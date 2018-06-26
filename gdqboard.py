@@ -29,11 +29,25 @@ def read_schedule(now, runs, incentive_dict):
         print(f"{delta}\t{game} ({platform})")
         print(f"\t{runtype:<15s} {runner:<15s} {estimate}")
         for incentive in incentive_dict.get(game, []):
-            filled = int((30 * incentive['current']) // incentive['total'])
-            progress_bar = '*' * filled + ' ' * (30 - filled)
-            print('\t{0:<35s}\t{1}|${3:,.0f}\n\t|>{2}'.format(
-                incentive['short_desc'], progress_bar, incentive['description'], incentive['total'],
-            ))
+            if 'total' in incentive:
+                filled = int(30 * incentive['current'] / incentive['total'])
+                progress_bar = '*' * filled + ' ' * (30 - filled)
+                print('\t{0:<35s}\t{1}|${3:,.0f}\n\t\t|>{2}'.format(
+                    incentive['short_desc'], progress_bar, incentive['description'], incentive['total'],
+                ))
+            elif 'options' in incentive:
+                print('\t{0:<15s}\t{1}'.format(
+                    incentive['short_desc'], incentive['description'],
+                ))
+                for option in incentive['options']:
+                    try:
+                        filled = int(30 * option['total'] / incentive['current'])
+                    except ZeroDivisionError:
+                        filled = 0
+                    progress_bar = '*' * filled + ' ' * (30 - filled)
+                    print('\t{0:<35s}\t{1}|${2:,.0f}'.format(option['choice'], progress_bar, option['total']))
+                    if option['description']:
+                        print('\t\t|>{0}'.format(option['description']))
 
 
 def read_incentives():
@@ -53,8 +67,16 @@ def read_incentives():
         try:
             gamedata['total'] = float(money.sub('', bid.contents[11].string))
         except ValueError:
-            # Handle bid wars later
-            continue
+            # Assume bid war
+            options = []
+            option_table = bid.find_next_sibling('tr').find('tbody')
+            for option in option_table.find_all('tr'):
+                options.append(dict(
+                    choice=option.contents[1].a.string.strip(),
+                    description=option.contents[7].string.strip(),
+                    total=float(money.sub('', option.contents[9].string)),
+                ))
+            gamedata['options'] = options
 
         incentives.setdefault(game, []).append(gamedata)
 
