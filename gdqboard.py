@@ -24,11 +24,14 @@ def read_schedule(now, runs, incentive_dict):
         runner = row.contents[5].string
         estimate = ''.join(row2.contents[1].stripped_strings)
         runtype, _, platform = row2.contents[3].string.rpartition(' — ')
-        details = f"{delta}\t{game} ({platform})\n\t{runtype}\t{runner:<20s}\t{estimate}"
-        print(details)
+        print(f"{delta}\t{game} ({platform})")
+        print(f"\t{runtype:<15s} {runner:<15s} {estimate}")
         for incentive in incentive_dict.get(game, []):
-            percent = incentive['current'] / incentive['total'] * 100
-            print('\t{0:03.2f}%\t{1}\n\t|>{2}'.format(percent, incentive['short_desc'], incentive['description']))
+            filled = int((30 * incentive['current']) // incentive['total'])
+            progress_bar = '*' * filled + ' ' * (30 - filled)
+            print('\t{0:<35s}\t{1}|${3:,.0f}\n\t|>{2}'.format(
+                incentive['short_desc'], progress_bar, incentive['description'], incentive['total'],
+            ))
 
 
 def read_incentives():
