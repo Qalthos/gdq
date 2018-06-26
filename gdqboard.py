@@ -8,12 +8,18 @@ import requests
 UTCFORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 
-def read_schedule(now, row, incentive_dict):
-    row2 = row.find_next_sibling()
+def read_schedule(now, runs, incentive_dict):
 
-    for _ in range(5):
-        delta = datetime.strptime(row.contents[1].string, UTCFORMAT) - now
-        delta = '{0}:{1[0]:02d}:{1[1]:02d}'.format(delta.days, divmod(delta.seconds // 60, 60))
+    for index in range(5):
+        row = runs[index]
+        row2 = row.find_next_sibling()
+
+        time = datetime.strptime(row.contents[1].string, UTCFORMAT)
+        if time > now:
+            delta = time - now
+            delta = '{0}:{1[0]:02d}:{1[1]:02d}'.format(delta.days, divmod(delta.seconds // 60, 60))
+        else:
+            delta = '  NOW  '
         game = row.contents[3].string
         runner = row.contents[5].string
         estimate = row2.contents[1].string
@@ -23,11 +29,6 @@ def read_schedule(now, row, incentive_dict):
         for incentive in incentive_dict.get(game, []):
             percent = incentive['current'] / incentive['total'] * 100
             print('{0:03.2f}%\t{1}\n|>{2}'.format(percent, incentive['short_desc'], incentive['description']))
-
-        try:
-            row, row2 = row2.find_next_siblings()[:2]
-        except ValueError:
-            break
 
 
 def read_incentives():
@@ -62,11 +63,13 @@ def main():
     now = datetime.utcnow()
 
     schedule = soup.find('table', id='runTable').tbody
-    for day_row in schedule.find_all('td', class_='start-time'):
+    run_starts = schedule.find_all('td', class_='start-time')
+    for index, day_row in enumerate(run_starts):
         time = datetime.strptime(day_row.text, UTCFORMAT)
         if time > now:
             incentives = read_incentives()
-            read_schedule(now, day_row.parent, incentives)
+            runs = [td.parent for td in run_starts[index-1:]]
+            read_schedule(now, runs, incentives)
             break
     else:
         print("Nothing running right now ):")
