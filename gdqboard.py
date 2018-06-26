@@ -13,6 +13,8 @@ def read_schedule(now, runs, incentive_dict):
     for index in range(5):
         row = runs[index]
         row2 = row.find_next_sibling()
+        if not row2:
+            break
 
         time = datetime.strptime(row.contents[1].string, UTCFORMAT)
         if time > now:
@@ -41,8 +43,7 @@ def read_incentives():
     incentives = {}
 
     money = re.compile('[$,\n]')
-    bids = soup.find_all('tr', class_='small')
-    for bid in bids:
+    for bid in soup.find('table').find_all('tr', class_='small', recursive=False):
         game = bid.contents[3].string.strip()
         gamedata = dict(
             short_desc=bid.contents[1].a.string.strip(),
