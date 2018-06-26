@@ -22,7 +22,7 @@ def read_schedule(now, runs, incentive_dict):
             delta = '  NOW  '
         game = row.contents[3].string
         runner = row.contents[5].string
-        estimate = row2.contents[1].string
+        estimate = ''.join(row2.contents[1].stripped_strings)
         runtype, _, platform = row2.contents[3].string.rpartition(' — ')
         details = f"{game} ({runtype}) in {delta}\n{platform}\t{runner:<20s}\t{estimate}"
         print(details)
