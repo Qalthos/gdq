@@ -26,9 +26,15 @@ def read_schedule(now, runs, incentive_dict):
 
         run['game'] = row.contents[1].p.a.string
         run['estimate'] = row.contents[2].string
-        run['runner'] = row.contents[3].p.a.string
-        run['platform'] = row.contents[4].string.strip()
-        run['runtype'] = row.contents[5].string.strip()
+        try:
+            run['runner'] = row.contents[3].p.a.string
+            run['platform'] = row.contents[4].string.strip()
+            run['runtype'] = row.contents[5].string.strip()
+        except AttributeError:
+            # Assume offline block
+            run['runner'] = ''
+            run['platform'] = ''
+            run['runtype'] = ''
 
         display_run(run, incentive_dict)
 
@@ -38,12 +44,13 @@ def main():
     soup = BeautifulSoup(source, 'html.parser')
     now = datetime.now(pytz.utc)
 
-    schedule = soup.find('table').tbody
+    header = soup.find('h2', class_='schedule-title', string='Stream ' + STREAM)
+    schedule = header.find_next('table').tbody
     run_starts = schedule.find_all('time', class_='time-only')
     for index, day_row in enumerate(run_starts):
         time = parser.parse(day_row.attrs['datetime'])
         if time > now:
-            incentives = read_incentives(BID_TRACKER)
+            incentives = read_incentives(BID_TRACKER + STREAM)
             runs = [td.parent.parent for td in run_starts[index - 1:]]
             read_schedule(now, runs, incentives)
             break
