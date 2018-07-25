@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from datetime import datetime
-import re
+import sys
 
 from bs4 import BeautifulSoup
 from dateutil import parser
@@ -11,7 +11,6 @@ from utils import read_incentives, display_run
 
 BID_TRACKER = 'https://donations.esamarathon.com/bids/2018s'
 SCHEDULE = 'https://esamarathon.com/schedule'
-STREAM = '1'
 
 
 def read_schedule(now, runs, incentive_dict):
@@ -40,17 +39,21 @@ def read_schedule(now, runs, incentive_dict):
 
 
 def main():
+    stream = '1'
+    if len(sys.argv) > 1:
+        stream = sys.argv[1]
+
     source = requests.get(SCHEDULE).text
     soup = BeautifulSoup(source, 'html.parser')
     now = datetime.now(pytz.utc)
 
-    header = soup.find('h2', class_='schedule-title', string='Stream ' + STREAM)
+    header = soup.find('h2', class_='schedule-title', string='Stream ' + stream)
     schedule = header.find_next('table').tbody
     run_starts = schedule.find_all('time', class_='time-only')
     for index, day_row in enumerate(run_starts):
         time = parser.parse(day_row.attrs['datetime'])
         if time > now:
-            incentives = read_incentives(BID_TRACKER + STREAM)
+            incentives = read_incentives(BID_TRACKER + stream)
             runs = [td.parent.parent for td in run_starts[index - 1:]]
             read_schedule(now, runs, incentives)
             break
