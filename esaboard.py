@@ -7,50 +7,30 @@ from dateutil import parser
 import pytz
 import requests
 
-from utils import read_incentives, show_progress
+from utils import read_incentives, display_run
 
-BID_TRACKER = 'https://donations.esamarathon.com/bids/2018s1'
+BID_TRACKER = 'https://donations.esamarathon.com/bids/2018s'
 SCHEDULE = 'https://esamarathon.com/schedule'
+STREAM = '1'
 
 
 def read_schedule(now, runs, incentive_dict):
-
     for index in range(5):
         row = runs[index]
+        run = dict(delta='  NOW  ')
 
         time = parser.parse(row.td.time.attrs['datetime'])
         if time > now:
             delta = time - now
-            delta = '{0}:{1[0]:02d}:{1[1]:02d}'.format(delta.days, divmod(delta.seconds // 60, 60))
-        else:
-            delta = '  NOW  '
-        game = row.contents[1].p.a.string
-        estimate = row.contents[2].string
-        runner = row.contents[3].p.a.string
-        platform = row.contents[4].string.strip()
-        runtype = row.contents[5].string.strip()
-        print(f"{delta}\t{game} ({platform})")
-        print(f"\t{runtype:<15s} {runner:<15s} {estimate}")
-        for incentive in incentive_dict.get(game, []):
-            if 'total' in incentive:
-                percent = incentive['current'] / incentive['total'] * 100
-                progress_bar = show_progress(percent)
-                print('\t{0:<35s}\t{1}|${3:,.0f}\n\t  |>{2}'.format(
-                    incentive['short_desc'], progress_bar, incentive['description'], incentive['total'],
-                ))
-            elif 'options' in incentive:
-                print('\t{0:<15s}\t{1}'.format(
-                    incentive['short_desc'], incentive['description'],
-                ))
-                for option in incentive['options']:
-                    try:
-                        percent = option['total'] / incentive['current'] * 100
-                    except ZeroDivisionError:
-                        percent = 0
-                    progress_bar = show_progress(percent)
-                    print('\t{0:<35s}\t{1}|${2:,.0f}'.format(option['choice'], progress_bar, option['total']))
-                    if option['description']:
-                        print('\t  |>{0}'.format(option['description']))
+            run['delta'] = '{0}:{1[0]:02d}:{1[1]:02d}'.format(delta.days, divmod(delta.seconds // 60, 60))
+
+        run['game'] = row.contents[1].p.a.string
+        run['estimate'] = row.contents[2].string
+        run['runner'] = row.contents[3].p.a.string
+        run['platform'] = row.contents[4].string.strip()
+        run['runtype'] = row.contents[5].string.strip()
+
+        display_run(run, incentive_dict)
 
 
 def main():
