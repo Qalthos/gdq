@@ -6,6 +6,18 @@ from bs4 import BeautifulSoup
 import requests
 
 UTCFORMAT = "%Y-%m-%dT%H:%M:%SZ"
+BID_TRACKER = 'https://gamesdonequick.com/tracker/bids/sgdq2018'
+SCHEDULE = 'https://gamesdonequick.com/schedule'
+
+
+def show_progress(percent, width=30):
+    chars = " ▏ ▎ ▍ ▌ ▋ ▊ ▉ █"
+
+    blocks = int(percent * width // 100)
+    fraction = int(percent * width % 100 // 12.5)
+    print(fraction)
+
+    return chars[-1] * blocks + chars[fraction] + ' ' * (width - blocks - 1)
 
 
 def read_schedule(now, runs, incentive_dict):
@@ -32,7 +44,7 @@ def read_schedule(now, runs, incentive_dict):
             if 'total' in incentive:
                 filled = int(30 * incentive['current'] / incentive['total'])
                 progress_bar = '*' * filled + ' ' * (30 - filled)
-                print('\t{0:<35s}\t{1}|${3:,.0f}\n\t\t|>{2}'.format(
+                print('\t{0:<35s}\t{1}|${3:,.0f}\n\t  |>{2}'.format(
                     incentive['short_desc'], progress_bar, incentive['description'], incentive['total'],
                 ))
             elif 'options' in incentive:
@@ -47,11 +59,11 @@ def read_schedule(now, runs, incentive_dict):
                     progress_bar = '*' * filled + ' ' * (30 - filled)
                     print('\t{0:<35s}\t{1}|${2:,.0f}'.format(option['choice'], progress_bar, option['total']))
                     if option['description']:
-                        print('\t\t|>{0}'.format(option['description']))
+                        print('\t  |>{0}'.format(option['description']))
 
 
 def read_incentives():
-    source = requests.get('https://gamesdonequick.com/tracker/bids/sgdq2018').text
+    source = requests.get(BID_TRACKER).text
     soup = BeautifulSoup(source, 'html.parser')
 
     incentives = {}
@@ -68,15 +80,20 @@ def read_incentives():
             gamedata['total'] = float(money.sub('', bid.contents[11].string))
         except ValueError:
             # Assume bid war
-            options = []
-            option_table = bid.find_next_sibling('tr').find('tbody')
-            for option in option_table.find_all('tr'):
-                options.append(dict(
-                    choice=option.contents[1].a.string.strip(),
-                    description=option.contents[7].string.strip(),
-                    total=float(money.sub('', option.contents[9].string)),
-                ))
-            gamedata['options'] = options
+            try:
+                option_list = bid.find_next_sibling('tr').find('tbody').find_all('tr')
+            except AttributeError:
+                # bid war with no options (e.g. filename with no bids yet)
+                pass
+            else:
+                gamedata['options'] = [
+                    dict(
+                        choice=option.contents[1].a.string.strip(),
+                        description=option.contents[7].string.strip(),
+                        total=float(money.sub('', option.contents[9].string)),
+                    )
+                    for option in option_list
+                ]
 
         incentives.setdefault(game, []).append(gamedata)
 
@@ -84,7 +101,7 @@ def read_incentives():
 
 
 def main():
-    source = requests.get('https://gamesdonequick.com/schedule').text
+    source = requests.get(SCHEDULE).text
     soup = BeautifulSoup(source, 'html.parser')
     now = datetime.utcnow()
 
@@ -94,7 +111,7 @@ def main():
         time = datetime.strptime(day_row.text, UTCFORMAT)
         if time > now:
             incentives = read_incentives()
-            runs = [td.parent for td in run_starts[index-1:]]
+            runs = [td.parent for td in run_starts[index - 1:]]
             read_schedule(now, runs, incentives)
             break
     else:
