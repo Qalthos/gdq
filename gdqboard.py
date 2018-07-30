@@ -14,7 +14,7 @@ SCHEDULE = 'https://gamesdonequick.com/schedule'
 
 
 def read_schedule(schedule_url, stream_index=1):
-    if stream_index != 1):
+    if stream_index != 1:
         print("Index {} is not valid for this steam".format(stream_index))
         return []
 
@@ -28,18 +28,18 @@ def read_schedule(schedule_url, stream_index=1):
     for index, day_row in enumerate(run_starts):
         time = parser.parse(day_row.text)
         if time > now:
-            return [parse_run(td.parent) for td in run_starts[index - 1:]]
-    else:
-        print("Nothing running right now ):")
-        return []
+            return [parse_run(td.parent, now) for td in run_starts[index - 1:]]
+
+    print("Nothing running right now ):")
+    return []
 
 
-def parse_run(row):
+def parse_run(row, now):
     """Parse run metadata from schedule row."""
 
     row2 = row.find_next_sibling()
     if not row2:
-        break
+        return Nonw
     run = dict(delta='  NOW  ')
 
     time = parser.parse(row.contents[1].string)

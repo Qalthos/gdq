@@ -17,8 +17,8 @@ def read_schedule(schedule_url, stream_index=1):
     source = requests.get(schedule_url).text
     soup = BeautifulSoup(source, 'html.parser')
 
-    header = soup.find('h2', class_='schedule-title', string='Stream ' + stream)
-    if header is None
+    header = soup.find('h2', class_='schedule-title', string='Stream ' + stream_index)
+    if header is None:
         print("Index {} is not valid for this steam".format(stream_index))
         return []
 
@@ -29,13 +29,13 @@ def read_schedule(schedule_url, stream_index=1):
     for index, day_row in enumerate(run_starts):
         time = parser.parse(day_row.attrs['datetime'])
         if time > now:
-            return [parse_run(td.parent.parent) for td in run_starts[index - 1:]]
-    else:
-        print("Nothing running right now ):")
-        return []
+            return [parse_run(td.parent.parent, now) for td in run_starts[index - 1:]]
+
+    print("Nothing running right now ):")
+    return []
 
 
-def parse_run(row):
+def parse_run(row, now):
     """Parse run metadata from schedule row."""
 
     run = dict(delta='  NOW  ')
@@ -66,7 +66,7 @@ def main():
         stream = sys.argv[1]
 
     runs = read_schedule(SCHEDULE, stream)
-    incentives = read_incentives(BID_TRACKER)
+    incentives = read_incentives(BID_TRACKER + stream)
 
     for run in runs[:5]:
         display_run(run, incentives)
