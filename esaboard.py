@@ -13,29 +13,51 @@ BID_TRACKER = 'https://donations.esamarathon.com/bids/2018s'
 SCHEDULE = 'https://esamarathon.com/schedule'
 
 
-def read_schedule(now, runs, incentive_dict):
-    for index in range(5):
-        row = runs[index]
-        run = dict(delta='  NOW  ')
+def read_schedule(schedule_url, stream_index=1):
+    source = requests.get(schedule_url).text
+    soup = BeautifulSoup(source, 'html.parser')
 
-        time = parser.parse(row.td.time.attrs['datetime'])
+    header = soup.find('h2', class_='schedule-title', string='Stream ' + stream)
+    if header is None
+        print("Index {} is not valid for this steam".format(stream_index))
+        return []
+
+    schedule = header.find_next('table').tbody
+    run_starts = schedule.find_all('time', class_='time-only')
+
+    now = datetime.now(pytz.utc)
+    for index, day_row in enumerate(run_starts):
+        time = parser.parse(day_row.attrs['datetime'])
         if time > now:
-            delta = time - now
-            run['delta'] = '{0}:{1[0]:02d}:{1[1]:02d}'.format(delta.days, divmod(delta.seconds // 60, 60))
+            return [parse_run(td.parent.parent) for td in run_starts[index - 1:]]
+    else:
+        print("Nothing running right now ):")
+        return []
 
-        run['game'] = row.contents[1].p.a.string
-        run['estimate'] = row.contents[2].string
-        try:
-            run['runner'] = row.contents[3].p.a.string
-            run['platform'] = row.contents[4].string.strip()
-            run['runtype'] = row.contents[5].string.strip()
-        except AttributeError:
-            # Assume offline block
-            run['runner'] = ''
-            run['platform'] = ''
-            run['runtype'] = ''
 
-        display_run(run, incentive_dict)
+def parse_run(row):
+    """Parse run metadata from schedule row."""
+
+    run = dict(delta='  NOW  ')
+
+    time = parser.parse(row.td.time.attrs['datetime'])
+    if time > now:
+        delta = time - now
+        run['delta'] = '{0}:{1[0]:02d}:{1[1]:02d}'.format(delta.days, divmod(delta.seconds // 60, 60))
+
+    run['game'] = row.contents[1].p.a.string
+    run['estimate'] = row.contents[2].string
+    try:
+        run['runner'] = row.contents[3].p.a.string
+        run['platform'] = row.contents[4].string.strip()
+        run['runtype'] = row.contents[5].string.strip()
+    except AttributeError:
+        # Assume offline block
+        run['runner'] = ''
+        run['platform'] = ''
+        run['runtype'] = ''
+
+    return run
 
 
 def main():
@@ -43,22 +65,11 @@ def main():
     if len(sys.argv) > 1:
         stream = sys.argv[1]
 
-    source = requests.get(SCHEDULE).text
-    soup = BeautifulSoup(source, 'html.parser')
-    now = datetime.now(pytz.utc)
+    runs = read_schedule(SCHEDULE, stream)
+    incentives = read_incentives(BID_TRACKER)
 
-    header = soup.find('h2', class_='schedule-title', string='Stream ' + stream)
-    schedule = header.find_next('table').tbody
-    run_starts = schedule.find_all('time', class_='time-only')
-    for index, day_row in enumerate(run_starts):
-        time = parser.parse(day_row.attrs['datetime'])
-        if time > now:
-            incentives = read_incentives(BID_TRACKER + stream)
-            runs = [td.parent.parent for td in run_starts[index - 1:]]
-            read_schedule(now, runs, incentives)
-            break
-    else:
-        print("Nothing running right now ):")
+    for run in runs[:5]:
+        display_run(run, incentives)
 
 
 if __name__ == '__main__':
