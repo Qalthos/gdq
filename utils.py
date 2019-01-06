@@ -4,14 +4,18 @@ from bs4 import BeautifulSoup
 import requests
 
 
-def show_progress(percent, width=30):
-    chars = " ▏ ▎ ▍ ▌ ▋ ▊ ▉ █"
+def show_progress(percent, width=72):
+    chars = " ▏▎▍▌▋▊▉█"
 
-    blocks = int(percent * width // 100)
-    fraction = int(percent * width % 100 // 12.5)
-    # print(fraction)
+    blocks, fraction = divmod(percent * width, 100)
+    blocks = int(blocks)
+    fraction = int(fraction // (100 / len(chars)))
 
-    return chars[-1] * blocks + chars[fraction] + ' ' * (width - blocks - 1)
+    if blocks >= width:
+        blocks = width - 1
+        fraction = -1
+
+    return '▕' + chars[-1] * blocks + chars[fraction] + ' ' * (width - blocks - 1) + '▏'
 
 
 def read_incentives(incentive_url):
@@ -53,25 +57,43 @@ def read_incentives(incentive_url):
 
 
 def display_run(run, incentive_dict):
-    print("{delta}\t{game} ({platform})".format(**run))
-    print("\t{runtype:<15s} {runner:<15s} {estimate}".format(**run))
+    prefix = '       '
+    if run['delta'] == '  NOW  ':
+        run['estimate'] = ''
+    else:
+        # Cut seconds off of estimate
+        run['estimate'] = '+%s' % run['estimate'].rsplit(':', 1)[0]
+
+    game = '{game} ({platform})'.format(**run)
+    print("{0}│{1:<49s} {2: >70s}".format(run['delta'], game, run['runner']))
+    print("{estimate: >7s}│{runtype}".format(**run))
+
+    # Handle incentives
     for incentive in incentive_dict.get(run['game'], []):
         if 'total' in incentive:
             percent = incentive['current'] / incentive['total'] * 100
             progress_bar = show_progress(percent)
-            print('\t{0:<35s}\t{1}|${3:,.0f}\n\t  |>{2}'.format(
-                incentive['short_desc'], progress_bar, incentive['description'], incentive['total'],
+            total = '${0:,.0f}'.format(incentive['total'])
+            print('{3}├┬{0:<37s} {1}{2: >7s}'.format(
+                incentive['short_desc'], progress_bar, total, prefix
             ))
+            print('{1}│└▶{0}'.format(incentive['description'], prefix))
         elif 'options' in incentive:
-            print('\t{0:<15s}\t{1}'.format(
-                incentive['short_desc'], incentive['description'],
+            print('{2}├┬{0:<38s} {1}'.format(
+                incentive['short_desc'], incentive['description'], prefix
             ))
-            for option in incentive['options']:
+            for index, option in enumerate(incentive['options']):
                 try:
                     percent = option['total'] / incentive['current'] * 100
                 except ZeroDivisionError:
                     percent = 0
                 progress_bar = show_progress(percent)
-                print('\t{0:<35s}\t{1}|${2:,.0f}'.format(option['choice'], progress_bar, option['total']))
+                total = '${0:,.0f}'.format(option['total'])
+                if index == len(incentive['options']) - 1:
+                    print('{3}│└▶{0:<36s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
+                else:
+                    print('{3}│├▶{0:<36s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
                 if option['description']:
-                    print('\t  |>{0}'.format(option['description']))
+                    print('{1}│  └▶{0}'.format(option['description'], prefix))
+
+    print('{0}┼{1}'.format('─' * 7, '─' * 120))
