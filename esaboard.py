@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from datetime import datetime
+import shutil
 import sys
 
 from bs4 import BeautifulSoup
@@ -61,6 +62,9 @@ def parse_run(row, now):
 
 
 def main():
+    width, height = shutil.get_terminal_size()
+    show_count = height // 3 + 1
+
     stream = '1'
     if len(sys.argv) > 1:
         stream = sys.argv[1]
@@ -68,8 +72,8 @@ def main():
     runs = read_schedule(SCHEDULE, stream)
     incentives = read_incentives(BID_TRACKER + stream)
 
-    for run in runs[:5]:
-        display_run(run, incentives)
+    for run in runs[:show_count]:
+        display_run(run, incentives, width)
 
 
 if __name__ == '__main__':
