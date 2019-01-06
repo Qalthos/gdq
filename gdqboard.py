@@ -9,7 +9,7 @@ import requests
 
 from utils import read_incentives, display_run
 
-BID_TRACKER = 'https://gamesdonequick.com/tracker/bids/sgdq2018'
+BID_TRACKER = 'https://gamesdonequick.com/tracker/bids/agdq2019'
 SCHEDULE = 'https://gamesdonequick.com/schedule'
 
 
@@ -28,7 +28,9 @@ def read_schedule(schedule_url, stream_index=1):
     for index, day_row in enumerate(run_starts):
         time = parser.parse(day_row.text)
         if time > now:
-            return [parse_run(td.parent, now) for td in run_starts[index - 1:]]
+            # If we havent started yet, index should still be 0
+            start = max(index - 1, 0)
+            return [parse_run(td.parent, now) for td in run_starts[start:]]
 
     print("Nothing running right now ):")
     return []
@@ -39,7 +41,7 @@ def parse_run(row, now):
 
     row2 = row.find_next_sibling()
     if not row2:
-        return Nonw
+        return None
     run = dict(delta='  NOW  ')
 
     time = parser.parse(row.contents[1].string)
