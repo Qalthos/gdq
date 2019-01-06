@@ -100,3 +100,8 @@ def display_run(run, incentive_dict, width=80):
                     print('{1}│  └▶{0}'.format(option['description'], prefix))
 
     print('{0}┼{1}'.format('─' * 7, '─' * (width)))
+
+
+if __name__ == '__main__':
+    import sys
+    print(show_progress(float(sys.argv[1])))
