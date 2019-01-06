@@ -58,6 +58,8 @@ def read_incentives(incentive_url):
 
 def display_run(run, incentive_dict):
     prefix = '       '
+    width = TERM_WIDTH - 8
+
     if run['delta'] == '  NOW  ':
         run['estimate'] = ''
     else:
@@ -65,14 +67,15 @@ def display_run(run, incentive_dict):
         run['estimate'] = '+%s' % run['estimate'].rsplit(':', 1)[0]
 
     game = '{game} ({platform})'.format(**run)
-    print("{0}│{1:<49s} {2: >70s}".format(run['delta'], game, run['runner']))
+    description = "{0}│{1:<49s} {2: >" + str(width - 50) + "s}"
+    print(description.format(run['delta'], game, run['runner']))
     print("{estimate: >7s}│{runtype}".format(**run))
 
     # Handle incentives
     for incentive in incentive_dict.get(run['game'], []):
         if 'total' in incentive:
             percent = incentive['current'] / incentive['total'] * 100
-            progress_bar = show_progress(percent)
+            progress_bar = show_progress(percent, width - 48)
             total = '${0:,.0f}'.format(incentive['total'])
             print('{3}├┬{0:<37s} {1}{2: >7s}'.format(
                 incentive['short_desc'], progress_bar, total, prefix
@@ -87,7 +90,7 @@ def display_run(run, incentive_dict):
                     percent = option['total'] / incentive['current'] * 100
                 except ZeroDivisionError:
                     percent = 0
-                progress_bar = show_progress(percent)
+                progress_bar = show_progress(percent, width - 48)
                 total = '${0:,.0f}'.format(option['total'])
                 if index == len(incentive['options']) - 1:
                     print('{3}│└▶{0:<36s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
@@ -96,4 +99,4 @@ def display_run(run, incentive_dict):
                 if option['description']:
                     print('{1}│  └▶{0}'.format(option['description'], prefix))
 
-    print('{0}┼{1}'.format('─' * 7, '─' * 120))
+    print('{0}┼{1}'.format('─' * 7, '─' * (width)))
