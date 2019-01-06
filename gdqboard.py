@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from datetime import datetime
 import re
+import shutil
 
 from bs4 import BeautifulSoup
 from dateutil import parser
@@ -58,11 +59,14 @@ def parse_run(row, now):
 
 
 def main():
+    width, height = shutil.get_terminal_size()
+    show_count = height // 3 + 1
+
     runs = read_schedule(SCHEDULE)
     incentives = read_incentives(BID_TRACKER)
 
-    for run in runs[:5]:
-        display_run(run, incentives)
+    for run in runs[:show_count]:
+        display_run(run, incentives, width)
 
 
 if __name__ == '__main__':

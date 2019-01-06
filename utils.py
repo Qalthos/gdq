@@ -56,9 +56,9 @@ def read_incentives(incentive_url):
     return incentives
 
 
-def display_run(run, incentive_dict):
+def display_run(run, incentive_dict, width=80):
     prefix = '       '
-    width = TERM_WIDTH - 8
+    width -= 8
 
     if run['delta'] == '  NOW  ':
         run['estimate'] = ''
@@ -75,14 +75,14 @@ def display_run(run, incentive_dict):
     for incentive in incentive_dict.get(run['game'], []):
         if 'total' in incentive:
             percent = incentive['current'] / incentive['total'] * 100
-            progress_bar = show_progress(percent, width - 48)
+            progress_bar = show_progress(percent, width - 42)
             total = '${0:,.0f}'.format(incentive['total'])
-            print('{3}├┬{0:<37s} {1}{2: >7s}'.format(
+            print('{3}├┬{0:<31s} {1}{2: >7s}'.format(
                 incentive['short_desc'], progress_bar, total, prefix
             ))
             print('{1}│└▶{0}'.format(incentive['description'], prefix))
         elif 'options' in incentive:
-            print('{2}├┬{0:<38s} {1}'.format(
+            print('{2}├┬{0:<32s} {1}'.format(
                 incentive['short_desc'], incentive['description'], prefix
             ))
             for index, option in enumerate(incentive['options']):
@@ -90,12 +90,12 @@ def display_run(run, incentive_dict):
                     percent = option['total'] / incentive['current'] * 100
                 except ZeroDivisionError:
                     percent = 0
-                progress_bar = show_progress(percent, width - 48)
+                progress_bar = show_progress(percent, width - 42)
                 total = '${0:,.0f}'.format(option['total'])
                 if index == len(incentive['options']) - 1:
-                    print('{3}│└▶{0:<36s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
+                    print('{3}│└▶{0:<30s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
                 else:
-                    print('{3}│├▶{0:<36s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
+                    print('{3}│├▶{0:<30s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
                 if option['description']:
                     print('{1}│  └▶{0}'.format(option['description'], prefix))
 
