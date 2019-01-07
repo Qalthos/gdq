@@ -43,9 +43,16 @@ def display_run(run, incentive_dict, width=80):
 
 
 def display_incentive(incentive, width):
-    progress_bar = show_progress(incentive.percent, width - 50)
-    print(f'{PREFIX}├┬{incentive.short_desc:<39s} {progress_bar}{incentive.total: >7s}')
-    lines = wrap(incentive.description, width - 2)
+    # Remove fixed elements
+    width -= 2
+
+    desc_size = max(25, len(incentive.short_desc))
+    progress_bar = show_progress(incentive.percent, width - desc_size - 8)
+
+    line_one = '{0}├┬{1:<' + str(desc_size) + 's}{2}{3: >7s}'
+    print(line_one.format(PREFIX, incentive.short_desc, progress_bar, incentive.total))
+
+    lines = wrap(incentive.description, width)
     print(f'{PREFIX}│└▶{lines[0]}')
     for line in lines[1:]:
         print(f'{PREFIX}│  {line}')
