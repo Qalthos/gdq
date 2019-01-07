@@ -57,19 +57,21 @@ def read_incentives(incentive_url):
 
 
 def display_run(run, incentive_dict, width=80):
-    prefix = '       '
-    width -= 8
+    prefix = ' ' * 7
+    width -= len(prefix) + 1
 
-    if run['delta'] == '  NOW  ':
-        run['estimate'] = ''
-    else:
-        # Cut seconds off of estimate
-        run['estimate'] = '+%s' % run['estimate'].rsplit(':', 1)[0]
+    runner = '│' + run['runner'] + '│'
+    print('{0}┼{1}┬{2}┐'.format('─' * 7, '─' * (width - len(runner)), '─' * len(run['runner'])))
 
     game = '{game} ({platform})'.format(**run)
-    description = "{0}│{1:<49s} {2: >" + str(width - 50) + "s}"
-    print(description.format(run['delta'], game, run['runner']))
-    print("{estimate: >7s}│{runtype}".format(**run))
+    line_one = "{0}│{1:<49s} {2: >" + str(width - 50) + "s}"
+    print(line_one.format(run['delta'], game, runner))
+
+    estimate = '+%s' % run['estimate'].rsplit(':', 1)[0]
+    if run['delta'] == '  NOW  ':
+        estimate = ''
+    line_two = "{0: >7s}│{1:<" + str(width - len(run['runner']) - 2) + "}└{2}┘"
+    print(line_two.format(estimate, run['runtype'], '─' * len(run['runner'])))
 
     # Handle incentives
     for incentive in incentive_dict.get(run['game'], []):
@@ -98,8 +100,6 @@ def display_run(run, incentive_dict, width=80):
                     print('{3}│├▶{0:<30s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, prefix))
                 if option['description']:
                     print('{1}│  └▶{0}'.format(option['description'], prefix))
-
-    print('{0}┼{1}'.format('─' * 7, '─' * (width)))
 
 
 if __name__ == '__main__':
