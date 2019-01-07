@@ -101,6 +101,10 @@ def read_incentives(incentive_url):
 
 
 def display_run(run, incentive_dict, width=80):
+    # If the estimate has passed, it's probably over.
+    if run.raw_estimate < timedelta():
+        return
+
     width -= len(PREFIX) + 1
 
     runner = '│' + run.runner + '│'
