@@ -28,7 +28,7 @@ def display_run(run, incentive_dict, width=80):
     runner = '│' + run.runner + '│'
     print('{0}┼{1}┬{2}┐'.format('─' * 7, '─' * (width - len(runner)), '─' * len(run.runner)))
 
-    line_one = "{0}│{1:<49s} {2: >" + str(width - 50) + "s}"
+    line_one = "{0}│{1:<45s}{2: >" + str(width - 45) + "s}"
     print(line_one.format(run.delta, run.game_desc, runner))
 
     line_two = "{0: >7s}│{1:<" + str(width - len(run.runner) - 2) + "}└{2}┘"
