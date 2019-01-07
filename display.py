@@ -1,4 +1,5 @@
 from datetime import timedelta
+from textwrap import wrap
 
 PREFIX = ' ' * 7
 
@@ -44,11 +45,18 @@ def display_run(run, incentive_dict, width=80):
 def display_incentive(incentive, width):
     progress_bar = show_progress(incentive.percent, width - 50)
     print(f'{PREFIX}├┬{incentive.short_desc:<39s} {progress_bar}{incentive.pretty_total: >7s}')
-    print(f'{PREFIX}│└▶{incentive.description}')
+    lines = wrap(incentive.description, width - 2)
+    print(f'{PREFIX}│└▶{lines[0]}')
+    for line in lines[1:]:
+        print(f'{PREFIX}│  {line}')
 
 
 def display_option(incentive, width):
-    print(f'{PREFIX}├┬{incentive.short_desc:<22s} {incentive.description}')
+    short_width = width - 25
+    lines = wrap(incentive.description, short_width)
+    print(f'{PREFIX}├┬{incentive.short_desc:<22s} {lines[0]}')
+    for line in lines[1:]:
+        print(f'{PREFIX}││{PREFIX:<22s} {line}')
 
     for index, option in enumerate(incentive.options):
         try:
