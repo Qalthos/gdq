@@ -35,39 +35,36 @@ def display_run(run, incentive_dict, width=80):
 
     # Handle incentives
     for incentive in incentive_dict.get(run.game, []):
-        if 'total' in incentive:
+        if hasattr(incentive, 'total'):
             display_incentive(incentive, width)
-        elif 'options' in incentive:
+        elif hasattr(incentive, 'options'):
             display_option(incentive, width)
 
 
 def display_incentive(incentive, width):
-    percent = incentive['current'] / incentive['total'] * 100
-    progress_bar = show_progress(percent, width - 50)
-    total = '${0:,.0f}'.format(incentive['total'])
-    print('{3}├┬{0:<39s} {1}{2: >7s}'.format(
-        incentive['short_desc'], progress_bar, total, PREFIX
-    ))
-    print('{1}│└▶{0}'.format(incentive['description'], PREFIX))
+    progress_bar = show_progress(incentive.percent, width - 50)
+    print(f'{PREFIX}├┬{incentive.short_desc:<39s} {progress_bar}{incentive.pretty_total: >7s}')
+    print(f'{PREFIX}│└▶{incentive.description}')
 
 
 def display_option(incentive, width):
-    print('{2}├┬{0:<32s} {1}'.format(
-        incentive['short_desc'], incentive['description'], PREFIX
-    ))
-    for index, option in enumerate(incentive['options']):
+    print(f'{PREFIX}├┬{incentive.short_desc:<22s} {incentive.description}')
+
+    for index, option in enumerate(incentive.options):
         try:
-            percent = option['total'] / incentive['current'] * 100
+            percent = option.total / incentive.current * 100
         except ZeroDivisionError:
             percent = 0
+
         progress_bar = show_progress(percent, width - 32)
-        total = '${0:,.0f}'.format(option['total'])
-        if index == len(incentive['options']) - 1:
-            print('{3}│└▶{0:<20s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, PREFIX))
-        else:
-            print('{3}│├▶{0:<20s} {1}{2: >7s}'.format(option['choice'], progress_bar, total, PREFIX))
-        if option['description']:
-            print('{1}│  └▶{0}'.format(option['description'], PREFIX))
+
+        leg = '├'
+        if index == len(incentive.options) - 1:
+            leg = '└'
+
+        print(f'{PREFIX}│{leg}▶{option.name:<20s} {progress_bar}{option.pretty_total: >7s}')
+        if option.description:
+            print(f'{PREFIX}│  └▶{option.description}')
 
 
 if __name__ == '__main__':

@@ -47,6 +47,41 @@ class Run:
         return f'{self.game} ({self.platform})'
 
 
+@dataclass
+class ChoiceIncentive:
+    description: str
+    short_desc: str
+    current: str
+    options: list
+
+
+@dataclass
+class Choice:
+    name: str
+    description: str
+    total: str
+
+    @property
+    def pretty_total(self):
+        return f'${self.total:,.0f}'
+
+
+@dataclass
+class DonationIncentive:
+    description: str
+    short_desc: str
+    current: str
+    total: str
+
+    @property
+    def percent(self):
+        return self.current / self.total * 100
+
+    @property
+    def pretty_total(self):
+        return f'${self.total:,.0f}'
+
+
 def read_incentives(incentive_url):
     source = requests.get(incentive_url).text
     soup = BeautifulSoup(source, 'html.parser')
@@ -56,13 +91,16 @@ def read_incentives(incentive_url):
     money = re.compile('[$,\n]')
     for bid in soup.find('table').find_all('tr', class_='small', recursive=False):
         game = bid.contents[3].string.strip()
-        gamedata = dict(
-            short_desc=bid.contents[1].a.string.strip(),
-            description=bid.contents[7].string.strip(),
-        )
-        gamedata['current'] = float(money.sub('', bid.contents[9].string))
+
+        short_desc = bid.contents[1].a.string.strip()
+        description = bid.contents[7].string.strip()
+        current = float(money.sub('', bid.contents[9].string))
         try:
-            gamedata['total'] = float(money.sub('', bid.contents[11].string))
+            total = float(money.sub('', bid.contents[11].string))
+            incentive = DonationIncentive(
+                description=description, short_desc=short_desc,
+                current=current, total=total,
+            )
         except ValueError:
             # Assume bid war
             try:
@@ -71,15 +109,20 @@ def read_incentives(incentive_url):
                 # bid war with no options (e.g. filename with no bids yet)
                 pass
             else:
-                gamedata['options'] = [
-                    dict(
-                        choice=option.contents[1].a.string.strip(),
+                options = [
+                    Choice(
+                        name=option.contents[1].a.string.strip(),
                         description=option.contents[7].string.strip(),
                         total=float(money.sub('', option.contents[9].string)),
                     )
                     for option in option_list
                 ]
 
-        incentives.setdefault(game, []).append(gamedata)
+            incentive = ChoiceIncentive(
+                description=description, short_desc=short_desc,
+                current=current, options=options,
+            )
+
+        incentives.setdefault(game, []).append(incentive)
 
     return incentives
