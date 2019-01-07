@@ -5,7 +5,8 @@ from bs4 import BeautifulSoup
 from dateutil import parser
 import requests
 
-from utils import NOW, Run, read_incentives, display_run
+from utils import NOW, Run, read_incentives
+from display import display_run
 
 BID_TRACKER = 'https://gamesdonequick.com/tracker/bids/agdq2019'
 SCHEDULE = 'https://gamesdonequick.com/schedule'

@@ -6,7 +6,8 @@ from bs4 import BeautifulSoup
 from dateutil import parser
 import requests
 
-from utils import NOW, Run, read_incentives, display_run
+from utils import NOW, Run, read_incentives
+from display import display_run
 
 BID_TRACKER = 'https://donations.esamarathon.com/bids/2018s'
 SCHEDULE = 'https://esamarathon.com/schedule'
