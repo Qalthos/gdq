@@ -51,7 +51,7 @@ class Run:
 class ChoiceIncentive:
     description: str
     short_desc: str
-    current: str
+    current: float
     options: list
 
 
@@ -59,27 +59,27 @@ class ChoiceIncentive:
 class Choice:
     name: str
     description: str
-    total: str
+    numeric_total: float
 
     @property
-    def pretty_total(self):
-        return f'${self.total:,.0f}'
+    def total(self):
+        return f'${self.numeric_total:,.0f}'
 
 
 @dataclass
 class DonationIncentive:
     description: str
     short_desc: str
-    current: str
-    total: str
+    current: float
+    numeric_total: float
 
     @property
     def percent(self):
-        return self.current / self.total * 100
+        return self.current / self.numeric_total * 100
 
     @property
-    def pretty_total(self):
-        return f'${self.total:,.0f}'
+    def total(self):
+        return f'${self.numeric_total:,.0f}'
 
 
 def read_incentives(incentive_url):
@@ -99,7 +99,7 @@ def read_incentives(incentive_url):
             total = float(money.sub('', bid.contents[11].string))
             incentive = DonationIncentive(
                 description=description, short_desc=short_desc,
-                current=current, total=total,
+                current=current, numeric_total=total,
             )
         except ValueError:
             # Assume bid war
@@ -113,7 +113,7 @@ def read_incentives(incentive_url):
                     Choice(
                         name=option.contents[1].a.string.strip(),
                         description=option.contents[7].string.strip(),
-                        total=float(money.sub('', option.contents[9].string)),
+                        numeric_total=float(money.sub('', option.contents[9].string)),
                     )
                     for option in option_list
                 ]

@@ -44,7 +44,7 @@ def display_run(run, incentive_dict, width=80):
 
 def display_incentive(incentive, width):
     progress_bar = show_progress(incentive.percent, width - 50)
-    print(f'{PREFIX}├┬{incentive.short_desc:<39s} {progress_bar}{incentive.pretty_total: >7s}')
+    print(f'{PREFIX}├┬{incentive.short_desc:<39s} {progress_bar}{incentive.total: >7s}')
     lines = wrap(incentive.description, width - 2)
     print(f'{PREFIX}│└▶{lines[0]}')
     for line in lines[1:]:
@@ -60,7 +60,7 @@ def display_option(incentive, width):
 
     for index, option in enumerate(incentive.options):
         try:
-            percent = option.total / incentive.current * 100
+            percent = option.numeric_total / incentive.current * 100
         except ZeroDivisionError:
             percent = 0
 
@@ -70,7 +70,7 @@ def display_option(incentive, width):
         if index == len(incentive.options) - 1:
             leg = '└'
 
-        print(f'{PREFIX}│{leg}▶{option.name:<20s} {progress_bar}{option.pretty_total: >7s}')
+        print(f'{PREFIX}│{leg}▶{option.name:<20s} {progress_bar}{option.total: >7s}')
         if option.description:
             print(f'{PREFIX}│  └▶{option.description}')
 
