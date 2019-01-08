@@ -24,15 +24,22 @@ def display_run(run, incentive_dict, width=80):
         return
 
     width -= len(PREFIX) + 1
+    desc_width = max(width - 2 - len(run.runner), len(run.game_desc))
 
     runner = '│' + run.runner + '│'
-    print('{0}┼{1}┬{2}┐'.format('─' * 7, '─' * (width - len(runner)), '─' * len(run.runner)))
+    if desc_width + len(runner) > width:
+        # Truncate runner display if too long
+        runner_width = width - 3 - desc_width
+        runner = '│' + run.runner[:runner_width] + '…│'
 
-    line_one = "{0}│{1:<45s}{2: >" + str(width - 45) + "s}"
+    border = '─' * (len(runner) - 2)
+    print('{0}┼{1}┬{2}┐'.format('─' * 7, '─' * desc_width, border))
+
+    line_one = "{0}│{1:<" + str(desc_width) + "s}{2}"
     print(line_one.format(run.delta, run.game_desc, runner))
 
-    line_two = "{0: >7s}│{1:<" + str(width - len(run.runner) - 2) + "}└{2}┘"
-    print(line_two.format(run.estimate, run.runtype, '─' * len(run.runner)))
+    line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┘"
+    print(line_two.format(run.estimate, run.runtype, border))
 
     # Handle incentives
     for incentive in incentive_dict.get(run.game, []):
