@@ -2,6 +2,7 @@ from datetime import timedelta
 from textwrap import wrap
 
 PREFIX = ' ' * 7
+MIN_OFFSET = 20
 
 
 def show_progress(percent, width=72):
@@ -53,7 +54,7 @@ def display_incentive(incentive, width):
     # Remove fixed elements
     width -= 2
 
-    desc_size = max(25, len(incentive.short_desc))
+    desc_size = max(MIN_OFFSET, len(incentive.short_desc))
     progress_bar = show_progress(incentive.percent, width - desc_size - 8)
 
     line_one = '{0}├┬{1:<' + str(desc_size) + 's}{2}{3: >7s}'
@@ -66,11 +67,19 @@ def display_incentive(incentive, width):
 
 
 def display_option(incentive, width):
-    short_width = width - 25
-    lines = wrap(incentive.description, short_width)
-    print(f'{PREFIX}├┬{incentive.short_desc:<22s} {lines[0]}')
+    # Remove fixed elements
+    width -= 3
+
+    longest_option = max(*(len(option.name) for option in incentive.options))
+    desc_size = max(MIN_OFFSET, len(incentive.short_desc), longest_option)
+    rest_size = width - desc_size
+
+    lines = wrap(incentive.description, rest_size)
+    description = '{0}├┬{1:<' + str(desc_size) + 's}  {2}'
+    print(description.format(PREFIX, incentive.short_desc, lines[0]))
     for line in lines[1:]:
-        print(f'{PREFIX}││{PREFIX:<22s} {line}')
+        description = '{0}││{0:<' + str(desc_size) + 's}  {1}'
+        print(description.format(PREFIX, line))
 
     for index, option in enumerate(incentive.options):
         try:
@@ -78,15 +87,19 @@ def display_option(incentive, width):
         except ZeroDivisionError:
             percent = 0
 
-        progress_bar = show_progress(percent, width - 32)
+        progress_bar = show_progress(percent, rest_size - 8)
 
         leg = '├│'
         if index == len(incentive.options) - 1:
             leg = '└ '
 
-        print(f'{PREFIX}│{leg[0]}▶{option.name:<20s} {progress_bar}{option.total: >7s}')
+        line_one = '{0}│{1}▶{2:<' + str(desc_size) + 's}{3}{4: >7s}'
+        print(line_one.format(PREFIX, leg[0], option.name, progress_bar, option.total))
         if option.description:
-            print(f'{PREFIX}│{leg[1]} └▶{option.description}')
+            lines = wrap(option.description, width)
+            print(f'{PREFIX}│{leg[1]} └▶{lines[0]}')
+            for line in lines[1:]:
+                print(f'{PREFIX}│{leg[1]}   {line}')
 
 
 if __name__ == '__main__':
