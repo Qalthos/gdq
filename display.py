@@ -80,13 +80,13 @@ def display_option(incentive, width):
 
         progress_bar = show_progress(percent, width - 32)
 
-        leg = '├'
+        leg = '├│'
         if index == len(incentive.options) - 1:
-            leg = '└'
+            leg = '└ '
 
-        print(f'{PREFIX}│{leg}▶{option.name:<20s} {progress_bar}{option.total: >7s}')
+        print(f'{PREFIX}│{leg[0]}▶{option.name:<20s} {progress_bar}{option.total: >7s}')
         if option.description:
-            print(f'{PREFIX}│  └▶{option.description}')
+            print(f'{PREFIX}│{leg[1]} └▶{option.description}')
 
 
 if __name__ == '__main__':
