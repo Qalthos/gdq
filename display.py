@@ -42,22 +42,24 @@ def display_run(run, incentive_dict, width=80):
     line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┘"
     print(line_two.format(run.estimate, run.runtype, border))
 
-    # Handle incentives
-    for incentive in incentive_dict.get(run.game, []):
-        if hasattr(incentive, 'total'):
-            display_incentive(incentive, width)
-        elif hasattr(incentive, 'options'):
-            display_option(incentive, width)
+    incentives = incentive_dict.get(run.game, [])
+    if incentives:
+        align_width = max(MIN_OFFSET, *(len(incentive) for incentive in incentives))
+        # Handle incentives
+        for incentive in incentives:
+            if hasattr(incentive, 'total'):
+                display_incentive(incentive, width, align_width)
+            elif hasattr(incentive, 'options'):
+                display_option(incentive, width, align_width)
 
 
-def display_incentive(incentive, width):
+def display_incentive(incentive, width, align):
     # Remove fixed elements
     width -= 2
 
-    desc_size = max(MIN_OFFSET, len(incentive.short_desc))
-    progress_bar = show_progress(incentive.percent, width - desc_size - 8)
+    progress_bar = show_progress(incentive.percent, width - align - 8)
 
-    line_one = '{0}├┬{1:<' + str(desc_size) + 's}{2}{3: >7s}'
+    line_one = '{0}├┬{1:<' + str(align + 1) + 's}{2}{3: >6s}'
     print(line_one.format(PREFIX, incentive.short_desc, progress_bar, incentive.total))
 
     lines = wrap(incentive.description, width)
@@ -66,14 +68,12 @@ def display_incentive(incentive, width):
         print(f'{PREFIX}│  {line}')
 
 
-def display_option(incentive, width):
+def display_option(incentive, width, align):
     # Remove fixed elements
     width -= 3
 
-    longest_option = max(*(len(option.name) for option in incentive.options))
-    desc_size = max(MIN_OFFSET, len(incentive.short_desc), longest_option)
+    desc_size = max(align, len(incentive.short_desc))
     rest_size = width - desc_size
-
     lines = wrap(incentive.description, rest_size)
     description = '{0}├┬{1:<' + str(desc_size) + 's}  {2}'
     print(description.format(PREFIX, incentive.short_desc, lines[0]))
@@ -87,13 +87,13 @@ def display_option(incentive, width):
         except ZeroDivisionError:
             percent = 0
 
-        progress_bar = show_progress(percent, rest_size - 8)
+        progress_bar = show_progress(percent, width - align - 7)
 
         leg = '├│'
         if index == len(incentive.options) - 1:
             leg = '└ '
 
-        line_one = '{0}│{1}▶{2:<' + str(desc_size) + 's}{3}{4: >7s}'
+        line_one = '{0}│{1}▶{2:<' + str(align) + 's}{3}{4: >6s}'
         print(line_one.format(PREFIX, leg[0], option.name, progress_bar, option.total))
         if option.description:
             lines = wrap(option.description, width)
