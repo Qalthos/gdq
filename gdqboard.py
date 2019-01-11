@@ -23,8 +23,8 @@ def read_schedule(schedule_url, stream_index=1):
     schedule = soup.find('table', id='runTable').tbody
     run_starts = schedule.find_all('td', class_='start-time')
 
-    for index, day_row in enumerate(run_starts):
-        time = parser.parse(day_row.text)
+    for index, row in enumerate(run_starts):
+        time = parser.parse(row.text)
         if time > NOW:
             # If we havent started yet, index should still be 0
             start = max(index - 1, 0)
@@ -45,6 +45,8 @@ def parse_run(row):
 
     runtype, _, platform = row2.contents[3].string.rpartition(' — ')
     estimate = ''.join(row2.contents[1].stripped_strings)
+    # Strip seconds off estimate
+    estimate = estimate.rsplit(':', 1)[0]
     run = Run(
         game=row.contents[3].string, platform=platform, runtype=runtype,
         runner=row.contents[5].string, start=time, str_estimate=estimate,

@@ -30,8 +30,8 @@ class Run:
 
     @property
     def raw_estimate(self):
-        hours, minutes, seconds = self.str_estimate.split(':')
-        estimate = timedelta(hours=int(hours), minutes=int(minutes), seconds=int(seconds))
+        hours, minutes = self.str_estimate.split(':')
+        estimate = timedelta(hours=int(hours), minutes=int(minutes))
         if self.start < NOW:
             estimate = self.start + estimate - NOW
         return estimate
