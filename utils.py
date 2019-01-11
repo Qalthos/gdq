@@ -54,6 +54,9 @@ class ChoiceIncentive:
     current: float
     options: list
 
+    def __len__(self):
+        return max(*(len(option.name) for option in self.options))
+
 
 @dataclass
 class Choice:
@@ -80,6 +83,9 @@ class DonationIncentive:
     @property
     def total(self):
         return f'${self.numeric_total:,.0f}'
+
+    def __len__(self):
+        return len(self.short_desc) - 1
 
 
 def read_incentives(incentive_url):
