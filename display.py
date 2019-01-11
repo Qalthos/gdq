@@ -2,7 +2,8 @@ from datetime import timedelta
 from textwrap import wrap
 
 PREFIX = ' ' * 7
-MIN_OFFSET = 20
+MIN_OFFSET = 16
+CHOICE_CUTOFF = -1
 
 
 def show_progress(percent, width=72):
@@ -86,6 +87,9 @@ def display_option(incentive, width, align):
             percent = option.numeric_total / incentive.current * 100
         except ZeroDivisionError:
             percent = 0
+
+        if percent < CHOICE_CUTOFF:
+            continue
 
         progress_bar = show_progress(percent, width - align - 7)
 
