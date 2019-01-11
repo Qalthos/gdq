@@ -66,6 +66,11 @@ class Choice:
 
     @property
     def total(self):
+        if self.numeric_total >= 1e4:
+            short_total = self.numeric_total / 1e3
+            if self.numeric_total >= 1e5:
+                return f'${short_total:,.0f}k'
+            return f'${short_total:,.1f}k'
         return f'${self.numeric_total:,.0f}'
 
 
@@ -82,6 +87,11 @@ class DonationIncentive:
 
     @property
     def total(self):
+        if self.numeric_total >= 1e4:
+            short_total = self.numeric_total / 1e3
+            if self.numeric_total >= 1e5:
+                return f'${short_total:,.0f}k'
+            return f'${short_total:,.1f}k'
         return f'${self.numeric_total:,.0f}'
 
     def __len__(self):
