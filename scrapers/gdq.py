@@ -1,23 +1,20 @@
-#!/usr/bin/env python
-import shutil
-
 from bs4 import BeautifulSoup
 from dateutil import parser
 import requests
 
-from utils import NOW, Run, read_incentives
-from display import display_run
+from utils import NOW, Run
 
-BID_TRACKER = 'https://gamesdonequick.com/tracker/bids/agdq2019'
-SCHEDULE = 'https://gamesdonequick.com/schedule'
+EVENT = 'agdq2019'
+BID_TRACKER = f'https://gamesdonequick.com/tracker/bids/{EVENT}'
 
 
-def read_schedule(schedule_url, stream_index=1):
-    if stream_index != 1:
+def read_schedule(stream_index='1'):
+    if stream_index != '1':
         print("Index {} is not valid for this steam".format(stream_index))
         return []
 
-    source = requests.get(schedule_url).text
+    schedule = 'https://gamesdonequick.com/schedule'
+    source = requests.get(schedule).text
     soup = BeautifulSoup(source, 'html.parser')
 
     schedule = soup.find('table', id='runTable').tbody
@@ -53,18 +50,3 @@ def parse_run(row):
     )
 
     return run
-
-
-def main():
-    width, height = shutil.get_terminal_size()
-    show_count = height // 3 + 1
-
-    runs = read_schedule(SCHEDULE)
-    incentives = read_incentives(BID_TRACKER)
-
-    for run in runs[:show_count]:
-        display_run(run, incentives, width)
-
-
-if __name__ == '__main__':
-    main()
