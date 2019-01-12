@@ -8,8 +8,8 @@ EVENT = 'agdq2019'
 BID_TRACKER = f'https://gamesdonequick.com/tracker/bids/{EVENT}'
 
 
-def read_schedule(stream_index='1'):
-    if stream_index != '1':
+def read_schedule(stream_index=1):
+    if stream_index != 1:
         print("Index {} is not valid for this steam".format(stream_index))
         return []
 

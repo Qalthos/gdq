@@ -102,8 +102,8 @@ class DonationIncentive:
         return len(self.short_desc) - 1
 
 
-def read_incentives(incentive_url):
-    source = requests.get(incentive_url).text
+def read_incentives(incentive_url, stream=1):
+    source = requests.get(incentive_url.format(stream_index=stream)).text
     soup = BeautifulSoup(source, 'html.parser')
 
     incentives = {}

@@ -1,20 +1,18 @@
-#!/usr/bin/env python
-import shutil
-import sys
-
 from bs4 import BeautifulSoup
 from dateutil import parser
 import requests
 
-from utils import NOW, Run, read_incentives
-from display import display_run
+from utils import NOW, Run
 
-BID_TRACKER = 'https://donations.esamarathon.com/bids/2018s'
+EVENT = '2018s'
+BID_TRACKER = f'https://donations.esamarathon.com/bids/{EVENT}' + '{stream_index}'
 SCHEDULE = 'https://esamarathon.com/schedule'
+# BID_TRACKER = 'https://bsgmarathon.com/tracker/bids/BSG2018'
+# SCHEDULE = 'https://www.speedrun.com/bsg2018/schedule'
 
 
-def read_schedule(schedule_url, stream_index=1):
-    source = requests.get(schedule_url).text
+def read_schedule(stream_index=1):
+    source = requests.get(SCHEDULE).text
     soup = BeautifulSoup(source, 'html.parser')
 
     stream_index = int(stream_index)
@@ -57,22 +55,3 @@ def parse_run(row):
     )
 
     return run
-
-
-def main():
-    width, height = shutil.get_terminal_size()
-    show_count = height // 3 + 1
-
-    stream = '1'
-    if len(sys.argv) > 1:
-        stream = sys.argv[1]
-
-    runs = read_schedule(SCHEDULE, stream)
-    incentives = read_incentives(BID_TRACKER + stream)
-
-    for run in runs[:show_count]:
-        display_run(run, incentives, width)
-
-
-if __name__ == '__main__':
-    main()

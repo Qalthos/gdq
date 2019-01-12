@@ -1,22 +1,21 @@
 #!/usr/bin/env python
+import argparse
 import shutil
-import sys
-
 from display import display_run
 from scrapers.gdq import BID_TRACKER, read_schedule
 from utils import read_incentives
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--stream_index', help="Stream index to follow", type=int, default=1)
+    args = parser.parse_args()
+
     width, height = shutil.get_terminal_size()
     show_count = height // 3 + 1
 
-    stream = '1'
-    if len(sys.argv) > 1:
-        stream = sys.argv[1]
-
-    runs = read_schedule(stream)
-    incentives = read_incentives(BID_TRACKER, stream)
+    runs = read_schedule(args.stream_index)
+    incentives = read_incentives(BID_TRACKER, args.stream_index)
 
     for run in runs[:show_count]:
         display_run(run, incentives, width)
