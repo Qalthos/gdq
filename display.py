@@ -56,17 +56,16 @@ def display_run(run, incentive_dict, width=80):
 
 def display_incentive(incentive, width, align):
     # Remove fixed elements
-    width -= 2
+    width -= 3
 
-    progress_bar = show_progress(incentive.percent, width - align - 8)
-
-    line_one = '{0}├┬{1:<' + str(align + 1) + 's}{2}{3: >6s}'
-    print(line_one.format(PREFIX, incentive.short_desc, progress_bar, incentive.total))
-
-    lines = wrap(incentive.description, width)
-    print(f'{PREFIX}│└▶{lines[0]}')
+    lines = wrap(incentive.description, width + 1)
+    print(f'{PREFIX}├┬{lines[0]}')
     for line in lines[1:]:
-        print(f'{PREFIX}│  {line}')
+        print(f'{PREFIX}││{line}')
+
+    progress_bar = show_progress(incentive.percent, width - align - 7)
+    progress = '{0}│└▶{1:<' + str(align) + 's}{2}{3: >6s}'
+    print(progress.format(PREFIX, incentive.short_desc, progress_bar, incentive.total))
 
 
 def display_option(incentive, width, align):
