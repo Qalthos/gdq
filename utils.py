@@ -25,6 +25,8 @@ class Run:
         if self.start < NOW:
             return '  NOW  '
         delta = self.start - NOW
+        if delta.days >= 10:
+            return f'{delta.days} DAYS'
         hours, minutes = divmod(delta.seconds // 60, 60)
         return f'{delta.days}:{hours:02d}:{minutes:02d}'
 
@@ -39,12 +41,14 @@ class Run:
     @property
     def estimate(self):
         hours, minutes = divmod(self.raw_estimate.seconds, 3600)
-        minutes = minutes // 60
+        minutes //= 60
         return f'+{hours}:{minutes:02d}'
 
     @property
     def game_desc(self):
-        return f'{self.game} ({self.platform})'
+        if self.platform:
+            return f'{self.game} ({self.platform})'
+        return self.game
 
 
 @dataclass
@@ -99,7 +103,7 @@ class DonationIncentive:
         return f'${self.numeric_total:,.0f}'
 
     def __len__(self):
-        return len(self.short_desc) - 1
+        return len(self.short_desc)
 
 
 def read_incentives(incentive_url, stream=1):
