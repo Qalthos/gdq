@@ -6,12 +6,12 @@ MIN_OFFSET = 16
 CHOICE_CUTOFF = -1
 
 
-def show_progress(percent, width=72):
+def show_progress(percent, width=72, out_of=100):
     chars = " ▏▎▍▌▋▊▉█"
 
-    blocks, fraction = divmod(percent * width, 100)
+    blocks, fraction = divmod(percent * width, out_of)
     blocks = int(blocks)
-    fraction = int(fraction // (100 / len(chars)))
+    fraction = int(fraction // (out_of / len(chars)))
 
     if blocks >= width:
         blocks = width - 1
@@ -82,6 +82,7 @@ def display_option(incentive, width, align):
         description = '{0}││{0:<' + str(desc_size) + 's}  {1}'
         print(description.format(PREFIX, line))
 
+    max_percent = incentive.max_percent
     for index, option in enumerate(incentive.options):
         try:
             percent = option.numeric_total / incentive.current * 100
@@ -91,7 +92,7 @@ def display_option(incentive, width, align):
         if percent < CHOICE_CUTOFF:
             continue
 
-        progress_bar = show_progress(percent, width - align - 7)
+        progress_bar = show_progress(percent, width - align - 7, max_percent)
 
         leg = '├│'
         if index == len(incentive.options) - 1:
