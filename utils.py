@@ -60,7 +60,8 @@ class ChoiceIncentive:
 
     @property
     def max_percent(self):
-        return max(*(option.numeric_total / self.current for option in self.options if option.numeric_total > 0)) * 100
+        nonzero_options = (option.numeric_total / self.current for option in self.options if option.numeric_total > 0)
+        return max((0, *nonzero_options)) * 100
 
     def __len__(self):
         return max(*(len(option.name) for option in self.options))
