@@ -1,6 +1,8 @@
 from datetime import timedelta
 from textwrap import wrap
 
+from utils import short_number
+
 PREFIX = ' ' * 7
 MIN_OFFSET = 16
 CHOICE_CUTOFF = -1
@@ -18,6 +20,24 @@ def show_progress(percent, width=72, out_of=100):
         fraction = -1
 
     return '▕' + chars[-1] * blocks + chars[fraction] + ' ' * (width - blocks - 1) + '▏'
+
+
+def display_milestone(total, records, width=80):
+    last_record = 0
+    for record, name in records:
+        if record < total:
+            last_record = record
+            continue
+
+        relative_percent = (total - last_record) / (record - last_record) * 100
+        progress_bar = show_progress(relative_percent, width=width - 16)
+        print('{0}{1}{2: >5s}'.format(
+            name, progress_bar, short_number(record),
+        ))
+        break
+
+    else:
+        print(f'{total:<9,.0f} NEW HIGH SCORE!')
 
 
 def display_run(run, incentive_dict, width=80):

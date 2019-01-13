@@ -144,7 +144,7 @@ def read_incentives(incentive_url, stream=1):
 
 def short_number(number):
     if number > 1e6:
-        return '{0:.1f}M'.format(number / 1e6)
+        return '{0:.2f}M'.format(number / 1e6)
     if number > 100e3:
         return '{0:.0f}k'.format(number / 1e3)
     if number > 10e3:

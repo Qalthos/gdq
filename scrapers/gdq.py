@@ -5,8 +5,44 @@ import requests
 from utils import NOW, Run
 
 EVENT = 'agdq2019'
+TRACKER = f'https://gamesdonequick.com/tracker/index/{EVENT}'
 BID_TRACKER = f'https://gamesdonequick.com/tracker/bids/{EVENT}'
 SCHEDULE = 'https://gamesdonequick.com/schedule'
+RECORDS = sorted([
+    # AGDQ
+    (10532, "Classic GDQ (2010)"),
+    (52520, "AGDQ 2011"),
+    (149045, "AGDQ 2012"),
+    (448425, "AGDQ 2013"),
+    (1031667, "AGDQ 2014"),
+    (1576085, "AGDQ 2015"),
+    (1216309, "AGDQ 2016"),
+    (2222791, "AGDQ 2017"),
+    (2295191, "AGDQ 2018"),
+
+    # SGDQ
+    (21397, "SGDQ 2011"),
+    (46279, "SGDQ 2012"),
+    (257181, "SGDQ 2013"),
+    (718235, "SGDQ 2014"),
+    (1215601, "SGDQ 2015"),
+    (1294139, "SGDQ 2016"),
+    (1792342, "SGDQ 2017"),
+    (2168889, "SGDQ 2018"),
+
+    # Other
+    (139879, "GDQx 2018"),
+])
+
+
+def read_total():
+    source = requests.get(TRACKER).text
+    soup = BeautifulSoup(source, 'html.parser')
+
+    total = soup.find('h2').small.string
+    total = total.split()[2].split(' (')[0].replace(',', '')[1:]
+
+    return float(total)
 
 
 def read_schedule(stream_index=1):

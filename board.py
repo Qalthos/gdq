@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
 import shutil
-from display import display_run
-from scrapers.gdq import BID_TRACKER, read_schedule
+from display import display_run, display_milestone
+from scrapers.gdq import BID_TRACKER, RECORDS, read_schedule, read_total
 from utils import read_incentives
 
 
@@ -17,6 +17,8 @@ def main():
     runs = read_schedule(args.stream_index)
     incentives = read_incentives(BID_TRACKER, args.stream_index)
 
+    total = read_total()
+    display_milestone(total, RECORDS, width)
     for run in runs[:show_count]:
         display_run(run, incentives, width)
 
