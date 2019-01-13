@@ -6,6 +6,7 @@ from utils import NOW, Run
 
 EVENT = 'agdq2019'
 BID_TRACKER = f'https://gamesdonequick.com/tracker/bids/{EVENT}'
+SCHEDULE = 'https://gamesdonequick.com/schedule'
 
 
 def read_schedule(stream_index=1):
@@ -13,8 +14,7 @@ def read_schedule(stream_index=1):
         print("Index {} is not valid for this steam".format(stream_index))
         return []
 
-    schedule = 'https://gamesdonequick.com/schedule'
-    source = requests.get(schedule).text
+    source = requests.get(SCHEDULE).text
     soup = BeautifulSoup(source, 'html.parser')
 
     schedule = soup.find('table', id='runTable').tbody

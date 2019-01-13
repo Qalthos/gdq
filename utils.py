@@ -74,12 +74,7 @@ class Choice:
 
     @property
     def total(self):
-        if self.numeric_total >= 1e4:
-            short_total = self.numeric_total / 1e3
-            if self.numeric_total >= 1e5:
-                return f'${short_total:,.0f}k'
-            return f'${short_total:,.1f}k'
-        return f'${self.numeric_total:,.0f}'
+        return short_number(self.numeric_total)
 
 
 @dataclass
@@ -95,12 +90,7 @@ class DonationIncentive:
 
     @property
     def total(self):
-        if self.numeric_total >= 1e4:
-            short_total = self.numeric_total / 1e3
-            if self.numeric_total >= 1e5:
-                return f'${short_total:,.0f}k'
-            return f'${short_total:,.1f}k'
-        return f'${self.numeric_total:,.0f}'
+        return short_number(self.numeric_total)
 
     def __len__(self):
         return len(self.short_desc)
@@ -150,3 +140,13 @@ def read_incentives(incentive_url, stream=1):
         incentives.setdefault(game, []).append(incentive)
 
     return incentives
+
+
+def short_number(number):
+    if number > 1e6:
+        return '{0:.1f}M'.format(number / 1e6)
+    if number > 100e3:
+        return '{0:.0f}k'.format(number / 1e3)
+    if number > 10e3:
+        return '{0:.1f}k'.format(number / 1e3)
+    return f'{number:,.0f}'

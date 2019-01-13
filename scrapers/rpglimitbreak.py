@@ -33,6 +33,7 @@ def read_schedule(stream_index=1):
 
 def parse_run(row):
     """Parse run metadata from schedule row."""
+
     start = parser.parse(row.contents[7].span.string)
     end = parser.parse(row.contents[9].span.string)
 
