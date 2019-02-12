@@ -4,18 +4,43 @@ import requests
 
 from utils import NOW, Run
 
-EVENT = '2018s'
-BID_TRACKER = f'https://donations.esamarathon.com/bids/{EVENT}' + '{stream_index}'
+EVENT = 'ESAW2019s'
+URL = 'https://donations.esamarathon.com'
+TRACKER = f'{URL}/index/{EVENT}' + '{stream_index}'
+BID_TRACKER = f'{URL}/bids/{EVENT}' + '{stream_index}'
 SCHEDULE = 'https://esamarathon.com/schedule'
-# BID_TRACKER = 'https://bsgmarathon.com/tracker/bids/BSG2018'
-# SCHEDULE = 'https://www.speedrun.com/bsg2018/schedule'
+STREAMS = (1, 2)
+RECORDS = sorted([
+    (22611.53, "ESA Winter 2018"),
+    (62783.69 + 8814.65, "ESA 2018"),
+    (7199.62, "ESA Movember 2018"),
+
+    (680.49, "UKSG Fall 2018"),
+    (1348.59, "UKSG Winter 2019"),
+])
+
+
+def read_total():
+    total = 0
+    for stream in STREAMS:
+        full_url = TRACKER.format(stream_index=stream)
+        source = requests.get(full_url).text
+        soup = BeautifulSoup(source, 'html.parser')
+
+        total_str = soup.find('h3').small.string
+        total += float(total_str.split()[2].split(' (')[0].replace(',', '')[1:])
+
+    return total
 
 
 def read_schedule(stream_index=1):
+    if stream_index not in STREAMS:
+        print("Index {} is not valid for this steam".format(stream_index))
+        return []
+
     source = requests.get(SCHEDULE).text
     soup = BeautifulSoup(source, 'html.parser')
 
-    stream_index = int(stream_index)
     schedules = soup.find_all('section', class_='schedule')
     if len(schedules) < stream_index:
         print("Index {} is not valid for this steam".format(stream_index))
@@ -41,7 +66,7 @@ def parse_run(row):
 
     time = parser.parse(row.td.time.attrs['datetime'])
     try:
-        runner = row.contents[3].p.string
+        runner = ''.join(row.contents[3].p.strings)
         platform = row.contents[4].string.strip()
         runtype = row.contents[5].string.strip()
     except AttributeError:
