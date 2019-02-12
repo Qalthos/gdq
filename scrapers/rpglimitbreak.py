@@ -5,7 +5,26 @@ import requests
 from utils import NOW, Run
 
 EVENT = 'rpglb2018'
-BID_TRACKER = f'https://www.rpglimitbreak.com/tracker/bids/{EVENT}'
+URL = 'https://www.rpglimitbreak.com/tracker'
+TRACKER = f'{URL}/index/{EVENT}'
+BID_TRACKER = f'{URL}/bids/{EVENT}'
+SCHEDULE = f'{URL}/runs/{EVENT}'
+RECORDS = sorted([
+    (46595, "RPGLB 2015"),
+    (75194.33, "RPGLB 2016"),
+    (111773.56, "RPGLB 2017"),
+    (164099.31, "RPGLB 2018"),
+])
+
+
+def read_total():
+    source = requests.get(TRACKER).text
+    soup = BeautifulSoup(source, 'html.parser')
+
+    total = soup.find('h2').small.string
+    total = total.split()[2].split(' (')[0].replace(',', '')[1:]
+
+    return float(total)
 
 
 def read_schedule(stream_index=1):
@@ -13,8 +32,7 @@ def read_schedule(stream_index=1):
         print("Index {} is not valid for this steam".format(stream_index))
         return []
 
-    schedule = f'https://www.rpglimitbreak.com/tracker/runs/{EVENT}'
-    source = requests.get(schedule).text
+    source = requests.get(SCHEDULE).text
     soup = BeautifulSoup(source, 'html.parser')
 
     schedule = soup.find('table')

@@ -5,8 +5,9 @@ import requests
 from utils import NOW, Run
 
 EVENT = 'agdq2019'
-TRACKER = f'https://gamesdonequick.com/tracker/index/{EVENT}'
-BID_TRACKER = f'https://gamesdonequick.com/tracker/bids/{EVENT}'
+URL = 'https://gamesdonequick.com/tracker'
+TRACKER = f'{URL}/index/{EVENT}'
+BID_TRACKER = f'{URL}/bids/{EVENT}'
 SCHEDULE = 'https://gamesdonequick.com/schedule'
 RECORDS = sorted([
     # AGDQ
