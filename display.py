@@ -4,7 +4,7 @@ from textwrap import wrap
 from utils import short_number
 
 PREFIX = ' ' * 7
-MIN_OFFSET = 16
+MIN_OFFSET = 20
 CHOICE_CUTOFF = -1
 
 
@@ -109,7 +109,8 @@ def display_option(incentive, width, align):
             percent = 0
 
         if percent < CHOICE_CUTOFF:
-            continue
+            print(f'{PREFIX}│╵')
+            break
 
         progress_bar = show_progress(percent, width - align - 7, max_percent)
 
