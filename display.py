@@ -30,7 +30,7 @@ def display_milestone(total, records, width=80):
             continue
 
         relative_percent = (total - last_record) / (record - last_record) * 100
-        progress_bar = show_progress(relative_percent, width=width - 16)
+        progress_bar = show_progress(relative_percent, width=(width - 7 - len(name)))
         print('{0}{1}{2: >5s}'.format(
             name, progress_bar, short_number(record),
         ))
