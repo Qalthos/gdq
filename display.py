@@ -40,7 +40,31 @@ def display_milestone(total, records, width=80):
         print(f'{total:<9,.0f} NEW HIGH SCORE!')
 
 
+def display_runs(schedules, incentives, width=80, height=24):
+    """Displays all current and future runs in a chronological list.
+
+    List may be split vertically to account for multiple concurrent streams.
+    """
+    rendered_schedules = []
+    column_width = (width - len(schedules) + 1) // len(schedules)
+    for schedule in schedules:
+        schedule_lines = []
+        for run in schedule:
+            schedule_lines.extend(_render_run(run, incentives, column_width))
+            if len(schedule_lines) > height:
+                break
+        padding = [' ' * column_width] * (height - len(schedule_lines))
+        rendered_schedules.append(schedule_lines + padding)
+
+    for full_row in zip(*rendered_schedules):
+        full_row = list(full_row)
+        for i in range(len(full_row) - 1):
+            full_row[i] = full_row[i][:-1] + _join_char(full_row[i][-1], full_row[i + 1][0])
+        print(''.join(full_row))
+
+
 def display_run(run, incentive_dict, width=80):
+    """Old version that prints a single schedule."""
     for row in _render_run(run, incentive_dict, width):
         print(row)
 
@@ -130,6 +154,18 @@ def _render_option(incentive, width, align):
             yield f'{PREFIX}│{leg[1]} └▶{lines[0]}'
             for line in lines[1:]:
                 yield f'{PREFIX}│{leg[1]}   {line}'
+
+
+def _join_char(left, right):
+    table = {
+        '┐': '┬',
+        '│': '├',
+        '┘': '┴',
+    }
+
+    if right == '─' and left in table:
+        return table[left]
+    return left
 
 
 if __name__ == '__main__':

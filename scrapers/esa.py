@@ -33,11 +33,15 @@ def read_total():
     return total
 
 
-def read_schedule(stream_index=1):
-    if stream_index not in STREAMS:
-        print("Index {} is not valid for this steam".format(stream_index))
-        return []
+def read_schedules():
+    source = requests.get(SCHEDULE).text
+    soup = BeautifulSoup(source, 'html.parser')
 
+    schedules = soup.find_all('section', class_='schedule')
+    return [_read_schedule(schedule) for schedule in schedules]
+
+
+def read_schedule(stream_index):
     source = requests.get(SCHEDULE).text
     soup = BeautifulSoup(source, 'html.parser')
 
