@@ -41,6 +41,11 @@ def display_milestone(total, records, width=80):
 
 
 def display_run(run, incentive_dict, width=80):
+    for row in _render_run(run, incentive_dict, width):
+        print(row)
+
+
+def _render_run(run, incentive_dict, width=80):
     # If the estimate has passed, it's probably over.
     if run.raw_estimate < timedelta():
         return
@@ -55,13 +60,13 @@ def display_run(run, incentive_dict, width=80):
         runner = '│' + run.runner[:runner_width] + '…│'
 
     border = '─' * (len(runner) - 2)
-    print('{0}┼{1}┬{2}┐'.format('─' * 7, '─' * desc_width, border))
+    yield '{0}┼{1}┬{2}┐'.format('─' * 7, '─' * desc_width, border)
 
     line_one = "{0}│{1:<" + str(desc_width) + "s}{2}"
-    print(line_one.format(run.delta, run.game_desc, runner))
+    yield line_one.format(run.delta, run.game_desc, runner)
 
     line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┘"
-    print(line_two.format(run.estimate, run.runtype, border))
+    yield line_two.format(run.estimate, run.runtype, border)
 
     incentives = incentive_dict.get(run.game, [])
     if incentives:
@@ -69,26 +74,26 @@ def display_run(run, incentive_dict, width=80):
         # Handle incentives
         for incentive in incentives:
             if hasattr(incentive, 'total'):
-                display_incentive(incentive, width, align_width)
+                yield from _render_incentive(incentive, width, align_width)
             elif hasattr(incentive, 'options'):
-                display_option(incentive, width, align_width)
+                yield from _render_option(incentive, width, align_width)
 
 
-def display_incentive(incentive, width, align):
+def _render_incentive(incentive, width, align):
     # Remove fixed elements
     width -= 3
 
     lines = wrap(incentive.description, width + 1)
-    print(f'{PREFIX}├┬{lines[0]}')
+    yield f'{PREFIX}├┬{lines[0]}'
     for line in lines[1:]:
-        print(f'{PREFIX}││{line}')
+        yield f'{PREFIX}││{line}'
 
     progress_bar = show_progress(incentive.percent, width - align - 7)
     progress = '{0}│└▶{1:<' + str(align) + 's}{2}{3: >6s}'
-    print(progress.format(PREFIX, incentive.short_desc, progress_bar, incentive.total))
+    yield progress.format(PREFIX, incentive.short_desc, progress_bar, incentive.total)
 
 
-def display_option(incentive, width, align):
+def _render_option(incentive, width, align):
     # Remove fixed elements
     width -= 3
 
@@ -96,10 +101,10 @@ def display_option(incentive, width, align):
     rest_size = width - desc_size
     lines = wrap(incentive.description, rest_size)
     description = '{0}├┬{1:<' + str(desc_size) + 's}  {2}'
-    print(description.format(PREFIX, incentive.short_desc, lines[0]))
+    yield description.format(PREFIX, incentive.short_desc, lines[0])
     for line in lines[1:]:
         description = '{0}││{0:<' + str(desc_size) + 's}  {1}'
-        print(description.format(PREFIX, line))
+        yield description.format(PREFIX, line)
 
     max_percent = incentive.max_percent
     for index, option in enumerate(incentive.options):
@@ -109,7 +114,7 @@ def display_option(incentive, width, align):
             percent = 0
 
         if percent < CHOICE_CUTOFF:
-            print(f'{PREFIX}│╵')
+            yield f'{PREFIX}│╵'
             break
 
         progress_bar = show_progress(percent, width - align - 7, max_percent)
@@ -119,12 +124,12 @@ def display_option(incentive, width, align):
             leg = '└ '
 
         line_one = '{0}│{1}▶{2:<' + str(align) + 's}{3}{4: >6s}'
-        print(line_one.format(PREFIX, leg[0], option.name, progress_bar, option.total))
+        yield line_one.format(PREFIX, leg[0], option.name, progress_bar, option.total)
         if option.description:
             lines = wrap(option.description, width)
-            print(f'{PREFIX}│{leg[1]} └▶{lines[0]}')
+            yield f'{PREFIX}│{leg[1]} └▶{lines[0]}'
             for line in lines[1:]:
-                print(f'{PREFIX}│{leg[1]}   {line}')
+                yield f'{PREFIX}│{leg[1]}   {line}'
 
 
 if __name__ == '__main__':
