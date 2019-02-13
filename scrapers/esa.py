@@ -49,6 +49,10 @@ def read_schedule(stream_index=1):
     # Align index to zero start
     stream_index -= 1
     schedule = schedules[stream_index].find_next('table').tbody
+    return _read_schedule(schedule)
+
+
+def _read_schedule(schedule):
     run_starts = schedule.find_all('time', class_='time-only')
     for index, row in enumerate(run_starts):
         time = parser.parse(row.attrs['datetime'])
