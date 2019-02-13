@@ -2,7 +2,7 @@
 import argparse
 import shutil
 from display import display_run, display_milestone
-from scrapers.gdq import BID_TRACKER, RECORDS, read_schedule, read_total
+from scrapers.esa import BID_TRACKER, RECORDS, read_schedule, read_total
 from utils import read_incentives
 
 
