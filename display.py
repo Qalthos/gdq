@@ -163,15 +163,14 @@ def _render_option(incentive, width, align):
 
 
 def _join_char(left, right):
-    table = {
-        '┐': '┬',
-        '│': '├',
-        '┘': '┴',
-    }
+    choices = '║╟╢╫'
+    pick = 0
+    if left in '┐┘':
+        pick += 0b10
+    if right == '─':
+        pick += 0b01
 
-    if right == '─' and left in table:
-        return table[left]
-    return left
+    return choices[pick]
 
 
 if __name__ == '__main__':
