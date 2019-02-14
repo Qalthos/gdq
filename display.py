@@ -83,6 +83,12 @@ def _render_run(run, incentive_dict, width=80):
         runner_width = width - 3 - desc_width
         runner = '│' + run.runner[:runner_width] + '…│'
 
+    if desc_width + len(runner) > width:
+        # If display still too long, truncate run
+        overrun = desc_width + len(runner) - width
+        desc_width -= overrun
+        run.game = run.game[:-(overrun + 1)] + '…'
+
     border = '─' * (len(runner) - 2)
     yield '{0}┼{1}┬{2}┐'.format('─' * 7, '─' * desc_width, border)
 
