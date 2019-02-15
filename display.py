@@ -96,7 +96,7 @@ def _render_run(run, incentive_dict, width=80):
     yield line_one.format(run.delta, run.game_desc, runner)
 
     line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┘"
-    yield line_two.format(run.estimate, run.runtype, border)
+    yield line_two.format(run.estimate, run.category, border)
 
     incentives = incentive_dict.get(run.game, [])
     if incentives:

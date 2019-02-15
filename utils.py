@@ -14,7 +14,7 @@ NOW = datetime.now(pytz.utc)
 class Run:
     game: str
     platform: str
-    runtype: str
+    category: str
     runner: str
 
     start: datetime

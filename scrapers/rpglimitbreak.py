@@ -62,7 +62,7 @@ def parse_run(row):
 
     run = Run(
         game=row.contents[1].a.string, runner=row.contents[3].string.strip(),
-        platform='', runtype='', start=start, str_estimate=estimate,
+        platform='', category='', start=start, str_estimate=estimate,
     )
 
     return run

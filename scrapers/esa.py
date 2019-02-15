@@ -76,14 +76,14 @@ def parse_run(row):
     try:
         runner = ''.join(row.contents[3].p.strings)
         platform = row.contents[4].string.strip()
-        runtype = row.contents[5].string.strip()
+        category = row.contents[5].string.strip()
     except AttributeError:
         # Assume offline block
         runner = ''
         platform = ''
-        runtype = ''
+        category = ''
     run = Run(
-        game=row.contents[1].p.string, platform=platform, runtype=runtype,
+        game=row.contents[1].p.string, platform=platform, category=category,
         runner=runner, start=time, str_estimate=row.contents[2].string,
     )
 

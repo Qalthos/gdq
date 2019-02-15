@@ -77,12 +77,12 @@ def parse_run(row):
 
     time = parser.parse(row.contents[1].string)
 
-    runtype, _, platform = row2.contents[3].string.rpartition(' — ')
+    category, _, platform = row2.contents[3].string.rpartition(' — ')
     estimate = ''.join(row2.contents[1].stripped_strings)
     # Strip seconds off estimate
     estimate = estimate.rsplit(':', 1)[0]
     run = Run(
-        game=row.contents[3].string, platform=platform, runtype=runtype,
+        game=row.contents[3].string, platform=platform, category=category,
         runner=row.contents[5].string, start=time, str_estimate=estimate,
     )
 
