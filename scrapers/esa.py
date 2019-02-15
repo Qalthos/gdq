@@ -1,15 +1,11 @@
 from bs4 import BeautifulSoup
 from dateutil import parser
-import requests
 
+from scrapers import MarathonBase
 from utils import NOW, Run
 
-EVENT = 'ESAW2019s'
+EVENT = 'esaw2019s'
 URL = 'https://donations.esamarathon.com'
-TRACKER = f'{URL}/index/{EVENT}' + '{stream_index}'
-BID_TRACKER = f'{URL}/bids/{EVENT}' + '{stream_index}'
-SCHEDULE = 'https://esamarathon.com/schedule'
-STREAMS = (1, 2)
 RECORDS = sorted([
     (22611.53, "ESA Winter 2018"),
     (62783.69 + 8814.65, "ESA 2018"),
@@ -20,40 +16,43 @@ RECORDS = sorted([
 ])
 
 
-def read_total():
-    total = 0
-    for stream in STREAMS:
-        full_url = TRACKER.format(stream_index=stream)
-        source = requests.get(full_url).text
+class ESAMarathon(MarathonBase):
+    index_url = f'{URL}/index/{EVENT}' + '{stream_index}'
+    schedule_url = 'https://esamarathon.com/schedule'
+    incentive_url = f'{URL}/bids/{EVENT}' + '{stream_index}'
+
+    def read_total(self, streams):
+        total = 0
+        for stream in streams:
+            full_url = self.index_url.format(stream_index=stream)
+            source = self.session.get(full_url).text
+            soup = BeautifulSoup(source, 'html.parser')
+
+            total_str = soup.find('h3').small.string
+            total += float(total_str.split()[2].split(' (')[0].replace(',', '')[1:])
+
+        return total
+
+    def read_schedules(self):
+        source = self.session.get(self.schedule_url).text
         soup = BeautifulSoup(source, 'html.parser')
 
-        total_str = soup.find('h3').small.string
-        total += float(total_str.split()[2].split(' (')[0].replace(',', '')[1:])
+        schedules = soup.find_all('section', class_='schedule')
+        return [_read_schedule(schedule) for schedule in schedules]
 
-    return total
+    def read_schedule(self, stream_index):
+        source = self.session.get(self.schedule_url).text
+        soup = BeautifulSoup(source, 'html.parser')
 
+        schedules = soup.find_all('section', class_='schedule')
+        if len(schedules) < stream_index:
+            print("Index {} is not valid for this steam".format(stream_index))
+            return []
 
-def read_schedules():
-    source = requests.get(SCHEDULE).text
-    soup = BeautifulSoup(source, 'html.parser')
-
-    schedules = soup.find_all('section', class_='schedule')
-    return [_read_schedule(schedule) for schedule in schedules]
-
-
-def read_schedule(stream_index):
-    source = requests.get(SCHEDULE).text
-    soup = BeautifulSoup(source, 'html.parser')
-
-    schedules = soup.find_all('section', class_='schedule')
-    if len(schedules) < stream_index:
-        print("Index {} is not valid for this steam".format(stream_index))
-        return []
-
-    # Align index to zero start
-    stream_index -= 1
-    schedule = schedules[stream_index].find_next('table').tbody
-    return _read_schedule(schedule)
+        # Align index to zero start
+        stream_index -= 1
+        schedule = schedules[stream_index].find_next('table').tbody
+        return _read_schedule(schedule)
 
 
 def _read_schedule(schedule):
@@ -63,13 +62,13 @@ def _read_schedule(schedule):
         if time > NOW:
             # If we havent started yet, index should still be 0
             start = max(index - 1, 0)
-            return [parse_run(td.parent.parent) for td in run_starts[start:]]
+            return [_parse_run(td.parent.parent) for td in run_starts[start:]]
 
     print("Nothing running right now ):")
     return []
 
 
-def parse_run(row):
+def _parse_run(row):
     """Parse run metadata from schedule row."""
 
     time = parser.parse(row.td.time.attrs['datetime'])

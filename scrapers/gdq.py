@@ -1,14 +1,11 @@
 from bs4 import BeautifulSoup
 from dateutil import parser
-import requests
 
+from scrapers import MarathonBase
 from utils import NOW, Run
 
 EVENT = 'agdq2019'
 URL = 'https://gamesdonequick.com/tracker'
-TRACKER = f'{URL}/index/{EVENT}'
-BID_TRACKER = f'{URL}/bids/{EVENT}'
-SCHEDULE = 'https://gamesdonequick.com/schedule'
 RECORDS = sorted([
     # AGDQ
     (10532, "Classic GDQ (2010)"),
@@ -36,39 +33,46 @@ RECORDS = sorted([
 ])
 
 
-def read_total():
-    source = requests.get(TRACKER).text
-    soup = BeautifulSoup(source, 'html.parser')
+class GamesDoneQuick(MarathonBase):
+    index_url = f'{URL}/index/{EVENT}'
+    schedule_url = 'https://gamesdonequick.com/schedule'
+    incentive_url = f'{URL}/bids/{EVENT}'
 
-    total = soup.find('h2').small.string
-    total = total.split()[2].split(' (')[0].replace(',', '')[1:]
+    def read_total(self, streams):
+        source = self.session.get(self.index_url).text
+        soup = BeautifulSoup(source, 'html.parser')
 
-    return float(total)
+        total = soup.find('h2').small.string
+        total = total.split()[2].split(' (')[0].replace(',', '')[1:]
 
+        return float(total)
 
-def read_schedule(stream_index=1):
-    if stream_index != 1:
-        print("Index {} is not valid for this steam".format(stream_index))
+    def read_schedules(self):
+        return [self.read_schedule(1)]
+
+    def read_schedule(self, stream_index):
+        if stream_index != 1:
+            print("Index {} is not valid for this steam".format(stream_index))
+            return []
+
+        source = self.session.get(self.schedule_url).text
+        soup = BeautifulSoup(source, 'html.parser')
+
+        schedule = soup.find('table', id='runTable').tbody
+        run_starts = schedule.find_all('td', class_='start-time')
+
+        for index, row in enumerate(run_starts):
+            time = parser.parse(row.text)
+            if time > NOW:
+                # If we havent started yet, index should still be 0
+                start = max(index - 1, 0)
+                return [_parse_run(td.parent) for td in run_starts[start:]]
+
+        print("Nothing running right now ):")
         return []
 
-    source = requests.get(SCHEDULE).text
-    soup = BeautifulSoup(source, 'html.parser')
 
-    schedule = soup.find('table', id='runTable').tbody
-    run_starts = schedule.find_all('td', class_='start-time')
-
-    for index, row in enumerate(run_starts):
-        time = parser.parse(row.text)
-        if time > NOW:
-            # If we havent started yet, index should still be 0
-            start = max(index - 1, 0)
-            return [parse_run(td.parent) for td in run_starts[start:]]
-
-    print("Nothing running right now ):")
-    return []
-
-
-def parse_run(row):
+def _parse_run(row):
     """Parse run metadata from schedule row."""
 
     row2 = row.find_next_sibling()

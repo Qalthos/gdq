@@ -2,8 +2,7 @@
 import argparse
 import shutil
 from display import display_runs, display_milestone
-from scrapers.esa import BID_TRACKER, RECORDS, STREAMS, read_schedules, read_total
-from utils import read_incentives
+from scrapers.esa import ESAMarathon, RECORDS
 
 
 def main():
@@ -13,7 +12,8 @@ def main():
 
     width, height = shutil.get_terminal_size()
 
-    schedules = read_schedules(SCHEDULE)
+    marathon = ESAMarathon()
+    schedules = marathon.read_schedules()
     streams = range(1, len(schedules) + 1)
     if args.stream_index in streams:
         # Select only requested stream
@@ -22,9 +22,9 @@ def main():
 
     incentives = {}
     for stream in streams:
-        incentives.update(read_incentives(BID_TRACKER, stream))
+        incentives.update(marathon.read_incentives(stream))
 
-    display_milestone(read_total(), RECORDS, width)
+    display_milestone(marathon.read_total(streams), RECORDS, width)
     display_runs(schedules, incentives, width, height - 1)
 
 
