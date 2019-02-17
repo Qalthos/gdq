@@ -48,7 +48,7 @@ def display_runs(schedules, incentives, width=80, height=24):
     List may be split vertically to account for multiple concurrent streams.
     """
     rendered_schedules = []
-    column_width = (width - len(schedules) + 1) // len(schedules)
+    column_width = width // len(schedules)
     for schedule in schedules:
         schedule_lines = []
         for run in schedule:
