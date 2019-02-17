@@ -37,16 +37,16 @@ class MarathonBase():
                     option_list = bid.find_next_sibling('tr').find('tbody').find_all('tr')
                 except AttributeError:
                     # bid war with no options (e.g. filename with no bids yet)
-                    pass
-                else:
-                    options = [
-                        Choice(
-                            name=option.contents[1].a.string.strip(),
-                            description=option.contents[7].string.strip(),
-                            numeric_total=float(money.sub('', option.contents[9].string)),
-                        )
-                        for option in option_list
-                    ]
+                    option_list = []
+
+                options = [
+                    Choice(
+                        name=option.contents[1].a.string.strip(),
+                        description=option.contents[7].string.strip(),
+                        numeric_total=float(money.sub('', option.contents[9].string)),
+                    )
+                    for option in option_list
+                ]
 
                 incentive = ChoiceIncentive(
                     description=description, short_desc=short_desc,

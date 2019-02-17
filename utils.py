@@ -64,7 +64,9 @@ class ChoiceIncentive:
         return max((0, *nonzero_options)) * 100
 
     def __len__(self):
-        return max(*(len(option.name) for option in self.options))
+        if self.options:
+            return max(*(len(option.name) for option in self.options))
+        return 0
 
 
 @dataclass
