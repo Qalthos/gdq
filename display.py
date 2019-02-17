@@ -11,9 +11,11 @@ CHOICE_CUTOFF = -1
 def show_progress(percent, width=72, out_of=100):
     chars = " ▏▎▍▌▋▊▉█"
 
-    blocks, fraction = divmod(percent * width, out_of)
-    blocks = int(blocks)
-    fraction = int(fraction // (out_of / len(chars)))
+    blocks, fraction = 0, 0
+    if percent:
+        blocks, fraction = divmod(percent * width, out_of)
+        blocks = int(blocks)
+        fraction = int(fraction // (out_of / len(chars)))
 
     if blocks >= width:
         blocks = width - 1
