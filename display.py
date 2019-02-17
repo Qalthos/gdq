@@ -92,12 +92,12 @@ def _render_run(run, incentive_dict, width=80):
         run.game = run.game[:-(overrun + 1)] + '…'
 
     border = '─' * (len(runner) - 2)
-    yield '{0}┼{1}┬{2}┐'.format('─' * 7, '─' * desc_width, border)
+    yield '{0}┼{1}┬{2}┤'.format('─' * 7, '─' * desc_width, border)
 
     line_one = "{0}│{1:<" + str(desc_width) + "s}{2}"
     yield line_one.format(run.delta, run.game_desc, runner)
 
-    line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┘"
+    line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┤"
     yield line_two.format(run.estimate, run.category, border)
 
     incentives = incentive_dict.get(run.game, [])
@@ -113,29 +113,29 @@ def _render_run(run, incentive_dict, width=80):
 
 def _render_incentive(incentive, width, align):
     # Remove fixed elements
-    width -= 3
+    width -= 4
 
     lines = wrap(incentive.description, width + 1)
-    yield f'{PREFIX}├┬{lines[0]}'
+    yield f'{PREFIX}├┬{lines[0].ljust(width + 2)}│'
     for line in lines[1:]:
-        yield f'{PREFIX}││{line}'
+        yield f'{PREFIX}││{line.ljust(width + 2)}│'
 
     progress_bar = show_progress(incentive.percent, width - align - 7)
-    progress = '{0}│└▶{1:<' + str(align) + 's}{2}{3: >6s}'
+    progress = '{0}│└▶{1:<' + str(align) + 's}{2}{3: >6s}│'
     yield progress.format(PREFIX, incentive.short_desc, progress_bar, incentive.total)
 
 
 def _render_option(incentive, width, align):
     # Remove fixed elements
-    width -= 3
+    width -= 4
 
     desc_size = max(align, len(incentive.short_desc))
     rest_size = width - desc_size
-    lines = wrap(incentive.description, rest_size)
-    description = '{0}├┬{1:<' + str(desc_size) + 's}  {2}'
+    lines = wrap(incentive.description, rest_size - 1)
+    description = '{0}├┬{1:<' + str(desc_size) + 's}  {2: <' + str(rest_size) + 's}│'
     yield description.format(PREFIX, incentive.short_desc, lines[0])
     for line in lines[1:]:
-        description = '{0}││{0:<' + str(desc_size) + 's}  {1}'
+        description = '{0}││{0:<' + str(desc_size) + 's}  {1: <' + str(rest_size) + 's}│'
         yield description.format(PREFIX, line)
 
     max_percent = incentive.max_percent
@@ -155,19 +155,19 @@ def _render_option(incentive, width, align):
         if index == len(incentive.options) - 1:
             leg = '└ '
 
-        line_one = '{0}│{1}▶{2:<' + str(align) + 's}{3}{4: >6s}'
+        line_one = '{0}│{1}▶{2:<' + str(align) + 's}{3}{4: >6s}│'
         yield line_one.format(PREFIX, leg[0], option.name, progress_bar, option.total)
         if option.description:
             lines = wrap(option.description, width)
-            yield f'{PREFIX}│{leg[1]} └▶{lines[0]}'
+            yield f'{PREFIX}│{leg[1]} └▶{lines[0]}│'
             for line in lines[1:]:
-                yield f'{PREFIX}│{leg[1]}   {line}'
+                yield f'{PREFIX}│{leg[1]}   {line}│'
 
 
 def _join_char(left, right):
     choices = '║╟╢╫'
     pick = 0
-    if left in '┐┘':
+    if left in '─┐┘┤':
         pick += 0b10
     if right == '─':
         pick += 0b01
