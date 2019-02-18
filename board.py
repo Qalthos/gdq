@@ -15,6 +15,9 @@ def main():
     marathon = ESAMarathon()
     schedules = marathon.read_schedules()
     streams = range(1, len(schedules) + 1)
+
+    display_milestone(marathon.read_total(streams), RECORDS, width)
+
     if args.stream_index in streams:
         # Select only requested stream
         schedules = [schedules[args.stream_index - 1]]
@@ -24,7 +27,6 @@ def main():
     for stream in streams:
         incentives.update(marathon.read_incentives(stream))
 
-    display_milestone(marathon.read_total(streams), RECORDS, width)
     display_runs(schedules, incentives, width, height - 1)
 
 
