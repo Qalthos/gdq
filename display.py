@@ -78,7 +78,7 @@ def display_run(run, incentive_dict, width=80):
 
 def _render_run(run, incentive_dict, width=80):
     # If the estimate has passed, it's probably over.
-    if run.raw_estimate < timedelta():
+    if run.remaining < timedelta():
         return
 
     width -= len(PREFIX) + 1
@@ -103,7 +103,7 @@ def _render_run(run, incentive_dict, width=80):
     yield line_one.format(run.delta, run.game_desc, runner)
 
     line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┤"
-    yield line_two.format(run.estimate, run.category, border)
+    yield line_two.format(run.str_estimate, run.category, border)
 
     incentives = incentive_dict.get(run.game, [])
     if incentives:

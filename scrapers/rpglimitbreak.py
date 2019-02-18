@@ -59,14 +59,10 @@ def _parse_run(row):
     start = parser.parse(row.contents[7].span.string)
     end = parser.parse(row.contents[9].span.string)
 
-    estimate = end - start
-    hours, minutes = divmod(estimate.seconds, 3600)
-    minutes //= 60
-    estimate = f'{hours}:{minutes:02d}'
-
+    estimate = (end - start).total_seconds()
     run = Run(
         game=row.contents[1].a.string, runner=row.contents[3].string.strip(),
-        platform='', category='', start=start, str_estimate=estimate,
+        platform='', category='', start=start, estimate=estimate,
     )
 
     return run

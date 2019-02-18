@@ -81,9 +81,12 @@ def _parse_run(row):
         runner = ''
         platform = ''
         category = ''
+
+    hours, minutes = row.contents[2].string.split(':')
+    estimate = (int(hours) * 60 + int(minutes)) * 60
     run = Run(
         game=row.contents[1].p.string, platform=platform, category=category,
-        runner=runner, start=time, str_estimate=row.contents[2].string,
+        runner=runner, start=time, estimate=estimate,
     )
 
     return run

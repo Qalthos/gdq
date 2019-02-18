@@ -18,7 +18,7 @@ class Run:
     runner: str
 
     start: datetime
-    str_estimate: str
+    estimate: int
 
     @property
     def delta(self):
@@ -31,16 +31,15 @@ class Run:
         return f'{delta.days}:{hours:02d}:{minutes:02d}'
 
     @property
-    def raw_estimate(self):
-        hours, minutes = self.str_estimate.split(':')
-        estimate = timedelta(hours=int(hours), minutes=int(minutes))
+    def remaining(self):
+        remaining = timedelta(seconds=self.estimate)
         if self.start < NOW:
-            estimate = self.start + estimate - NOW
-        return estimate
+            remaining -= NOW - self.start
+        return remaining
 
     @property
-    def estimate(self):
-        hours, minutes = divmod(self.raw_estimate.seconds, 3600)
+    def str_estimate(self):
+        hours, minutes = divmod(self.remaining.seconds, 3600)
         minutes //= 60
         return f'+{hours}:{minutes:02d}'
 
