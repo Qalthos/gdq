@@ -58,11 +58,16 @@ def display_runs(schedules, incentives, width=80, height=24):
         padding = [' ' * column_width] * (height - len(schedule_lines))
         rendered_schedules.append(schedule_lines + padding)
 
+    first_row = True
     for full_row in zip(*rendered_schedules):
         full_row = list(full_row)
         for i in range(len(full_row) - 1):
             full_row[i] = full_row[i][:-1] + _join_char(full_row[i][-1], full_row[i + 1][0])
-        print(''.join(full_row))
+        full_row = ''.join(full_row)
+        if first_row:
+            full_row = _flatten(full_row)
+            first_row = False
+        print(full_row)
 
 
 def display_run(run, incentive_dict, width=80):
@@ -173,6 +178,11 @@ def _join_char(left, right):
         pick += 0b01
 
     return choices[pick]
+
+
+def _flatten(string):
+    translation = str.maketrans('┼╫┤', '┬╥┐')
+    return string.translate(translation)
 
 
 if __name__ == '__main__':
