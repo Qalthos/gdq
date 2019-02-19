@@ -64,6 +64,8 @@ class ChoiceIncentive:
 
     def __len__(self):
         if self.options:
+            if len(self.options) == 1:
+                return len(self.options[0].name)
             return max(*(len(option.name) for option in self.options))
         return 0
 
