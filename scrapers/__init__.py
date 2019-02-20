@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import re
 
 from bs4 import BeautifulSoup
@@ -6,7 +7,10 @@ import requests
 from utils import ChoiceIncentive, Choice, DonationIncentive
 
 
-class MarathonBase():
+MONEY = re.compile('[$,\n]')
+
+
+class MarathonBase(ABC):
     incentive_url = ''
 
     def __init__(self):
@@ -18,15 +22,14 @@ class MarathonBase():
 
         incentives = {}
 
-        money = re.compile('[$,\n]')
         for bid in soup.find('table').find_all('tr', class_='small', recursive=False):
             game = bid.contents[3].string.strip()
 
             short_desc = bid.contents[1].a.string.strip()
             description = bid.contents[7].string.strip()
-            current = float(money.sub('', bid.contents[9].string))
+            current = float(MONEY.sub('', bid.contents[9].string))
             try:
-                total = float(money.sub('', bid.contents[11].string))
+                total = float(MONEY.sub('', bid.contents[11].string))
                 incentive = DonationIncentive(
                     description=description, short_desc=short_desc,
                     current=current, numeric_total=total,
@@ -43,7 +46,7 @@ class MarathonBase():
                     Choice(
                         name=option.contents[1].a.string.strip(),
                         description=option.contents[7].string.strip(),
-                        numeric_total=float(money.sub('', option.contents[9].string)),
+                        numeric_total=float(MONEY.sub('', option.contents[9].string)),
                     )
                     for option in option_list
                 ]
