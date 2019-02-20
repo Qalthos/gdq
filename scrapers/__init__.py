@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 import re
 
 from bs4 import BeautifulSoup
@@ -12,6 +13,8 @@ MONEY = re.compile('[$,\n]')
 
 class MarathonBase(ABC):
     incentive_url = ''
+    last_check = None
+    stream_slugs = []
 
     def __init__(self):
         self.session = requests.Session()
@@ -59,3 +62,34 @@ class MarathonBase(ABC):
             incentives.setdefault(game, []).append(incentive)
 
         return incentives
+
+    def read_schedules(self):
+        return [self._read_schedule(self.event_id, stream_id) for stream_id in self.stream_ids]
+
+    def _read_schedule(self, event, stream_id):
+        headers = {}
+        if self.last_check:
+            headers['If-Modified-Since'] = datetime.strftime(self.last_check, '%a, %d %b %Y %H:%M:%S GMT')
+        data = self.session.get(f'https://horaro.org/-/api/v1/events/{event}/schedules/{stream_id}', headers=headers)
+
+        try:
+            data = data.json()['data']
+        except ValueError:
+            print(data)
+            return []
+
+        timezone = data['timezone']
+        keys = data['columns']
+        schedule = data['items']
+
+        return self.parse_data(keys, schedule, timezone)
+
+    @classmethod
+    @abstractmethod
+    def parse_data(cls, keys, schedule, timezone='UTC'):
+        """Parses data from horaro.org using event-specific keys."""
+
+    @staticmethod
+    def strip_md(string):
+        links = re.compile(r'(?:\[(?P<name>[^]]*)]\([^\)]+\))')
+        return links.sub(r'\g<name>', string)
