@@ -121,12 +121,16 @@ def _render_incentive(incentive, width, align):
     width -= 4
 
     lines = wrap(incentive.description, width + 1)
-    yield f'{PREFIX}├┬{lines[0].ljust(width + 2)}│'
-    for line in lines[1:]:
-        yield f'{PREFIX}││{line.ljust(width + 2)}│'
-
     progress_bar = show_progress(incentive.percent, width - align - 7)
-    progress = '{0}│└▶{1:<' + str(align) + 's}{2}{3: >6s}│'
+    if lines:
+        yield f'{PREFIX}├┬{lines[0].ljust(width + 2)}│'
+        for line in lines[1:]:
+            yield f'{PREFIX}││{line.ljust(width + 2)}│'
+
+        progress = '{0}│└▶{1:<' + str(align) + 's}{2}{3: >6s}│'
+    else:
+        progress = '{0}├─▶{1:<' + str(align) + 's}{2}{3: >6s}│'
+
     yield progress.format(PREFIX, incentive.short_desc, progress_bar, incentive.total)
 
 
@@ -164,9 +168,9 @@ def _render_option(incentive, width, align):
         yield line_one.format(PREFIX, leg[0], option.name, progress_bar, option.total)
         if option.description:
             lines = wrap(option.description, width)
-            yield f'{PREFIX}│{leg[1]} └▶{lines[0]}│'
+            yield f'{PREFIX}│{leg[1]} └▶{lines[0].ljust(width - 1)}│'
             for line in lines[1:]:
-                yield f'{PREFIX}│{leg[1]}   {line}│'
+                yield f'{PREFIX}│{leg[1]}   {line.ljust(width - 1)}│'
 
 
 def _join_char(left, right):
