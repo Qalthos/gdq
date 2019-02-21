@@ -142,10 +142,13 @@ def _render_option(incentive, width, align):
     rest_size = width - desc_size
     lines = wrap(incentive.description, rest_size - 1)
     description = '{0}├┬{1:<' + str(desc_size) + 's}  {2: <' + str(rest_size) + 's}│'
-    yield description.format(PREFIX, incentive.short_desc, lines[0])
-    for line in lines[1:]:
-        description = '{0}││{0:<' + str(desc_size) + 's}  {1: <' + str(rest_size) + 's}│'
-        yield description.format(PREFIX, line)
+    if lines:
+        yield description.format(PREFIX, incentive.short_desc, lines[0])
+        for line in lines[1:]:
+            description = '{0}││{0:<' + str(desc_size) + 's}  {1: <' + str(rest_size) + 's}│'
+            yield description.format(PREFIX, line)
+    else:
+        yield description.format(PREFIX, incentive.short_desc, '')
 
     max_percent = incentive.max_percent
     for index, option in enumerate(incentive.options):
