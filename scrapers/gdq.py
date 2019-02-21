@@ -38,15 +38,6 @@ class GamesDoneQuick(MarathonBase):
     schedule_url = 'https://gamesdonequick.com/schedule'
     incentive_url = f'{URL}/bids/{EVENT}'
 
-    def read_total(self, streams):
-        source = self.session.get(self.index_url).text
-        soup = BeautifulSoup(source, 'html.parser')
-
-        total = soup.find('h2').small.string
-        total = total.split()[2].split(' (')[0].replace(',', '')[1:]
-
-        return float(total)
-
     def read_schedules(self):
         return [self.read_schedule(1)]
 

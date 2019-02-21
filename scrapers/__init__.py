@@ -12,14 +12,31 @@ MONEY = re.compile('[$,\n]')
 
 
 class MarathonBase(ABC):
+    index_url = ''
     incentive_url = ''
     last_check = None
-    stream_slugs = []
+    event_id = ''
+    stream_ids = []
 
     def __init__(self):
         self.session = requests.Session()
 
+    def read_total(self, streams):
+        donation_re = re.compile(fr'Donation Total:\s+\$([\d,]+.[0-9]+)')
+
+        total = 0
+        for stream in streams:
+            full_url = self.index_url.format(stream_index=stream)
+            source = self.session.get(full_url).text
+            soup = BeautifulSoup(source, 'html.parser')
+
+            donation_info = donation_re.search(soup.find(string=donation_re))
+            total += float(donation_info.group(1).replace(',', ''))
+
+        return total
+
     def read_incentives(self, stream=1):
+        """Scrapes GDQ-derrived donation trackers for incentives."""
         source = self.session.get(self.incentive_url.format(stream_index=stream)).text
         soup = BeautifulSoup(source, 'html.parser')
 

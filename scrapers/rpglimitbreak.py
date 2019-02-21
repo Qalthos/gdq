@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from bs4 import BeautifulSoup
 import pytz
 
 from scrapers import MarathonBase
@@ -20,16 +19,7 @@ class RPGLimitBreak(MarathonBase):
     index_url = f'{URL}/index/{EVENT}'
     incentive_url = f'{URL}/bids/{EVENT}'
     event_id = 'rpglb'
-    stream_ids = ['2018']
-
-    def read_total(self, streams):
-        source = self.session.get(self.index_url).text
-        soup = BeautifulSoup(source, 'html.parser')
-
-        total = soup.find('h2').small.string
-        total = float(total.split()[2].split(' (')[0].replace(',', '')[1:])
-
-        return total
+    stream_ids = ('2018',)
 
     @classmethod
     def parse_data(cls, keys, schedule, timezone='UTC'):
