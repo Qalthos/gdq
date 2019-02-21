@@ -39,28 +39,25 @@ class GamesDoneQuick(MarathonBase):
     incentive_url = f'{URL}/bids/{EVENT}'
 
     def read_schedules(self):
-        return [self.read_schedule(1)]
-
-    def read_schedule(self, stream_index):
-        if stream_index != 1:
-            print("Index {} is not valid for this steam".format(stream_index))
-            return []
-
         source = self.session.get(self.schedule_url).text
         soup = BeautifulSoup(source, 'html.parser')
 
         schedule = soup.find('table', id='runTable').tbody
         run_starts = schedule.find_all('td', class_='start-time')
 
+        runs = []
         for index, row in enumerate(run_starts):
             time = parser.parse(row.text)
             if time > NOW:
                 # If we havent started yet, index should still be 0
                 start = max(index - 1, 0)
-                return [_parse_run(td.parent) for td in run_starts[start:]]
+                runs = [_parse_run(td.parent) for td in run_starts[start:]]
 
-        print("Nothing running right now ):")
-        return []
+        return [runs]
+
+    @classmethod
+    def parse_data(cls, keys, schedule, timezone='UTC'):
+        pass
 
 
 def _parse_run(row):
