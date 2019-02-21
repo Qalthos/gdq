@@ -67,13 +67,11 @@ def display_runs(schedules, incentives, width=80, height=24):
         if first_row:
             full_row = _flatten(full_row)
             first_row = False
+        if not full_row.replace('║', '').strip():
+            # Row is nothing but whitespace and column separators...
+            # Assume that means the schedule is finished
+            break
         print(full_row)
-
-
-def display_run(run, incentive_dict, width=80):
-    """Old version that prints a single schedule."""
-    for row in _render_run(run, incentive_dict, width):
-        print(row)
 
 
 def _render_run(run, incentive_dict, width=80):
