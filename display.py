@@ -1,4 +1,5 @@
 from datetime import timedelta
+from itertools import zip_longest
 from textwrap import wrap
 
 from utils import short_number
@@ -49,28 +50,25 @@ def display_runs(schedules, incentives, width=80, height=24):
     """
     rendered_schedules = []
     column_width = width // len(schedules)
+    padding = ' ' * column_width
+
     for schedule in schedules:
         schedule_lines = []
         for run in schedule:
             schedule_lines.extend(_render_run(run, incentives, column_width))
             if len(schedule_lines) > height:
                 break
-        padding = [' ' * column_width] * (height - len(schedule_lines))
-        rendered_schedules.append(schedule_lines + padding)
+        rendered_schedules.append(schedule_lines)
 
     first_row = True
-    for full_row in zip(*rendered_schedules):
-        full_row = list(full_row)
+    for full_row in zip_longest(*rendered_schedules):
+        full_row = [column or padding for column in full_row]
         for i in range(len(full_row) - 1):
             full_row[i] = full_row[i][:-1] + _join_char(full_row[i][-1], full_row[i + 1][0])
         full_row = ''.join(full_row)
         if first_row:
             full_row = _flatten(full_row)
             first_row = False
-        if not full_row.replace('║', '').strip():
-            # Row is nothing but whitespace and column separators...
-            # Assume that means the schedule is finished
-            break
         print(full_row)
 
 
