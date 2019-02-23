@@ -8,12 +8,19 @@ from utils import Run
 EVENT = 'esaw2019s'
 URL = 'https://donations.esamarathon.com'
 RECORDS = sorted([
-    (22611.53, "ESA Winter 2018"),
+    # Original
+    (58626, "ESA 2017"),
     (62783.69 + 8814.65, "ESA 2018"),
-    (7199.62, "ESA Movember 2018"),
 
+    # Winter
+    (22611.53, "ESA Winter 2018"),
+
+    # UKSG
     (680.49, "UKSG Fall 2018"),
     (1348.59, "UKSG Winter 2019"),
+
+    # Other
+    (7199.62, "ESA Movember 2018"),
 ])
 
 
