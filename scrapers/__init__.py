@@ -9,10 +9,8 @@ import requests
 from utils import ChoiceIncentive, Choice, DonationIncentive
 
 
-MONEY = re.compile('[$,\n]')
-
-
 class MarathonBase(ABC):
+    money = re.compile('[$,\n]')
     index_url = ''
     incentive_url = ''
     event_id = ''
@@ -47,9 +45,9 @@ class MarathonBase(ABC):
 
             short_desc = bid.contents[1].a.string.strip()
             description = bid.contents[7].string.strip()
-            current = float(MONEY.sub('', bid.contents[9].string))
+            current = float(self.money.sub('', bid.contents[9].string))
             try:
-                total = float(MONEY.sub('', bid.contents[11].string))
+                total = float(self.money.sub('', bid.contents[11].string))
                 incentive = DonationIncentive(
                     description=description, short_desc=short_desc,
                     current=current, numeric_total=total,
@@ -66,7 +64,7 @@ class MarathonBase(ABC):
                     Choice(
                         name=option.contents[1].a.string.strip(),
                         description=option.contents[7].string.strip(),
-                        numeric_total=float(MONEY.sub('', option.contents[9].string)),
+                        numeric_total=float(self.money.sub('', option.contents[9].string)),
                     )
                     for option in option_list
                 ]
@@ -120,3 +118,71 @@ class MarathonBase(ABC):
     def strip_md(string):
         links = re.compile(r'(?:\[(?P<name>[^]]*)]\([^\)]+\))')
         return links.sub(r'\g<name>', string)
+
+
+class MarathonBaseEuro(MarathonBase):
+    money = re.compile('[€.\n]')
+
+    def read_total(self, streams):
+        donation_re = re.compile(fr'Donation Total:\s+€ ([\d,]+,[0-9]+)')
+
+        source = self.session.get(self.index_url).text
+        soup = BeautifulSoup(source, 'html.parser')
+
+        donation_info = donation_re.search(soup.find(string=donation_re))
+        total = float(donation_info.group(1).replace('.', '').replace(',', '.'))
+
+        return total
+
+    def read_incentives(self, stream=1):
+        """Scrapes GDQ-derrived donation trackers for incentives."""
+        source = self.session.get(self.incentive_url.format(stream_index=stream)).text
+        soup = BeautifulSoup(source, 'html.parser')
+
+        incentives = {}
+
+        for bid in soup.find('table').find_all('tr', class_='small', recursive=False):
+            try:
+                game = bid.contents[3].string.strip()
+            except IndexError:
+                continue
+
+            short_desc = bid.contents[1].a.string.strip()
+            description = bid.contents[5].string.strip()
+            current = float(self.money.sub('', bid.contents[7].string).replace(',', '.'))
+            try:
+                total = float(self.money.sub('', bid.contents[9].string).replace(',', '.'))
+                incentive = DonationIncentive(
+                    description=description, short_desc=short_desc,
+                    current=current, numeric_total=total,
+                )
+            except ValueError:
+                # Assume bid war
+                try:
+                    option_list = bid.find_next_sibling('tr').find('tbody').find_all('tr')
+                except AttributeError:
+                    # bid war with no options (e.g. filename with no bids yet)
+                    option_list = []
+
+                options = [
+                    Choice(
+                        name=option.contents[1].a.string.strip(),
+                        description=option.contents[7].string.strip(),
+                        numeric_total=float(self.money.sub('', option.contents[9].string).replace(',', '.')),
+                    )
+                    for option in option_list
+                ]
+
+                incentive = ChoiceIncentive(
+                    description=description, short_desc=short_desc,
+                    current=current, options=options,
+                )
+
+            incentives.setdefault(game, []).append(incentive)
+
+        return incentives
+
+    @classmethod
+    @abstractmethod
+    def parse_data(cls, keys, schedule, timezone='UTC'):
+        """Parses data from horaro.org using event-specific keys."""
