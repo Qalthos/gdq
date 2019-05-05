@@ -2,7 +2,7 @@
 import argparse
 import shutil
 from display import display_runs, display_milestone
-from scrapers.esa import ESAMarathon, RECORDS
+from scrapers.rpglimitbreak import RPGLimitBreak as Marathon, RECORDS
 
 
 def main():
@@ -12,7 +12,7 @@ def main():
 
     width, height = shutil.get_terminal_size()
 
-    marathon = ESAMarathon()
+    marathon = Marathon()
     schedules = marathon.read_schedules()
     streams = range(1, len(schedules) + 1)
 
