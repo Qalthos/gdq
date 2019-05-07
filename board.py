@@ -2,7 +2,7 @@
 import argparse
 import shutil
 
-from display import display_runs, display_milestone
+from display import format_runs, format_milestone
 from events.rpglimitbreak import RPGLimitBreak as Marathon
 
 
@@ -20,11 +20,12 @@ def main():
         # Select only requested stream
         marathon.stream_ids = (marathon.stream_ids[args.stream_index - 1],)
 
-    display_milestone(marathon.read_total(), marathon.records, width)
+    print(format_milestone(marathon.read_total(), marathon.records, width))
 
     schedules = marathon.read_schedules()
     incentives = marathon.read_incentives()
-    display_runs(schedules, incentives, width, height - 1)
+    # Uhhh, waiting for walrus operator?
+    [print(line) for line in format_runs(schedules, incentives, width, height - 1)]
 
 
 if __name__ == '__main__':

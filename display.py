@@ -1,8 +1,12 @@
 from datetime import timedelta
 from itertools import zip_longest
 from textwrap import wrap
+from typing import Dict, Generator, List
 
+from models import Run
 from utils import short_number
+
+Runs = List[Run]
 
 PREFIX = ' ' * 7
 MIN_OFFSET = 20
@@ -25,7 +29,7 @@ def show_progress(percent, width=72, out_of=100):
     return '▕' + chars[-1] * blocks + chars[fraction] + ' ' * (width - blocks - 1) + '▏'
 
 
-def display_milestone(total, records, width=80):
+def format_milestone(total: float, records: Dict[str, float], width: int = 80) -> str:
     last_record = 0
     for record, name in records:
         if record < total:
@@ -34,16 +38,12 @@ def display_milestone(total, records, width=80):
 
         relative_percent = (total - last_record) / (record - last_record) * 100
         progress_bar = show_progress(relative_percent, width=(width - 7 - len(name)))
-        print('{0}{1}{2: >5s}'.format(
-            name, progress_bar, short_number(record),
-        ))
-        break
-
+        return '{0}{1}{2: >5s}'.format(name, progress_bar, short_number(record))
     else:
-        print(f'{total:<9,.0f} NEW HIGH SCORE!')
+        return f'{total:<9,.0f} NEW HIGH SCORE!'
 
 
-def display_runs(schedules, incentives, width=80, height=24):
+def format_runs(schedules: List[Runs], incentives: IncentiveDict, width: int = 80, height: int = 24) -> Generator:
     """Displays all current and future runs in a chronological list.
 
     List may be split vertically to account for multiple concurrent streams.
@@ -55,7 +55,7 @@ def display_runs(schedules, incentives, width=80, height=24):
     for schedule in schedules:
         schedule_lines = []
         for run in schedule:
-            schedule_lines.extend(_render_run(run, incentives, column_width))
+            schedule_lines.extend(_format_run(run, incentives, column_width))
             if len(schedule_lines) > height:
                 break
         rendered_schedules.append(schedule_lines)
@@ -69,10 +69,10 @@ def display_runs(schedules, incentives, width=80, height=24):
         if first_row:
             full_row = _flatten(full_row)
             first_row = False
-        print(full_row)
+        yield full_row
 
 
-def _render_run(run, incentive_dict, width=80):
+def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
     # If the estimate has passed, it's probably over.
     if run.remaining < timedelta():
         return
@@ -101,7 +101,7 @@ def _render_run(run, incentive_dict, width=80):
     line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┤"
     yield line_two.format(run.str_estimate, run.category, border)
 
-    incentives = incentive_dict.get(run.game, [])
+    incentives = incentives.get(run.game, [])
     if incentives:
         align_width = max(MIN_OFFSET, *(len(incentive) for incentive in incentives))
         # Handle incentives
