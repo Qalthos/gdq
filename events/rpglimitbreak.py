@@ -3,7 +3,7 @@ from typing import Generator, List
 
 from dateutil import tz
 
-from events import MarathonBase
+from events import register, MarathonBase
 from models import Run
 from parsers import horaro
 from utils import strip_md
@@ -23,6 +23,7 @@ def parse_data(keys, schedule, timezone="UTC") -> Generator:
         )
 
 
+@register
 class RPGLimitBreak(MarathonBase):
     event = "rpglb"
     url = "https://www.rpglimitbreak.com/tracker"

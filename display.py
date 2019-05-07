@@ -1,15 +1,15 @@
 from datetime import timedelta
 from itertools import zip_longest
 from textwrap import wrap
-from typing import Dict, Generator, List
+from typing import Dict, Generator
 
+from events import MarathonBase
 from models import Run, Incentive, ChoiceIncentive, DonationIncentive
 from utils import short_number
 
-Runs = List[Run]
 IncentiveDict = Dict[str, Incentive]
 
-PREFIX = ' ' * 7
+PREFIX = " " * 7
 MIN_OFFSET = 20
 CHOICE_CUTOFF = -1
 
@@ -27,31 +27,35 @@ def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
         blocks = width - 1
         fraction = -1
 
-    return '▕' + chars[-1] * blocks + chars[fraction] + ' ' * (width - blocks - 1) + '▏'
+    return "▕" + chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1) + "▏"
 
 
-def format_milestone(total: float, records: Dict[str, float], width: int = 80) -> str:
+def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
     last_record = 0
-    for record, name in records:
+    total = marathon.read_total()
+    for record, name in marathon.records:
         if record < total:
             last_record = record
             continue
 
         relative_percent = (total - last_record) / (record - last_record) * 100
-        progress_bar = show_progress(relative_percent, width=(width - 7 - len(name)))
-        return '{0}{1}{2: >5s}'.format(name, progress_bar, short_number(record))
+        bar = show_progress(relative_percent, width=(width - 7 - len(name)))
+        return "{0}{1}{2: >5s}".format(name, bar, short_number(record))
     else:
-        return f'{total:<9,.0f} NEW HIGH SCORE!'
+        return f"{total:<9,.0f} NEW HIGH SCORE!"
 
 
-def format_runs(schedules: List[Runs], incentives: IncentiveDict, width: int = 80, height: int = 24) -> Generator:
+def format_runs(marathon: MarathonBase, width: int = 80, height: int = 24) -> Generator:
     """Displays all current and future runs in a chronological list.
 
     List may be split vertically to account for multiple concurrent streams.
     """
+    schedules = marathon.read_schedules()
+    incentives = marathon.read_incentives()
+
     rendered_schedules = []
     column_width = width // len(schedules)
-    padding = ' ' * column_width
+    padding = " " * column_width
 
     for schedule in schedules:
         schedule_lines = []
@@ -65,8 +69,10 @@ def format_runs(schedules: List[Runs], incentives: IncentiveDict, width: int = 8
     for full_row in zip_longest(*rendered_schedules):
         full_row = [column or padding for column in full_row]
         for i in range(len(full_row) - 1):
-            full_row[i] = full_row[i][:-1] + _join_char(full_row[i][-1], full_row[i + 1][0])
-        full_row = ''.join(full_row)
+            full_row[i] = full_row[i][:-1] + _join_char(
+                full_row[i][-1], full_row[i + 1][0]
+            )
+        full_row = "".join(full_row)
         if first_row:
             full_row = _flatten(full_row)
             first_row = False
@@ -81,20 +87,20 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
     width -= len(PREFIX) + 1
     desc_width = max(width - 2 - len(run.runner), len(run.game_desc))
 
-    runner = '│' + run.runner + '│'
+    runner = "│" + run.runner + "│"
     if desc_width + len(runner) > width:
         # Truncate runner display if too long
         runner_width = width - 3 - desc_width
-        runner = '│' + run.runner[:runner_width] + '…│'
+        runner = "│" + run.runner[:runner_width] + "…│"
 
     if desc_width + len(runner) > width:
         # If display still too long, truncate run
         overrun = desc_width + len(runner) - width
         desc_width -= overrun
-        run.game = run.game[:-(overrun + 1)] + '…'
+        run.game = run.game[: -(overrun + 1)] + "…"
 
-    border = '─' * (len(runner) - 2)
-    yield '{0}┼{1}┬{2}┤'.format('─' * 7, '─' * desc_width, border)
+    border = "─" * (len(runner) - 2)
+    yield "{0}┼{1}┬{2}┤".format("─" * 7, "─" * desc_width, border)
 
     line_one = "{0}│{1:<" + str(desc_width) + "s}{2}"
     yield line_one.format(run.delta, run.game_desc, runner)
@@ -107,9 +113,9 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
         align_width = max(MIN_OFFSET, *(len(incentive) for incentive in incentives))
         # Handle incentives
         for incentive in incentives:
-            if hasattr(incentive, 'total'):
+            if hasattr(incentive, "total"):
                 yield from _render_incentive(incentive, width, align_width)
-            elif hasattr(incentive, 'options'):
+            elif hasattr(incentive, "options"):
                 yield from _render_option(incentive, width, align_width)
 
 
@@ -118,17 +124,17 @@ def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> s
     width -= 4
 
     lines = wrap(incentive.description, width + 1)
-    progress_bar = show_progress(incentive.percent, width - align - 7)
+    bar = show_progress(incentive.percent, width - align - 7)
     if lines:
-        yield f'{PREFIX}├┬{lines[0].ljust(width + 2)}│'
+        yield f"{PREFIX}├┬{lines[0].ljust(width + 2)}│"
         for line in lines[1:]:
-            yield f'{PREFIX}││{line.ljust(width + 2)}│'
+            yield f"{PREFIX}││{line.ljust(width + 2)}│"
 
-        progress = '{0}│└▶{1:<' + str(align) + 's}{2}{3: >6s}│'
+        progress = "{0}│└▶{1:<" + str(align) + "s}{2}{3: >6s}│"
     else:
-        progress = '{0}├─▶{1:<' + str(align) + 's}{2}{3: >6s}│'
+        progress = "{0}├─▶{1:<" + str(align) + "s}{2}{3: >6s}│"
 
-    yield progress.format(PREFIX, incentive.short_desc, progress_bar, incentive.total)
+    yield progress.format(PREFIX, incentive.short_desc, bar, incentive.total)
 
 
 def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Generator:
@@ -138,14 +144,16 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Genera
     desc_size = max(align, len(incentive.short_desc))
     rest_size = width - desc_size
     lines = wrap(incentive.description, rest_size - 1)
-    description = '{0}├┬{1:<' + str(desc_size) + 's}  {2: <' + str(rest_size) + 's}│'
+    description = "{0}├┬{1:<" + str(desc_size) + "s}  {2: <" + str(rest_size) + "s}│"
     if lines:
         yield description.format(PREFIX, incentive.short_desc, lines[0])
         for line in lines[1:]:
-            description = '{0}││{0:<' + str(desc_size) + 's}  {1: <' + str(rest_size) + 's}│'
+            description = (
+                "{0}││{0:<" + str(desc_size) + "s}  {1: <" + str(rest_size) + "s}│"
+            )
             yield description.format(PREFIX, line)
     else:
-        yield description.format(PREFIX, incentive.short_desc, '')
+        yield description.format(PREFIX, incentive.short_desc, "")
 
     max_percent = incentive.max_percent
     for index, option in enumerate(incentive.options):
@@ -155,40 +163,41 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Genera
             percent = 0
 
         if percent < CHOICE_CUTOFF:
-            yield f'{PREFIX}│╵'
+            yield f"{PREFIX}│╵"
             break
 
-        progress_bar = show_progress(percent, width - align - 7, max_percent)
+        bar = show_progress(percent, width - align - 7, max_percent)
 
-        leg = '├│'
+        leg = "├│"
         if index == len(incentive.options) - 1:
-            leg = '└ '
+            leg = "└ "
 
-        line_one = '{0}│{1}▶{2:<' + str(align) + 's}{3}{4: >6s}│'
-        yield line_one.format(PREFIX, leg[0], option.name, progress_bar, option.total)
+        line_one = "{0}│{1}▶{2:<" + str(align) + "s}{3}{4: >6s}│"
+        yield line_one.format(PREFIX, leg[0], option.name, bar, option.total)
         if option.description:
             lines = wrap(option.description, width)
-            yield f'{PREFIX}│{leg[1]} └▶{lines[0].ljust(width - 1)}│'
+            yield f"{PREFIX}│{leg[1]} └▶{lines[0].ljust(width - 1)}│"
             for line in lines[1:]:
-                yield f'{PREFIX}│{leg[1]}   {line.ljust(width - 1)}│'
+                yield f"{PREFIX}│{leg[1]}   {line.ljust(width - 1)}│"
 
 
 def _join_char(left: str, right: str) -> str:
-    choices = '║╟╢╫'
+    choices = "║╟╢╫"
     pick = 0
-    if left in '─┐┘┤':
+    if left in "─┐┘┤":
         pick += 0b10
-    if right == '─':
+    if right == "─":
         pick += 0b01
 
     return choices[pick]
 
 
 def _flatten(string: str) -> str:
-    translation = str.maketrans('┼╫┤', '┬╥┐')
+    translation = str.maketrans("┼╫┤", "┬╥┐")
     return string.translate(translation)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     print(show_progress(float(sys.argv[1])))

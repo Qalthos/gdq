@@ -1,12 +1,16 @@
 from abc import ABC, abstractmethod
+from typing import Callable, Dict
 
 from parsers import gdq_tracker
+
+PLUGINS: Dict[str, Callable] = {}
 
 
 class MarathonBase(ABC):
     url = ""
     event = ""
     stream_ids = []
+    records = []
 
     def read_total(self):
         return sum(
@@ -64,3 +68,12 @@ class MarathonBaseEuro(MarathonBase, ABC):
     @staticmethod
     def _money_parser(string):
         return MarathonBaseEuro._atof(gdq_tracker.MONEY_EURO.sub("", string))
+
+
+def register(func: Callable) -> Callable:
+    PLUGINS[func.__name__] = func
+    return func
+
+
+def call(name: str) -> MarathonBase:
+    return PLUGINS[name]()
