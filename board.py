@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 import argparse
 import shutil
+
 from display import display_runs, display_milestone
-from scrapers.rpglimitbreak import RPGLimitBreak as Marathon, RECORDS
+from events.rpglimitbreak import RPGLimitBreak as Marathon
 
 
 def main():
@@ -13,20 +14,16 @@ def main():
     width, height = shutil.get_terminal_size()
 
     marathon = Marathon()
-    schedules = marathon.read_schedules()
-    streams = range(1, len(schedules) + 1)
 
-    display_milestone(marathon.read_total(streams), RECORDS, width)
-
+    streams = range(1, len(marathon.stream_ids) + 1)
     if args.stream_index in streams:
         # Select only requested stream
-        schedules = [schedules[args.stream_index - 1]]
-        streams = (args.stream_index,)
+        marathon.stream_ids = (marathon.stream_ids[args.stream_index - 1],)
 
-    incentives = {}
-    for stream in streams:
-        incentives.update(marathon.read_incentives(stream))
+    display_milestone(marathon.read_total(), marathon.records, width)
 
+    schedules = marathon.read_schedules()
+    incentives = marathon.read_incentives()
     display_runs(schedules, incentives, width, height - 1)
 
 

@@ -1,8 +1,10 @@
 from bs4 import BeautifulSoup
 from dateutil import parser
+import requests
 
-from scrapers import MarathonBase
-from utils import NOW, Run
+from events import MarathonBase
+from utils import NOW
+from models import Run
 
 EVENT = 'agdq2019'
 URL = 'https://gamesdonequick.com/tracker'
@@ -40,7 +42,7 @@ class GamesDoneQuick(MarathonBase):
     incentive_url = f'{URL}/bids/{EVENT}'
 
     def read_schedules(self):
-        source = self.session.get(self.schedule_url).text
+        source = requests.get(self.schedule_url).text
         soup = BeautifulSoup(source, 'html.parser')
 
         schedule = soup.find('table', id='runTable').tbody
@@ -56,8 +58,7 @@ class GamesDoneQuick(MarathonBase):
 
         return [runs]
 
-    @classmethod
-    def parse_data(cls, keys, schedule, timezone='UTC'):
+    def _read_schedule(self, stream_id):
         pass
 
 
