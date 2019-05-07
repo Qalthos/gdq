@@ -46,10 +46,14 @@ class Run:
 
 
 @dataclass
-class ChoiceIncentive:
+class Incentive:
     description: str
     short_desc: str
     current: float
+
+
+@dataclass
+class ChoiceIncentive(Incentive):
     options: list
 
     @property
@@ -77,10 +81,7 @@ class Choice:
 
 
 @dataclass
-class DonationIncentive:
-    description: str
-    short_desc: str
-    current: float
+class DonationIncentive(Incentive):
     numeric_total: float
 
     @property

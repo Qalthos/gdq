@@ -3,17 +3,18 @@ from itertools import zip_longest
 from textwrap import wrap
 from typing import Dict, Generator, List
 
-from models import Run
+from models import Run, Incentive, ChoiceIncentive, DonationIncentive
 from utils import short_number
 
 Runs = List[Run]
+IncentiveDict = Dict[str, Incentive]
 
 PREFIX = ' ' * 7
 MIN_OFFSET = 20
 CHOICE_CUTOFF = -1
 
 
-def show_progress(percent, width=72, out_of=100):
+def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
     chars = " ▏▎▍▌▋▊▉█"
 
     blocks, fraction = 0, 0
@@ -112,7 +113,7 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
                 yield from _render_option(incentive, width, align_width)
 
 
-def _render_incentive(incentive, width, align):
+def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> str:
     # Remove fixed elements
     width -= 4
 
@@ -130,7 +131,7 @@ def _render_incentive(incentive, width, align):
     yield progress.format(PREFIX, incentive.short_desc, progress_bar, incentive.total)
 
 
-def _render_option(incentive, width, align):
+def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Generator:
     # Remove fixed elements
     width -= 4
 
@@ -172,7 +173,7 @@ def _render_option(incentive, width, align):
                 yield f'{PREFIX}│{leg[1]}   {line.ljust(width - 1)}│'
 
 
-def _join_char(left, right):
+def _join_char(left: str, right: str) -> str:
     choices = '║╟╢╫'
     pick = 0
     if left in '─┐┘┤':
@@ -183,7 +184,7 @@ def _join_char(left, right):
     return choices[pick]
 
 
-def _flatten(string):
+def _flatten(string: str) -> str:
     translation = str.maketrans('┼╫┤', '┬╥┐')
     return string.translate(translation)
 
