@@ -3,11 +3,11 @@ from datetime import datetime, timedelta
 import re
 
 from bs4 import BeautifulSoup
-import pytz
+from dateutil import tz
 import requests
 
 
-NOW = datetime.now(pytz.utc)
+NOW: datetime = datetime.now(tz.UTC)
 
 
 @dataclass
