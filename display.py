@@ -1,13 +1,12 @@
 from datetime import timedelta
 from itertools import zip_longest
 from textwrap import wrap
-from typing import Dict, Generator
+from typing import Generator
 
-from events import MarathonBase
-from models import Run, Incentive, ChoiceIncentive, DonationIncentive
+from events import MarathonBase, IncentiveDict
+from models import Run, ChoiceIncentive, DonationIncentive
 from utils import short_number
 
-IncentiveDict = Dict[str, Incentive]
 
 PREFIX = " " * 7
 MIN_OFFSET = 20
@@ -32,17 +31,16 @@ def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
 
 def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
     last_record = 0
-    total = marathon.read_total()
     for record, name in marathon.records:
-        if record < total:
+        if record < marathon.total:
             last_record = record
             continue
 
-        relative_percent = (total - last_record) / (record - last_record) * 100
+        relative_percent = (marathon.total - last_record) / (record - last_record) * 100
         bar = show_progress(relative_percent, width=(width - 7 - len(name)))
         return "{0}{1}{2: >5s}".format(name, bar, short_number(record))
     else:
-        return f"{total:<9,.0f} NEW HIGH SCORE!"
+        return f"{marathon.total:<9,.0f} NEW HIGH SCORE!"
 
 
 def format_runs(marathon: MarathonBase, width: int = 80, height: int = 24) -> Generator:

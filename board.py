@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import shutil
+import sys
 
 import display
 import events
-
-# Prime the plugin cache for `call()`
-from events import rpglimitbreak
 
 
 def main():
@@ -14,11 +12,18 @@ def main():
     parser.add_argument(
         "-i", "--stream_index", help="Follow only a single stream", type=int, default=0
     )
+    parser.add_argument(
+        "stream_name", nargs="?", help="The event to follow", type=str, default="rpglimitbreak",
+    )
     args = parser.parse_args()
 
     width, height = shutil.get_terminal_size()
 
-    marathon = events.call("RPGLimitBreak")
+    if args.stream_name not in events.names():
+        print(f"Marathon plugin {args.stream_name} not found.")
+        sys.exit(1)
+
+    marathon = events.marathon(args.stream_name)
 
     streams = range(1, len(marathon.stream_ids) + 1)
     if args.stream_index in streams:
@@ -27,8 +32,9 @@ def main():
 
     print(display.format_milestone(marathon, width))
 
-    # Uhhh, waiting for walrus operator?
-    [print(line) for line in display.format_runs(marathon, width, height - 1)]
+    rendered_text = display.format_runs(marathon, width, height - 1)
+    for line in rendered_text:
+        print(line)
 
 
 if __name__ == "__main__":
