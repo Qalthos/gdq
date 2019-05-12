@@ -3,8 +3,7 @@ import argparse
 import shutil
 import sys
 
-import display
-import events
+from gdq import events, display
 
 
 def main():

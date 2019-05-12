@@ -3,9 +3,9 @@ from typing import List, Optional
 from dateutil import parser
 import pyplugs
 
-from events import MarathonBase
-from parsers import gdq_schedule
-from models import Run
+from gdq.events import MarathonBase
+from gdq.parsers import gdq_schedule
+from gdq.models import Run
 
 
 def parse_data(row) -> Optional[Run]:
@@ -33,7 +33,6 @@ def parse_data(row) -> Optional[Run]:
 class GamesDoneQuick(MarathonBase):
     url = 'https://gamesdonequick.com/tracker'
     event = 'agdq'
-    schedule_url = 'https://gamesdonequick.com/schedule'
     stream_ids = ('2019',)
     records = sorted([
         # AGDQ
@@ -63,4 +62,5 @@ class GamesDoneQuick(MarathonBase):
     ])
 
     def _read_schedule(self, stream_id: str) -> List[Run]:
-        return list(gdq_schedule.read_schedule(self.schedule_url, parse_data))
+        schedule_url = 'https://gamesdonequick.com/schedule'
+        return list(gdq_schedule.read_schedule(schedule_url, parse_data))

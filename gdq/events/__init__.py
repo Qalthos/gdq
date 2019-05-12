@@ -1,9 +1,12 @@
-import pyplugs
 from abc import ABC, abstractmethod
+import re
 from typing import Dict, List
 
-from models import Incentive, Run
-from parsers import gdq_tracker
+import pyplugs
+
+from gdq.models import Incentive, Run
+from gdq.parsers import gdq_tracker
+from gdq import utils
 
 IncentiveDict = Dict[str, Incentive]
 names = pyplugs.names_factory(__package__)
@@ -11,6 +14,7 @@ marathon = pyplugs.call_factory(__package__)
 
 
 class MarathonBase(ABC):
+    donation_re = re.compile(fr'Donation Total:\s+\$([\d,]+.[0-9]+)')
     url = ""
     event = ""
     records = []
@@ -20,13 +24,12 @@ class MarathonBase(ABC):
     @property
     def total(self) -> float:
         if self._total is None:
-            self._total = sum(
-                (
-                    self._atof(gdq_tracker.read_total(self.url, self.event + stream_id))
-                    for stream_id in self.stream_ids
-                )
-            )
-
+            total = 0
+            for stream_id in self.stream_ids:
+                full_url = "{}/index/{}{}".format(self.url, self.event, stream_id)
+                soup = utils.url_to_soup(full_url)
+                total += gdq_tracker.read_total(soup, donation_re=self.donation_re, atof=self._atof)
+            self._total = total
         return self._total
 
     def read_incentives(self) -> IncentiveDict:
@@ -56,23 +59,11 @@ class MarathonBase(ABC):
 
 
 class MarathonBaseEuro(MarathonBase, ABC):
-    def read_total(self):
-        return sum(
-            (
-                self._atof(
-                    gdq_tracker.read_total(
-                        self.url,
-                        self.event + stream_id,
-                        donation_re=gdq_tracker.DONATION_EURO,
-                    )
-                )
-                for stream_id in self.stream_ids
-            )
-        )
+    donation_re = re.compile(fr'Donation Total:\s+€ ([\d ]+,[0-9]+)')
 
     @staticmethod
     def _atof(string):
-        return float(string.replace(".", "").replace(",", "."))
+        return float(string.replace(" ", "").replace(",", "."))
 
     @staticmethod
     def _money_parser(string):

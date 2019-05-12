@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from dataclasses import dataclass
 
-from utils import NOW, short_number
+from gdq.utils import NOW, short_number
 
 
 @dataclass

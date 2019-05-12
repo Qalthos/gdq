@@ -3,9 +3,9 @@ from itertools import zip_longest
 from textwrap import wrap
 from typing import Generator
 
-from events import MarathonBase, IncentiveDict
-from models import Run, ChoiceIncentive, DonationIncentive
-from utils import short_number
+from gdq.events import MarathonBase, IncentiveDict
+from gdq.models import Run, ChoiceIncentive, DonationIncentive
+from gdq.utils import short_number
 
 
 PREFIX = " " * 7
@@ -117,7 +117,7 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
                 yield from _render_option(incentive, width, align_width)
 
 
-def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> str:
+def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> Generator:
     # Remove fixed elements
     width -= 4
 

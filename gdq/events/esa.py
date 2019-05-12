@@ -4,10 +4,10 @@ from typing import List
 from dateutil import tz
 import pyplugs
 
-from parsers.horaro import read_schedule
-from events import MarathonBase
-from utils import strip_md
-from models import Run
+from gdq.events import MarathonBase
+from gdq.models import Run
+from gdq.parsers import horaro
+from gdq.utils import strip_md
 
 
 def parse_data(keys, schedule, timezone='UTC') -> List[Run]:
@@ -46,4 +46,4 @@ class ESAMarathon(MarathonBase):
     stream_ids = ('2019-winter1', '2019-winter2')
 
     def _read_schedule(self, stream_id) -> List[Run]:
-        return read_schedule(self.event_id, stream_id, parse_data)
+        return horaro.read_schedule(self.event_id, stream_id, parse_data)
