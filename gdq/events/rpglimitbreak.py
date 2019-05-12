@@ -53,6 +53,7 @@ class RPGLimitBreak(MarathonBase):
             (75194.33, "RPGLB 2016"),
             (111773.56, "RPGLB 2017"),
             (164099.31, "RPGLB 2018"),
+            (200339.84, "RPGLB 2019"),
         ]
     )
 
