@@ -28,6 +28,7 @@ def parse_data(keys, schedule, timezone='UTC') -> List[Run]:
 class ESAMarathon(MarathonBase):
     url = 'https://donations.esamarathon.com'
     event_id = 'esa'
+    stream_ids = ('2019-winter1', '2019-winter2')
     records = sorted([
         # Original
         (58626, "ESA 2017"),
@@ -35,6 +36,7 @@ class ESAMarathon(MarathonBase):
 
         # Winter
         (22611.53, "ESA Winter 2018"),
+        (27574.68 + 2501.00, "ESA Winter 2018"),
 
         # UKSG
         (680.49, "UKSG Fall 2018"),
@@ -42,8 +44,8 @@ class ESAMarathon(MarathonBase):
 
         # Other
         (7199.62, "ESA Movember 2018"),
+        (6175.67, "Twitchcon Europe 2019")
     ])
-    stream_ids = ('2019-winter1', '2019-winter2')
 
     def _read_schedule(self, stream_id) -> List[Run]:
         return horaro.read_schedule(self.event_id, stream_id, parse_data)

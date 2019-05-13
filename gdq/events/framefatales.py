@@ -30,9 +30,9 @@ def parse_data(keys, schedule, timezone="UTC") -> Generator:
 
 @pyplugs.register
 class FrameFatales(MarathonBase):
-    event = 'framefatales'
-    stream_ids = ('schedule',)
     schedule_only = True
+    event = "framefatales"
+    stream_ids = ("schedule",)
 
     def _read_schedule(self, stream_id: str) -> List[Run]:
         return horaro.read_schedule(self.event, stream_id, parse_data)
