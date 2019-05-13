@@ -12,7 +12,7 @@ def main():
         "-i", "--stream_index", help="Follow only a single stream", type=int, default=0
     )
     parser.add_argument(
-        "stream_name", nargs="?", help="The event to follow", type=str, default="rpglimitbreak",
+        "stream_name", nargs="?", help="The event to follow", type=str, default="gdq",
     )
     args = parser.parse_args()
 
