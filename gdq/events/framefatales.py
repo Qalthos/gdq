@@ -11,20 +11,38 @@ from gdq.parsers import horaro
 
 def parse_data(keys, schedule, timezone="UTC") -> Generator:
     for run in schedule:
-        run_data = dict(zip(keys, run['data']))
-        try:
-            game, runner = run_data['Description'].split(" by ")
-        except ValueError:
-            game = run_data['Description']
-            runner = ""
+        run_data = dict(zip(keys, run["data"]))
+        for splitval in ("by", "-"):
+            try:
+                game, runner = run_data["Description"].split(f" {splitval} ")
+            except ValueError:
+                continue
+            else:
+                break
+        else:
+            # It might be a race?
+            try:
+                game, runners = run_data["Description"].rsplit(" of ", 1)
+                runner = ", ".join(runners.split(" v "))
+            except ValueError:
+                game = run_data["Description"]
+                runner = ""
+
+        if "%" in game:
+            # Really crappy category detection
+            game, cat_tail = game.split("%")
+            game, cat_head = game.rsplit(" ", 1)
+            category = "%".join((cat_head, cat_tail))
+        else:
+            category = ""
 
         yield Run(
             game=game,
             platform="",
-            category="",
+            category=category,
             runner=runner,
-            start=datetime.fromtimestamp(run['scheduled_t'], tz=tz.gettz(timezone)),
-            estimate=run['length_t'],
+            start=datetime.fromtimestamp(run["scheduled_t"], tz=tz.gettz(timezone)),
+            estimate=run["length_t"],
         )
 
 
