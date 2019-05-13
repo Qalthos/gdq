@@ -83,28 +83,41 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
         return
 
     width -= len(PREFIX) + 1
-    desc_width = max(width - 2 - len(run.runner), len(run.game_desc))
+    if not run.runner:
+        if len(run.game_desc) > width:
+            # If display too long, truncate run
+            run.game = run.game[:width - 1] + "…"
 
-    runner = "│" + run.runner + "│"
-    if desc_width + len(runner) > width:
-        # Truncate runner display if too long
-        runner_width = width - 3 - desc_width
-        runner = "│" + run.runner[:runner_width] + "…│"
+        yield "{0}┼{1}┤".format("─" * 7, "─" * (width - 1))
 
-    if desc_width + len(runner) > width:
-        # If display still too long, truncate run
-        overrun = desc_width + len(runner) - width
-        desc_width -= overrun
-        run.game = run.game[: -(overrun + 1)] + "…"
+        line_one = "{0}│{1:<" + str(width - 1) + "s}│"
+        yield line_one.format(run.delta, run.game_desc)
 
-    border = "─" * (len(runner) - 2)
-    yield "{0}┼{1}┬{2}┤".format("─" * 7, "─" * desc_width, border)
+        line_two = "{0: >7s}│{1:<" + str(width - 1) + "}│"
+        yield line_two.format(run.str_estimate, run.category)
+    else:
+        desc_width = max(width - 2 - len(run.runner), len(run.game_desc))
 
-    line_one = "{0}│{1:<" + str(desc_width) + "s}{2}"
-    yield line_one.format(run.delta, run.game_desc, runner)
+        runner = "│" + run.runner + "│"
+        if desc_width + len(runner) > width:
+            # Truncate runner display if too long
+            runner_width = width - 3 - desc_width
+            runner = "│" + run.runner[:runner_width] + "…│"
 
-    line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┤"
-    yield line_two.format(run.str_estimate, run.category, border)
+        if desc_width + len(runner) > width:
+            # If display still too long, truncate run
+            overrun = desc_width + len(runner) - width
+            desc_width -= overrun
+            run.game = run.game[: -(overrun + 1)] + "…"
+
+        border = "─" * (len(runner) - 2)
+        yield "{0}┼{1}┬{2}┤".format("─" * 7, "─" * desc_width, border)
+
+        line_one = "{0}│{1:<" + str(desc_width) + "s}{2}"
+        yield line_one.format(run.delta, run.game_desc, runner)
+
+        line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┤"
+        yield line_two.format(run.str_estimate, run.category, border)
 
     incentives = incentives.get(run.game, [])
     if incentives:
