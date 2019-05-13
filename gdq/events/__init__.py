@@ -17,6 +17,7 @@ class MarathonBase(ABC):
     donation_re = re.compile(fr'Donation Total:\s+\$([\d,]+.[0-9]+)')
     url = ""
     event = ""
+    schedule_only = False
     records = []
     stream_ids = []
     _total = None

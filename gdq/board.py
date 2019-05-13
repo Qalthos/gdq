@@ -29,7 +29,8 @@ def main():
         # Select only requested stream
         marathon.stream_ids = (marathon.stream_ids[args.stream_index - 1],)
 
-    print(display.format_milestone(marathon, width))
+    if not marathon.schedule_only:
+        print(display.format_milestone(marathon, width))
 
     rendered_text = display.format_runs(marathon, width, height - 1)
     for line in rendered_text:
