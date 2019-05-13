@@ -49,10 +49,7 @@ def format_runs(marathon: MarathonBase, width: int = 80, height: int = 24) -> Ge
     List may be split vertically to account for multiple concurrent streams.
     """
     schedules = marathon.read_schedules()
-    if marathon.schedule_only:
-        incentives = {}
-    else:
-        incentives = marathon.read_incentives()
+    incentives = marathon.read_incentives()
 
     rendered_schedules = []
     column_width = width // len(schedules)

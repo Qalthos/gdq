@@ -14,13 +14,21 @@ marathon = pyplugs.call_factory(__package__)
 
 
 class MarathonBase(ABC):
-    donation_re = re.compile(fr'Donation Total:\s+\$([\d,]+.[0-9]+)')
+    # Tracker base URL
     url = ""
-    event = ""
+
+    # Disables total and incentives when true
     schedule_only = False
-    records = []
+
+    # horaro.org keys
+    event = ""
     stream_ids = []
+
+    donation_re = re.compile(fr'Donation Total:\s+\$([\d,]+.[0-9]+)')
     _total = None
+
+    # Historical donation records
+    records = []
 
     @property
     def total(self) -> float:
@@ -35,12 +43,15 @@ class MarathonBase(ABC):
 
     def read_incentives(self) -> IncentiveDict:
         incentives = {}
-        for stream_id in self.stream_ids:
-            incentives.update(
-                gdq_tracker.read_incentives(
-                    self.url, self.event + stream_id, self._money_parser
+        if not self.schedule_only:
+            for stream_id in self.stream_ids:
+                incentives.update(
+                    gdq_tracker.read_incentives(
+                        self.url,
+                        self.event + stream_id,
+                        self._money_parser,
+                    )
                 )
-            )
         return incentives
 
     def read_schedules(self):
