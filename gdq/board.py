@@ -32,8 +32,7 @@ def main():
     if not marathon.schedule_only:
         print(display.format_milestone(marathon, width))
 
-    rendered_text = display.format_runs(marathon, width, height - 1)
-    for line in rendered_text:
+    for line in display.format_runs(marathon, width, height - 1):
         print(line)
 
 
