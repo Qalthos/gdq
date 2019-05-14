@@ -1,4 +1,5 @@
-pyplugs
-requests
+xdg
 beautifulsoup4
+pyplugs
 python-dateutil
+requests
