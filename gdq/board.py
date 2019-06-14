@@ -44,7 +44,8 @@ def main():
             terminal.refresh()
             display.display_marathon(terminal.width, terminal.height, marathon)
 
-            ticks = args.interval * 2
+            resolution = 10
+            ticks = args.interval * resolution
             for i in range(ticks):
                 if terminal.refresh():
                     # Terminal shape has changed, skip the countdown and repaint early.
@@ -52,7 +53,7 @@ def main():
 
                 repaint_progress = display.show_progress(i, terminal.width - 2, out_of=ticks)
                 print(f"\x1b[{terminal.height}H{repaint_progress}", end="", flush=True)
-                time.sleep(0.5)
+                time.sleep(1 / resolution)
         except KeyboardInterrupt:
             break
 
