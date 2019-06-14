@@ -44,15 +44,14 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
 
 
 def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
-    # Clear the screen and reset cursor
-    print("\x1b[2J", end="")
-    row_index = 1  # Terminal lines are apparently 1-indexed.
+    schedules = marathon.read_schedules()
+    incentives = marathon.read_incentives()
+
+    # Terminal lines are apparently 1-indexed.
+    row_index = 1
     if not marathon.schedule_only:
         print(f"\x1b[H{format_milestone(marathon, width)}")
         row_index += 1
-
-    schedules = marathon.read_schedules()
-    incentives = marathon.read_incentives()
 
     rendered_schedules = []
     column_width = width // len(schedules)
@@ -80,6 +79,11 @@ def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
         row_index += 1
         if row_index == height:
             break
+    else:
+        clear_row = " " * width
+        while row_index < height:
+            print(f"\x1b[{row_index}H{clear_row}", end="")
+            row_index += 1
 
 
 def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
