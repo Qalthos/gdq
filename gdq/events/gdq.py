@@ -32,7 +32,7 @@ def parse_data(row) -> Optional[Run]:
 @pyplugs.register
 class GamesDoneQuick(MarathonBase):
     url = 'https://gamesdonequick.com/tracker'
-    event = 'agdq'
+    event = 'sgdq'
     stream_ids = ('2019',)
     records = sorted([
         # AGDQ
