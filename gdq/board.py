@@ -51,7 +51,7 @@ def main():
                     break
 
                 repaint_progress = display.show_progress(i, terminal.width - 2, out_of=ticks)
-                print(f"\x1b[{terminal.height}:0f{repaint_progress}", end="", flush=True)
+                print(f"\x1b[{terminal.height}H{repaint_progress}", end="", flush=True)
                 time.sleep(0.5)
         except KeyboardInterrupt:
             break
