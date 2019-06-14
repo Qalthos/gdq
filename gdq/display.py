@@ -89,9 +89,11 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
 
     width -= len(PREFIX) + 1
     if not run.runner:
-        if len(run.game_desc) > width:
+        desc_width = max(len(run.game_desc), len(run.category))
+        if desc_width > width:
             # If display too long, truncate run
             run.game = run.game[:width - 1] + "…"
+            run.category = run.category[:width - 1] + "…"
 
         yield "{0}┼{1}┤".format("─" * 7, "─" * (width - 1))
 
@@ -101,7 +103,7 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
         line_two = "{0: >7s}│{1:<" + str(width - 1) + "}│"
         yield line_two.format(run.str_estimate, run.category)
     else:
-        desc_width = max(width - 2 - len(run.runner), len(run.game_desc))
+        desc_width = max(width - 2 - len(run.runner), len(run.game_desc), len(run.category))
 
         runner = "│" + run.runner + "│"
         if desc_width + len(runner) > width:
