@@ -38,16 +38,19 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
 
         relative_percent = (marathon.total - last_record) / (record - last_record) * 100
         bar = show_progress(relative_percent, width=(width - 7 - len(name)))
-        return "{0}{1}{2: >5s}".format(name, bar, short_number(record))
+        return f"{name}{bar}{0: >5s}".format(short_number(record))
     else:
         return f"{marathon.total:<9,.0f} NEW HIGH SCORE!"
 
 
-def format_runs(marathon: MarathonBase, width: int = 80, height: int = 24) -> Generator:
-    """Displays all current and future runs in a chronological list.
+def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
+    # Clear the screen and reset cursor
+    print("\x1b[2J", end="")
+    row_index = 0
+    if not marathon.schedule_only:
+        print(format_milestone(marathon, width))
+        row_index += 1
 
-    List may be split vertically to account for multiple concurrent streams.
-    """
     schedules = marathon.read_schedules()
     incentives = marathon.read_incentives()
 
@@ -59,8 +62,6 @@ def format_runs(marathon: MarathonBase, width: int = 80, height: int = 24) -> Ge
         schedule_lines = []
         for run in schedule:
             schedule_lines.extend(_format_run(run, incentives, column_width))
-            if len(schedule_lines) > height:
-                break
         rendered_schedules.append(schedule_lines)
 
     first_row = True
@@ -74,7 +75,11 @@ def format_runs(marathon: MarathonBase, width: int = 80, height: int = 24) -> Ge
         if first_row:
             full_row = _flatten(full_row)
             first_row = False
-        yield full_row
+
+        print(f"\x1b[{row_index};0f{full_row}", end="")
+        row_index += 1
+        if row_index == height:
+            break
 
 
 def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:

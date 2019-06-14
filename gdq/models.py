@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from dataclasses import dataclass
 
-from gdq.utils import NOW, short_number
+from gdq import utils
 
 
 @dataclass
@@ -17,9 +17,9 @@ class Run:
 
     @property
     def delta(self) -> str:
-        if self.start < NOW:
+        if self.start < utils.NOW:
             return '  NOW  '
-        delta = self.start - NOW
+        delta = self.start - utils.NOW
         if delta.days >= 10:
             return f'{delta.days} DAYS'
         hours, minutes = divmod(delta.seconds // 60, 60)
@@ -28,8 +28,8 @@ class Run:
     @property
     def remaining(self) -> timedelta:
         remaining = timedelta(seconds=self.estimate)
-        if self.start < NOW:
-            remaining -= NOW - self.start
+        if self.start < utils.NOW:
+            remaining -= utils.NOW - self.start
         return remaining
 
     @property
@@ -77,7 +77,7 @@ class Choice:
 
     @property
     def total(self) -> str:
-        return short_number(self.numeric_total)
+        return utils.short_number(self.numeric_total)
 
 
 @dataclass
@@ -90,7 +90,7 @@ class DonationIncentive(Incentive):
 
     @property
     def total(self) -> str:
-        return short_number(self.numeric_total)
+        return utils.short_number(self.numeric_total)
 
     def __len__(self) -> int:
         return len(self.short_desc)

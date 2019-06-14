@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 import argparse
-import shutil
+from datetime import datetime
 import sys
+import time
+
+from dateutil import tz
 
 from gdq import events, display
+from gdq import utils
 
 
 def main():
@@ -12,11 +16,12 @@ def main():
         "-i", "--stream_index", help="Follow only a single stream", type=int, default=0
     )
     parser.add_argument(
+        "-n", "--interval", help="Time between screen refreshes", type=int, default=60
+    )
+    parser.add_argument(
         "stream_name", nargs="?", help="The event to follow", type=str, default="gdq",
     )
     args = parser.parse_args()
-
-    width, height = shutil.get_terminal_size()
 
     if args.stream_name not in events.names():
         print(f"Marathon plugin {args.stream_name} not found.")
@@ -29,11 +34,27 @@ def main():
         # Select only requested stream
         marathon.stream_ids = (marathon.stream_ids[args.stream_index - 1],)
 
-    if not marathon.schedule_only:
-        print(display.format_milestone(marathon, width))
+    terminal = utils.Terminal()
+    while True:
+        try:
+            # Update current time for display.
+            utils.NOW = datetime.now(tz.UTC)
 
-    for line in display.format_runs(marathon, width, height - 1):
-        print(line)
+            # Recaclulate terminal size
+            terminal.refresh()
+            display.display_marathon(terminal.width, terminal.height, marathon)
+
+            ticks = args.interval * 2
+            for i in range(ticks):
+                if terminal.refresh():
+                    # Terminal shape has changed, skip the countdown and repaint early.
+                    break
+
+                repaint_progress = display.show_progress(i, terminal.width - 2, out_of=ticks)
+                print(f"\x1b[{terminal.height}:0f{repaint_progress}", end="", flush=True)
+                time.sleep(0.5)
+        except KeyboardInterrupt:
+            break
 
 
 if __name__ == "__main__":

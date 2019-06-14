@@ -1,5 +1,6 @@
 from datetime import datetime
 import re
+import shutil
 
 from bs4 import BeautifulSoup
 from dateutil import tz
@@ -26,4 +27,23 @@ def strip_md(string: str):
 
 def url_to_soup(url: str) -> BeautifulSoup:
     source = requests.get(url).text
-    return BeautifulSoup(source, 'html.parser')
+    return BeautifulSoup(source, "html.parser")
+
+
+class Terminal:
+    width: int = 0
+    height: int = 0
+
+    def __init__(self):
+        self.refresh()
+
+    def refresh(self) -> bool:
+        """Refresh terminal geometry
+
+        Returns True if geometry has changed, False otherwise.
+        """
+        geom = shutil.get_terminal_size()
+        if geom != (self.width, self.height):
+            self.width, self.height = geom
+            return True
+        return False
