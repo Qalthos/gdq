@@ -46,9 +46,9 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
 def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
     # Clear the screen and reset cursor
     print("\x1b[2J", end="")
-    row_index = 0
+    row_index = 1
     if not marathon.schedule_only:
-        print(format_milestone(marathon, width))
+        print(f"\x1b[0:0f{format_milestone(marathon, width)}")
         row_index += 1
 
     schedules = marathon.read_schedules()
