@@ -5,6 +5,7 @@ import sys
 import time
 
 from dateutil import tz
+import requests
 
 from gdq import events, display
 from gdq import utils
@@ -42,7 +43,11 @@ def main():
 
             # Recaclulate terminal size
             terminal.refresh()
-            display.display_marathon(terminal.width, terminal.height, marathon)
+            try:
+                display.display_marathon(terminal.width, terminal.height, marathon)
+            except requests.exceptions.ConnectionError:
+                # Failed to read schedule. Hopefully a temporary failure.
+                pass
 
             resolution = 10
             ticks = args.interval * resolution
