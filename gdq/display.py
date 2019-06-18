@@ -37,10 +37,9 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
             continue
 
         relative_percent = (marathon.total - last_record) / (record - last_record) * 100
-        bar = show_progress(relative_percent, width=(width - 7 - len(name)))
-        return f"{name}{bar}{short_number(record): >5s}"
-    else:
-        return f"{marathon.total:<9,.0f} NEW HIGH SCORE!"
+        record_bar = show_progress(relative_percent, width=(width - 7 - len(name)))
+        return f"{name}{record_bar}{short_number(record): >5s}"
+    return f"{marathon.total:<9,.0f} NEW HIGH SCORE!"
 
 
 def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
