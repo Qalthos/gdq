@@ -3,6 +3,7 @@ import re
 from typing import Dict, List
 
 import pyplugs
+import requests
 
 from gdq.models import Incentive, Run
 from gdq.parsers import gdq_tracker
@@ -14,6 +15,8 @@ marathon = pyplugs.call_factory(__package__)
 
 
 class MarathonBase(ABC):
+    donation_re = re.compile(fr'Donation Total:\s+\$([\d,]+.[0-9]+)')
+
     # Tracker base URL
     url = ""
 
@@ -24,24 +27,32 @@ class MarathonBase(ABC):
     event = ""
     stream_ids = []
 
-    donation_re = re.compile(fr'Donation Total:\s+\$([\d,]+.[0-9]+)')
-    _total = None
-
     # Historical donation records
     records = []
 
-    @property
-    def total(self) -> float:
-        if self._total is None:
-            total = 0
-            for stream_id in self.stream_ids:
-                full_url = "{}/index/{}{}".format(self.url, self.event, stream_id)
-                soup = utils.url_to_soup(full_url)
-                total += gdq_tracker.read_total(soup, donation_re=self.donation_re, atof=self._atof)
-            self._total = total
-        return self._total
+    # Cached live data
+    total = 0
+    incentives = {}
+    schedules = [[]]
 
-    def read_incentives(self) -> IncentiveDict:
+    def refresh_all(self):
+        try:
+            self.read_total()
+            self.read_schedules()
+            self.read_incentives()
+        except requests.exceptions.ConnectionError:
+            # Hopefully temporary, just use cached values.
+            pass
+
+    def read_total(self) -> None:
+        total = 0
+        for stream_id in self.stream_ids:
+            full_url = "{}/index/{}{}".format(self.url, self.event, stream_id)
+            soup = utils.url_to_soup(full_url)
+            total += gdq_tracker.read_total(soup, donation_re=self.donation_re, atof=self._atof)
+        self.total = total
+
+    def read_incentives(self) -> None:
         incentives = {}
         if not self.schedule_only:
             for stream_id in self.stream_ids:
@@ -52,10 +63,10 @@ class MarathonBase(ABC):
                         self._money_parser,
                     )
                 )
-        return incentives
+        self.incentives = incentives
 
-    def read_schedules(self):
-        return [self._read_schedule(stream_id) for stream_id in self.stream_ids]
+    def read_schedules(self) -> None:
+        self.schedules = [self._read_schedule(stream_id) for stream_id in self.stream_ids]
 
     @abstractmethod
     def _read_schedule(self, stream_id) -> List[Run]:

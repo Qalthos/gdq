@@ -44,9 +44,6 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
 
 
 def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
-    schedules = marathon.read_schedules()
-    incentives = marathon.read_incentives()
-
     # Terminal lines are apparently 1-indexed.
     row_index = 1
     if not marathon.schedule_only:
@@ -54,13 +51,13 @@ def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
         row_index += 1
 
     rendered_schedules = []
-    column_width = width // len(schedules)
+    column_width = width // len(marathon.schedules)
     padding = " " * column_width
 
-    for schedule in schedules:
+    for schedule in marathon.schedules:
         schedule_lines = []
         for run in schedule:
-            schedule_lines.extend(_format_run(run, incentives, column_width))
+            schedule_lines.extend(_format_run(run, marathon.incentives, column_width))
         rendered_schedules.append(schedule_lines)
 
     first_row = True

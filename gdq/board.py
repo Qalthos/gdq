@@ -5,10 +5,36 @@ import sys
 import time
 
 from dateutil import tz
-import requests
 
 from gdq import events, display
 from gdq import utils
+
+
+def refresh_event(marathon, terminal, args):
+    # Update current time for display.
+    utils.NOW = datetime.now(tz.UTC)
+
+    # Recaclulate terminal size
+    terminal.refresh()
+    marathon.refresh_all()
+
+    display.display_marathon(terminal.width, terminal.height, marathon)
+
+    resolution = 0.10
+    ticks = args.interval / resolution
+    # Don't bother updating the progress bar more often than necessary
+    if ticks > (terminal.width - 2) * 8:
+        ticks = (terminal.width - 2) * 8
+        resolution = args.interval / ticks
+
+    for i in range(ticks):
+        if terminal.refresh():
+            # Terminal shape has changed, skip the countdown and repaint early.
+            break
+
+        repaint_progress = display.show_progress(i, terminal.width - 2, out_of=ticks)
+        print(f"\x1b[{terminal.height}H{repaint_progress}", end="", flush=True)
+        time.sleep(resolution)
 
 
 def main():
@@ -38,27 +64,7 @@ def main():
     terminal = utils.Terminal()
     while True:
         try:
-            # Update current time for display.
-            utils.NOW = datetime.now(tz.UTC)
-
-            # Recaclulate terminal size
-            terminal.refresh()
-            try:
-                display.display_marathon(terminal.width, terminal.height, marathon)
-            except requests.exceptions.ConnectionError:
-                # Failed to read schedule. Hopefully a temporary failure.
-                pass
-
-            resolution = 10
-            ticks = args.interval * resolution
-            for i in range(ticks):
-                if terminal.refresh():
-                    # Terminal shape has changed, skip the countdown and repaint early.
-                    break
-
-                repaint_progress = display.show_progress(i, terminal.width - 2, out_of=ticks)
-                print(f"\x1b[{terminal.height}H{repaint_progress}", end="", flush=True)
-                time.sleep(1 / resolution)
+            refresh_event(marathon, terminal, args)
         except KeyboardInterrupt:
             break
 
