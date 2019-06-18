@@ -26,7 +26,7 @@ def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
         blocks = width - 1
         fraction = -1
 
-    return "▕" + chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1) + "▏"
+    return chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1)
 
 
 def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
@@ -38,7 +38,7 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
 
         relative_percent = (marathon.total - last_record) / (record - last_record) * 100
         record_bar = show_progress(relative_percent, width=(width - 7 - len(name)))
-        return f"{name}{record_bar}{short_number(record): >5s}"
+        return f"{name}▕{record_bar}▏{short_number(record): >5s}"
     return f"{marathon.total:<9,.0f} NEW HIGH SCORE!"
 
 
@@ -142,17 +142,17 @@ def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> G
     width -= 4
 
     lines = wrap(incentive.description, width + 1)
-    bar = show_progress(incentive.percent, width - align - 7)
+    incentive_bar = show_progress(incentive.percent, width - align - 7)
     if lines:
         yield f"{PREFIX}├┬{lines[0].ljust(width + 2)}│"
         for line in lines[1:]:
             yield f"{PREFIX}││{line.ljust(width + 2)}│"
 
-        progress = "{0}│└▶{1:<" + str(align) + "s}{2}{3: >6s}│"
+        progress = "{0}│└▶{1:<" + str(align) + "s}▕{2}▏{3: >6s}│"
     else:
-        progress = "{0}├─▶{1:<" + str(align) + "s}{2}{3: >6s}│"
+        progress = "{0}├─▶{1:<" + str(align) + "s}▕{2}▏{3: >6s}│"
 
-    yield progress.format(PREFIX, incentive.short_desc, bar, incentive.total)
+    yield progress.format(PREFIX, incentive.short_desc, incentive_bar, incentive.total)
 
 
 def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Generator:
@@ -184,14 +184,14 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Genera
             yield f"{PREFIX}│╵"
             break
 
-        bar = show_progress(percent, width - align - 7, max_percent)
+        incentive_bar = show_progress(percent, width - align - 7, max_percent)
 
         leg = "├│"
         if index == len(incentive.options) - 1:
             leg = "└ "
 
-        line_one = "{0}│{1}▶{2:<" + str(align) + "s}{3}{4: >6s}│"
-        yield line_one.format(PREFIX, leg[0], option.name, bar, option.total)
+        line_one = "{0}│{1}▶{2:<" + str(align) + "s}▕{3}▏{4: >6s}│"
+        yield line_one.format(PREFIX, leg[0], option.name, incentive_bar, option.total)
         if option.description:
             lines = wrap(option.description, width)
             yield f"{PREFIX}│{leg[1]} └▶{lines[0].ljust(width - 1)}│"

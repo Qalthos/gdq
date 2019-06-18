@@ -21,10 +21,10 @@ def refresh_event(marathon, terminal, args):
     display.display_marathon(terminal.width, terminal.height, marathon)
 
     resolution = 0.10
-    ticks = args.interval / resolution
+    ticks = int(args.interval / resolution)
     # Don't bother updating the progress bar more often than necessary
-    if ticks > (terminal.width - 2) * 8:
-        ticks = (terminal.width - 2) * 8
+    if ticks > terminal.width * 8:
+        ticks = terminal.width * 8
         resolution = args.interval / ticks
 
     for i in range(ticks):
@@ -32,7 +32,7 @@ def refresh_event(marathon, terminal, args):
             # Terminal shape has changed, skip the countdown and repaint early.
             break
 
-        repaint_progress = display.show_progress(i, terminal.width - 2, out_of=ticks)
+        repaint_progress = display.show_progress(i, terminal.width, out_of=ticks)
         print(f"\x1b[{terminal.height}H{repaint_progress}", end="", flush=True)
         time.sleep(resolution)
 
