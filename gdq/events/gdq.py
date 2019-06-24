@@ -1,14 +1,33 @@
+from datetime import datetime, timedelta
 from typing import List, Optional
 
-from dateutil import parser
+from dateutil import parser, tz
 import pyplugs
 
 from gdq.events import MarathonBase
-from gdq.parsers import gdq_schedule
 from gdq.models import Run
+from gdq.parsers import gdq_schedule, horaro
 
 
-def parse_data(row) -> Optional[Run]:
+def parse_data(keys, schedule, timezone='UTC') -> List[Run]:
+    for run in schedule:
+        run_data = dict(zip(keys, run['data']))
+
+        category, _, platform = run_data["Category"].partition(" — ")
+        # length_t includes setup time, so calculate from run time field
+        hours, minutes, seconds = (int(part) for part in run_data["Run Time"].split(":"))
+        estimate = timedelta(hours=hours, minutes=minutes, seconds=seconds)
+        yield Run(
+            game=run_data['Name'],
+            platform=platform,
+            category=category,
+            runner=run_data['Runners'],
+            start=datetime.fromtimestamp(run['scheduled_t'], tz=tz.gettz(timezone)),
+            estimate=estimate.total_seconds(),
+        )
+
+
+def parse_gdq_data(row) -> Optional[Run]:
     """Parse run metadata from schedule row."""
 
     row2 = row.find_next_sibling()
@@ -62,5 +81,9 @@ class GamesDoneQuick(MarathonBase):
     ])
 
     def _read_schedule(self, stream_id: str) -> List[Run]:
-        schedule_url = 'https://gamesdonequick.com/schedule'
-        return list(gdq_schedule.read_schedule(schedule_url, parse_data))
+        try:
+            schedule_url = 'https://gamesdonequick.com/schedule'
+            return list(gdq_schedule.read_schedule(schedule_url, parse_gdq_data))
+        except IndexError:
+            # GDQ borked again, use horaro
+            return horaro.read_schedule(self.event, stream_id, parse_data)

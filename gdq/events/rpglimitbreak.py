@@ -58,5 +58,4 @@ class RPGLimitBreak(MarathonBase):
     )
 
     def _read_schedule(self, stream_id) -> List[Run]:
-        event_id = "rpglb"
-        return horaro.read_schedule(event_id, stream_id, parse_data)
+        return horaro.read_schedule(self.event, stream_id, parse_data)
