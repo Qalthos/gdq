@@ -10,7 +10,6 @@ from gdq.utils import short_number
 
 PREFIX = " " * 7
 MIN_OFFSET = 20
-CHOICE_CUTOFF = -1
 
 
 def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
@@ -42,7 +41,7 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
     return f"{marathon.total:<9,.0f} NEW HIGH SCORE!"
 
 
-def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
+def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> None:
     # Terminal lines are apparently 1-indexed.
     row_index = 1
     if not marathon.schedule_only:
@@ -56,7 +55,7 @@ def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
     for schedule in marathon.schedules:
         schedule_lines = []
         for run in schedule:
-            schedule_lines.extend(_format_run(run, marathon.incentives, column_width))
+            schedule_lines.extend(_format_run(run, marathon.incentives, column_width, args))
         rendered_schedules.append(schedule_lines)
 
     first_row = True
@@ -82,7 +81,7 @@ def display_marathon(width: int, height: int, marathon: MarathonBase) -> None:
             row_index += 1
 
 
-def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
+def _format_run(run: Run, incentives: IncentiveDict, width: int = 80, args=None) -> str:
     # If the estimate has passed, it's probably over.
     if run.remaining < timedelta():
         return
@@ -132,9 +131,10 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80) -> str:
         # Handle incentives
         for incentive in incentives:
             if hasattr(incentive, "total"):
-                yield from _render_incentive(incentive, width, align_width)
+                if incentive.percent < 100 or not args.hide_completed:
+                    yield from _render_incentive(incentive, width, align_width)
             elif hasattr(incentive, "options"):
-                yield from _render_option(incentive, width, align_width)
+                yield from _render_option(incentive, width, align_width, args)
 
 
 def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> Generator:
@@ -155,7 +155,7 @@ def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> G
     yield progress.format(PREFIX, incentive.short_desc, incentive_bar, incentive.total)
 
 
-def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Generator:
+def _render_option(incentive: ChoiceIncentive, width: int, align: int, args) -> Generator:
     # Remove fixed elements
     width -= 4
 
@@ -180,7 +180,7 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int) -> Genera
         except ZeroDivisionError:
             percent = 0
 
-        if percent < CHOICE_CUTOFF:
+        if percent < args.min_percent and index >= args.min_options:
             yield f"{PREFIX}│╵"
             break
 

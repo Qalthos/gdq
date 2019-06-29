@@ -18,7 +18,7 @@ def refresh_event(marathon, terminal, args):
     terminal.refresh()
     marathon.refresh_all()
 
-    display.display_marathon(terminal.width, terminal.height, marathon)
+    display.display_marathon(terminal.width, terminal.height, marathon, args)
 
     resolution = 0.10
     ticks = int(args.interval / resolution)
@@ -44,6 +44,15 @@ def main():
     )
     parser.add_argument(
         "-n", "--interval", help="Time between screen refreshes", type=int, default=60
+    )
+    parser.add_argument(
+        "-p", "--min-percent", help="Minimum percent before displaying choice incentive.", type=int, default=5
+    )
+    parser.add_argument(
+        "-o", "--min-options", help="Minimum number of choices before applying percent cutoff.", type=int, default=5
+    )
+    parser.add_argument(
+        "--hide-completed", help="Hide completed donation incentives.", action="store_true"
     )
     parser.add_argument(
         "stream_name", nargs="?", help="The event to follow", type=str, default="gdq",
