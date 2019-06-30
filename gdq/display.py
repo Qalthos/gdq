@@ -76,9 +76,8 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
             break
     else:
         clear_row = " " * width
-        while row_index < height:
-            print(f"\x1b[{row_index}H{clear_row}", end="")
-            row_index += 1
+        for clear_index in range(row_index, height):
+            print(f"\x1b[{clear_index}H{clear_row}", end="")
 
 
 def _format_run(run: Run, incentives: IncentiveDict, width: int = 80, args=None) -> str:

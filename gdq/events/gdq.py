@@ -64,7 +64,7 @@ class GamesDoneQuick(MarathonBase):
         (1216309, "AGDQ 2016"),
         (2222791, "AGDQ 2017"),
         (2295191, "AGDQ 2018"),
-        (2425791, "AGDQ 2019"),
+        (2425790, "AGDQ 2019"),
 
         # SGDQ
         (21397, "SGDQ 2011"),
@@ -74,7 +74,8 @@ class GamesDoneQuick(MarathonBase):
         (1215601, "SGDQ 2015"),
         (1294139, "SGDQ 2016"),
         (1792342, "SGDQ 2017"),
-        (2168889, "SGDQ 2018"),
+        (2168913, "SGDQ 2018"),
+        (3005839, "SGDQ 2019"),
 
         # Other
         (139879, "GDQx 2018"),
