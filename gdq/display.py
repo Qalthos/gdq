@@ -38,7 +38,7 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
         relative_percent = (marathon.total - last_record) / (record - last_record) * 100
         record_bar = show_progress(relative_percent, width=(width - 7 - len(name)))
         return f"{name}▕{record_bar}▏{short_number(record): >5s}"
-    return f"{marathon.total:<9,.0f} NEW HIGH SCORE!"
+    return f"NEW HIGH SCORE!" + " " * (width - 24) + f"{marathon.total:<9,.0f}"
 
 
 def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> None:
@@ -179,8 +179,14 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int, args) -> 
         except ZeroDivisionError:
             percent = 0
 
-        if percent < args.min_percent and index >= args.min_options:
-            yield f"{PREFIX}│╵"
+        if percent < args.min_percent and index >= args.min_options and index != len(incentive.options) - 1:
+            remaining = incentive.options[index:]
+            total = sum(option.numeric_total for option in remaining)
+            percent = total / incentive.current * 100
+            description = "And {} more".format(len(remaining))
+            incentive_bar = show_progress(percent, width - align - 7, max_percent)
+            line_one = "{0}│╵ {1:<" + str(align) + "s}▕{2}▏{3: >6s}│"
+            yield line_one.format(PREFIX, description, incentive_bar, short_number(total))
             break
 
         incentive_bar = show_progress(percent, width - align - 7, max_percent)
