@@ -33,6 +33,7 @@ class ESAMarathon(MarathonBase):
         # Original
         (58626, "ESA 2017"),
         (62783.69 + 8814.65, "ESA 2018"),
+        (78255.44 + 6880.43, "ESA 2019"),
 
         # Winter
         (22611.53, "ESA Winter 2018"),
