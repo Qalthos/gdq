@@ -182,7 +182,10 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int, args) -> 
         if percent < args.min_percent and index >= args.min_options and index != len(incentive.options) - 1:
             remaining = incentive.options[index:]
             total = sum(option.numeric_total for option in remaining)
-            percent = total / incentive.current * 100
+            try:
+                percent = total / incentive.current * 100
+            except ZeroDivisionError:
+                percent = 0
             description = "And {} more".format(len(remaining))
             incentive_bar = show_progress(percent, width - align - 7, max_percent)
             line_one = "{0}│╵ {1:<" + str(align) + "s}▕{2}▏{3: >6s}│"
