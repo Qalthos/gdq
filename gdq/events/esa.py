@@ -6,22 +6,7 @@ import pyplugs
 
 from gdq.events import MarathonBase
 from gdq.models import Run
-from gdq.parsers import horaro
-from gdq.utils import strip_md
-
-
-def parse_data(keys, schedule, timezone='UTC') -> List[Run]:
-    for run in schedule:
-        run_data = dict(zip(keys, run['data']))
-
-        yield Run(
-            game=run_data['Game'],
-            platform=run_data['Platform'] or "",
-            category=run_data['Category'] or "",
-            runner=strip_md(run_data['Player(s)']),
-            start=datetime.fromtimestamp(run['scheduled_t'], tz=tz.gettz(timezone)),
-            estimate=run['length_t'],
-        )
+from gdq.parsers import gdq_api
 
 
 @pyplugs.register
@@ -48,9 +33,5 @@ class ESAMarathon(MarathonBase):
         (6175.67, "Twitchcon Europe 2019")
     ])
 
-    def _read_schedule(self, stream_id) -> List[Run]:
-        stream_map = {
-            "2019s1": "2019-one",
-            "2019s2": "2019-two",
-        }
-        return horaro.read_schedule(self.event, stream_map[stream_id], parse_data)
+    def _read_schedule(self, stream_id: str) -> List[Run]:
+        return gdq_api.read_schedule(self.url, self.event + stream_id)

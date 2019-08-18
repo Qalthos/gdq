@@ -15,7 +15,6 @@ def read_schedule(base_url: str, event_id: str) -> List[Run]:
         run = run["fields"]
         # TODO: Probably some wrangling needed here.
         # keys available: starttime, endtime, setup_time, run_time
-        import q;q(run.keys())
         start_time = datetime.strptime(run["starttime"], "%Y-%m-%dT%H:%M:%S%z")
         end_time = datetime.strptime(run["endtime"], "%Y-%m-%dT%H:%M:%S%z")
         estimate = (end_time - start_time).total_seconds()
