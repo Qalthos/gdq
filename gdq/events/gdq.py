@@ -1,57 +1,16 @@
-from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List
 
-from dateutil import parser, tz
 import pyplugs
 
 from gdq.events import MarathonBase
 from gdq.models import Run
-from gdq.parsers import gdq_schedule, horaro
-
-
-def parse_data(keys, schedule, timezone='UTC') -> List[Run]:
-    for run in schedule:
-        run_data = dict(zip(keys, run['data']))
-
-        category, _, platform = run_data["Category"].partition(" — ")
-        # length_t includes setup time, so calculate from run time field
-        hours, minutes, seconds = (int(part) for part in run_data["Run Time"].split(":"))
-        estimate = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-        yield Run(
-            game=run_data['Name'],
-            platform=platform,
-            category=category,
-            runner=run_data['Runners'],
-            start=datetime.fromtimestamp(run['scheduled_t'], tz=tz.gettz(timezone)),
-            estimate=estimate.total_seconds(),
-        )
-
-
-def parse_gdq_data(row) -> Optional[Run]:
-    """Parse run metadata from schedule row."""
-
-    row2 = row.find_next_sibling()
-    if not row2:
-        return None
-
-    time = parser.parse(row.contents[1].string)
-
-    category, _, platform = row2.contents[3].string.rpartition(' — ')
-    estimate = ''.join(row2.contents[1].stripped_strings)
-    hours, minutes, seconds = estimate.split(':')
-    estimate = (int(hours) * 60 + int(minutes)) * 60 + int(seconds)
-    run = Run(
-        game=row.contents[3].string, platform=platform, category=category,
-        runner=row.contents[5].string, start=time, estimate=estimate,
-    )
-
-    return run
+from gdq.parsers import gdq_api
 
 
 @pyplugs.register
 class GamesDoneQuick(MarathonBase):
     url = 'https://gamesdonequick.com/tracker'
-    event = 'sgdq'
+    event = 'GDQX'
     stream_ids = ('2019',)
     records = sorted([
         # AGDQ
@@ -82,9 +41,4 @@ class GamesDoneQuick(MarathonBase):
     ])
 
     def _read_schedule(self, stream_id: str) -> List[Run]:
-        try:
-            schedule_url = 'https://gamesdonequick.com/schedule'
-            return list(gdq_schedule.read_schedule(schedule_url, parse_gdq_data))
-        except IndexError:
-            # GDQ borked again, use horaro
-            return horaro.read_schedule(self.event, stream_id, parse_data)
+        return gdq_api.read_schedule(self.url, self.event + stream_id)
