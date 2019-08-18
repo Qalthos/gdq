@@ -37,9 +37,10 @@ class MarathonBase(ABC):
 
     def refresh_all(self):
         try:
-            self.read_total()
             self.read_schedules()
-            self.read_incentives()
+            if not self.schedule_only:
+                self.read_total()
+                self.read_incentives()
         except requests.exceptions.ConnectionError:
             # Hopefully temporary, just use cached values.
             pass
@@ -54,15 +55,14 @@ class MarathonBase(ABC):
 
     def read_incentives(self) -> None:
         incentives = {}
-        if not self.schedule_only:
-            for stream_id in self.stream_ids:
-                incentives.update(
-                    gdq_tracker.read_incentives(
-                        self.url,
-                        self.event + stream_id,
-                        self._money_parser,
-                    )
+        for stream_id in self.stream_ids:
+            incentives.update(
+                gdq_tracker.read_incentives(
+                    self.url,
+                    self.event + stream_id,
+                    self._money_parser,
                 )
+            )
         self.incentives = incentives
 
     def read_schedules(self) -> None:

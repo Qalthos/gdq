@@ -12,7 +12,7 @@ from gdq.parsers import horaro
 def parse_data(keys, schedule, timezone="UTC") -> Generator:
     for run in schedule:
         run_data = dict(zip(keys, run["data"]))
-        for splitval in ("by", "-"):
+        for splitval in ("by", "of", "with"):
             try:
                 game, runner = run_data["Description"].split(f" {splitval} ")
             except ValueError:
@@ -20,13 +20,8 @@ def parse_data(keys, schedule, timezone="UTC") -> Generator:
             else:
                 break
         else:
-            # It might be a race?
-            try:
-                game, runners = run_data["Description"].rsplit(" of ", 1)
-                runner = ", ".join(runners.split(" v "))
-            except ValueError:
-                game = run_data["Description"]
-                runner = ""
+            game = run_data["Description"]
+            runner = ""
 
         if "%" in game:
             # Really crappy category detection
@@ -50,7 +45,7 @@ def parse_data(keys, schedule, timezone="UTC") -> Generator:
 class FrameFatales(MarathonBase):
     schedule_only = True
     event = "framefatales"
-    stream_ids = ("schedule",)
+    stream_ids = ("a19schedule",)
 
     def _read_schedule(self, stream_id: str) -> List[Run]:
         return horaro.read_schedule(self.event, stream_id, parse_data)
