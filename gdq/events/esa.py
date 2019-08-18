@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List
 
-from dateutil import tz
 import pyplugs
 
 from gdq.events import MarathonBase
