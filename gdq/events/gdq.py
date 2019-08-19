@@ -1,14 +1,10 @@
-from typing import List
-
 import pyplugs
 
-from gdq.events import MarathonBase
-from gdq.models import Run
-from gdq.parsers import gdq_api
+from gdq.events import GDQTracker
 
 
 @pyplugs.register
-class GamesDoneQuick(MarathonBase):
+class GamesDoneQuick(GDQTracker):
     url = 'https://gamesdonequick.com/tracker'
     event = 'GDQX'
     stream_ids = ('2019',)
@@ -39,6 +35,3 @@ class GamesDoneQuick(MarathonBase):
         # Other
         (139879, "GDQx 2018"),
     ])
-
-    def _read_schedule(self, stream_id: str) -> List[Run]:
-        return gdq_api.read_schedule(self.url, self.event + stream_id)

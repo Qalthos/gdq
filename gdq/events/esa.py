@@ -1,15 +1,10 @@
-from datetime import datetime
-from typing import List
-
 import pyplugs
 
-from gdq.events import MarathonBase
-from gdq.models import Run
-from gdq.parsers import gdq_api
+from gdq.events import GDQTracker
 
 
 @pyplugs.register
-class ESAMarathon(MarathonBase):
+class ESAMarathon(GDQTracker):
     url = 'https://donations.esamarathon.com'
     event = 'esa'
     stream_ids = ('2019s1', '2019s2')
@@ -31,6 +26,3 @@ class ESAMarathon(MarathonBase):
         (7199.62, "ESA Movember 2018"),
         (6175.67, "Twitchcon Europe 2019")
     ])
-
-    def _read_schedule(self, stream_id: str) -> List[Run]:
-        return gdq_api.read_schedule(self.url, self.event + stream_id)

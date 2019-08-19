@@ -55,7 +55,10 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
     for schedule in marathon.schedules:
         schedule_lines = []
         for run in schedule:
-            schedule_lines.extend(_format_run(run, marathon.incentives, column_width, args))
+            if hasattr(marathon, "incentives"):
+                schedule_lines.extend(_format_run(run, marathon.incentives, column_width, args))
+            else:
+                schedule_lines.extend(_format_run(run, {}, column_width, args))
         rendered_schedules.append(schedule_lines)
 
     first_row = True

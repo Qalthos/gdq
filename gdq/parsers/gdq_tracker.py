@@ -7,16 +7,7 @@ import requests
 from gdq.models import ChoiceIncentive, Choice, DonationIncentive
 
 
-MONEY_DOLLAR = re.compile('[$,\n]')
-MONEY_EURO = re.compile('[€.\n]')
-
-
-def read_total(soup: BeautifulSoup, donation_re: Pattern, atof: Callable) -> str:
-    donation_info = donation_re.search(soup.find(string=donation_re))
-    return atof(donation_info.group(1))
-
-
-def read_incentives(base_url, event, money_parser):
+def read_incentives(base_url: str, event: dict, money_parser: Callable):
     """Scrapes GDQ-derived donation trackers for incentives."""
     source = requests.get("{}/bids/{}".format(base_url, event)).text
     soup = BeautifulSoup(source, 'html.parser')
