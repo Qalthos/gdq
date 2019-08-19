@@ -6,7 +6,17 @@ from gdq import utils
 
 
 @dataclass
+class Event:
+    event_id: int
+    name: str
+    short_name: str
+    total: float
+    target: float
+
+
+@dataclass
 class Run:
+    run_id: int
     game: str
     platform: str
     category: str
