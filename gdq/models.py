@@ -16,7 +16,6 @@ class Event:
 
 @dataclass
 class Run:
-    run_id: int
     game: str
     platform: str
     category: str
@@ -24,6 +23,8 @@ class Run:
 
     start: datetime
     estimate: int
+
+    run_id: int = None
 
     @property
     def delta(self) -> str:

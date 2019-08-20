@@ -1,16 +1,19 @@
 from abc import ABC, abstractmethod
 import re
-from typing import Dict, List
+from typing import Dict
 
 import pyplugs
 
-from gdq.models import Incentive, Run
+from gdq.models import Incentive
 from gdq.parsers import gdq_api, gdq_tracker, horaro
-from gdq import utils
 
 IncentiveDict = Dict[str, Incentive]
 names = pyplugs.names_factory(__package__)
 marathon = pyplugs.call_factory(__package__)
+
+
+def money_parser(string: str) -> float:
+    return float(re.compile('[$,\n]').sub("", string))
 
 
 class MarathonBase(ABC):
@@ -45,10 +48,7 @@ class GDQTracker(MarathonBase):
     def read_incentives(self) -> None:
         incentives = {}
         incentives.update(
-            gdq_tracker.read_incentives(
-                self.url,
-                self.current_event.short_name,
-            )
+            gdq_tracker.read_incentives(self.url, self.current_event.short_name, money_parser)
         )
         self.incentives = incentives
 
@@ -64,7 +64,7 @@ class HoraroSchedule(MarathonBase):
             for stream_id in self.stream_ids
         ]
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def parse_data(keys, schedule, timezone="UTC"):
         raise NotImplementedError

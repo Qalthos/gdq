@@ -27,7 +27,7 @@ class TestFrameFatales(unittest.TestCase):
         data = [
             json.loads(fixture)
         ]
-        runs = list(framefatales.parse_data(self.keys, data))
+        runs = list(framefatales.FrameFatales.parse_data(self.keys, data))
         self.assertEqual(runs, [expected_run])
 
     def test_parse_data_with_category(self):
@@ -46,7 +46,7 @@ class TestFrameFatales(unittest.TestCase):
         data = [
             json.loads(fixture)
         ]
-        runs = list(framefatales.parse_data(self.keys, data))
+        runs = list(framefatales.FrameFatales.parse_data(self.keys, data))
         self.assertEqual(runs, [expected_run])
 
     def test_parse_data_race(self):
@@ -54,7 +54,7 @@ class TestFrameFatales(unittest.TestCase):
             game="Final Fantasy IV Free Enterprise (League Forge) Race",
             platform="",
             category="",
-            runner="Netara, Demerine",
+            runner="Netara v Demerine",
             start=datetime(2019, 5, 14, 20, 50, tzinfo=tz.gettz("UTC")),
             estimate=7500,
         )
@@ -65,5 +65,24 @@ class TestFrameFatales(unittest.TestCase):
         data = [
             json.loads(fixture)
         ]
-        runs = list(framefatales.parse_data(self.keys, data))
+        runs = list(framefatales.FrameFatales.parse_data(self.keys, data))
+        self.assertEqual(runs, [expected_run])
+
+    def test_parse_data_confusing_runners(self):
+        expected_run = Run(
+            game="The Legend of Zelda: A Link tot he Past",
+            platform="",
+            category="any%MG, no save+quit Race",
+            runner="EmoSaru and Kelpsey",
+            start=datetime(2019, 8, 20, 18, 39, tzinfo=tz.gettz("UTC")),
+            estimate=5700,
+        )
+        fixture = (
+            '{"length":"PT1H35M","length_t":5700,"scheduled":"2019-08-20T14:39:00-04:00","scheduled_t":1566326340,'
+            '"data":["The Legend of Zelda: A Link tot he Past any%MG, no save+quit Race with EmoSaru and Kelpsey"]}'
+        )
+        data = [
+            json.loads(fixture)
+        ]
+        runs = list(framefatales.FrameFatales.parse_data(self.keys, data))
         self.assertEqual(runs, [expected_run])

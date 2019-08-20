@@ -3,7 +3,7 @@ from itertools import zip_longest
 from textwrap import wrap
 from typing import Generator
 
-from gdq.events import MarathonBase, IncentiveDict
+from gdq.events import MarathonBase, GDQTracker, IncentiveDict
 from gdq.models import Run, ChoiceIncentive, DonationIncentive
 from gdq.utils import short_number
 
@@ -28,7 +28,7 @@ def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
     return chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1)
 
 
-def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
+def format_milestone(marathon: GDQTracker, width: int = 80) -> str:
     last_record = 0
     for record, name in marathon.records:
         if record < marathon.total:
@@ -44,7 +44,7 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
 def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> None:
     # Terminal lines are apparently 1-indexed.
     row_index = 1
-    if hasattr(marathon, "total"):
+    if isinstance(marathon, GDQTracker):
         print(f"\x1b[H{format_milestone(marathon, width)}")
         row_index += 1
 

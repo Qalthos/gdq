@@ -1,4 +1,3 @@
-import re
 from typing import Callable
 
 from bs4 import BeautifulSoup
@@ -7,7 +6,7 @@ import requests
 from gdq.models import ChoiceIncentive, Choice, DonationIncentive
 
 
-def read_incentives(base_url: str, event: dict, money_parser: Callable):
+def read_incentives(base_url: str, event: str, money_parser: Callable):
     """Scrapes GDQ-derived donation trackers for incentives."""
     source = requests.get("{}/bids/{}".format(base_url, event)).text
     soup = BeautifulSoup(source, 'html.parser')

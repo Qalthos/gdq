@@ -3,7 +3,7 @@ from typing import List
 
 import requests
 
-from gdq.models import Event, Run
+from gdq.models import ChoiceIncentive, DonationIncentive, Event, Run
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs) -> List:
@@ -54,7 +54,7 @@ def get_runs(base_url: str, event_id: int) -> List[Run]:
             # TODO: pull directly
             runner=run["deprecated_runners"],
             start=start_time,
-            estimate=estimate,
+            estimate=int(estimate),
         )
 
 
