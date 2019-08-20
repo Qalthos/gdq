@@ -39,7 +39,9 @@ class GDQTracker(MarathonBase):
     def __init__(self):
         self.events = list(gdq_api.get_events(self.url))
         self.current_event = self.events.pop(-1)
-        self.records = sorted([(event.total, event.short_name.upper()) for event in self.events])
+        self.records = sorted(
+            [(event.total, event.short_name.upper()) for event in self.events]
+        )
 
     def refresh_all(self):
         self.schedules = [gdq_api.get_runs(self.url, self.current_event.event_id)]
