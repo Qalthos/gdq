@@ -65,5 +65,6 @@ class HoraroSchedule(MarathonBase):
         ]
 
     @abstractmethod
-    def parse_data(self, events):
+    @staticmethod
+    def parse_data(keys, schedule, timezone="UTC"):
         raise NotImplementedError

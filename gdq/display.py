@@ -44,7 +44,7 @@ def format_milestone(marathon: MarathonBase, width: int = 80) -> str:
 def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> None:
     # Terminal lines are apparently 1-indexed.
     row_index = 1
-    if not marathon.schedule_only:
+    if hasattr(marathon, "total"):
         print(f"\x1b[H{format_milestone(marathon, width)}")
         row_index += 1
 

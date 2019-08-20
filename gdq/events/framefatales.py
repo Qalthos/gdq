@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generator, List
+from typing import Generator
 
 from dateutil import tz
 import pyplugs
@@ -14,10 +14,11 @@ class FrameFatales(HoraroSchedule):
     event = "framefatales"
     stream_ids = ("a19schedule",)
 
+    @staticmethod
     def parse_data(keys, schedule, timezone="UTC") -> Generator:
         for run in schedule:
             run_data = dict(zip(keys, run["data"]))
-            for splitval in ("by", "of", "with"):
+            for splitval in ("by", "with", "of"):
                 try:
                     game, runner = run_data["Description"].split(f" {splitval} ")
                 except ValueError:
