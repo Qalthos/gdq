@@ -60,3 +60,20 @@ def get_runs(base_url: str, event_id: int) -> List[Run]:
 
 def get_incentives_for_run(base_url: str, run_id: int):
     incentives = _get_resource(base_url, "bid", run=run_id, state="OPENED")
+
+    for incentive in incentives:
+        if incentive["istarget"]:
+            yield DonationIncentive(
+                description=incentive["description"],
+                short_desc=incentive["name"],
+                current=float(incentive["total"]),
+                numeric_total=float(incentive["goal"]),
+            )
+        else:
+            yield ChoiceIncentive(
+                description=incentive["description"],
+                short_desc=incentive["name"],
+                current=float(incentive["total"]),
+                # TODO: Uhhh...
+                options=[],
+            )
