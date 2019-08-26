@@ -28,12 +28,12 @@ class Run:
     @property
     def delta(self) -> str:
         if self.start < utils.NOW:
-            return '  NOW  '
+            return "  NOW  "
         delta = self.start - utils.NOW
         if delta.days >= 10:
-            return f'{delta.days} DAYS'
+            return f"{delta.days} DAYS"
         hours, minutes = divmod(delta.seconds // 60, 60)
-        return f'{delta.days}:{hours:02d}:{minutes:02d}'
+        return f"{delta.days}:{hours:02d}:{minutes:02d}"
 
     @property
     def remaining(self) -> timedelta:
@@ -46,12 +46,12 @@ class Run:
     def str_estimate(self) -> str:
         hours, minutes = divmod(self.remaining.seconds, 3600)
         minutes //= 60
-        return f'+{hours}:{minutes:02d}'
+        return f"+{hours}:{minutes:02d}"
 
     @property
     def game_desc(self) -> str:
         if self.platform:
-            return f'{self.game} ({self.platform})'
+            return f"{self.game} ({self.platform})"
         return self.game
 
 
@@ -68,7 +68,11 @@ class ChoiceIncentive(Incentive):
 
     @property
     def max_percent(self) -> float:
-        nonzero_options = (option.numeric_total / self.current for option in self.options if option.numeric_total > 0)
+        nonzero_options = (
+            option.numeric_total / self.current
+            for option in self.options
+            if option.numeric_total > 0
+        )
         return max((0, *nonzero_options)) * 100
 
     def __len__(self) -> int:
