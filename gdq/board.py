@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import configparser
 from datetime import datetime
+from pathlib import Path
 import sys
 import time
 
 from dateutil import tz
+import xdg
 
 from gdq import events, display
 from gdq import utils
@@ -59,16 +62,27 @@ def main():
     )
     args = parser.parse_args()
 
-    if args.stream_name not in events.names():
+    config = configparser.ConfigParser()
+    config_path = Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.ini"
+    config.read(config_path)
+    if config.has_section(args.stream_name):
+        if config.has_option(args.stream_name, "url"):
+            url = config[args.stream_name]["url"]
+            stream_count = int(config[args.stream_name].get("concurrent_streams", 1))
+            marathon = events.GDQTracker(url=url, streams=stream_count)
+        else:
+            print(f"Config for {args.stream_name} is missing 'url' key")
+            sys.exit(1)
+    elif args.stream_name in events.names():
+        marathon = events.marathon(args.stream_name)
+    else:
         print(f"Marathon plugin {args.stream_name} not found.")
         sys.exit(1)
 
-    marathon = events.marathon(args.stream_name)
-
-    streams = range(1, len(marathon.stream_ids) + 1)
+    streams = range(1, len(marathon.current_events) + 1)
     if args.stream_index in streams:
         # Select only requested stream
-        marathon.stream_ids = (marathon.stream_ids[args.stream_index - 1],)
+        marathon.current_events = (marathon.current_events[args.stream_index - 1],)
 
     terminal = utils.Terminal()
     while True:

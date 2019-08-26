@@ -43,8 +43,13 @@ def get_runs(base_url: str, event_id: int) -> Generator:
         run = run["fields"]
         # TODO: Probably some wrangling needed here.
         # keys available: starttime, endtime, setup_time, run_time
-        start_time = datetime.strptime(run["starttime"], "%Y-%m-%dT%H:%M:%S%z")
-        end_time = datetime.strptime(run["endtime"], "%Y-%m-%dT%H:%M:%S%z")
+        try:
+            start_time = datetime.strptime(run["starttime"], "%Y-%m-%dT%H:%M:%S%z")
+            end_time = datetime.strptime(run["endtime"], "%Y-%m-%dT%H:%M:%S%z")
+        except TypeError:
+            # No times attached, huh?
+            continue
+
         estimate = (end_time - start_time).total_seconds()
         yield Run(
             run_id=run_id,

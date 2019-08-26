@@ -21,6 +21,7 @@ class MarathonBase(ABC):
     url = ""
 
     # Cached live data
+    current_events = []
     schedules = [[]]
 
     @abstractmethod
@@ -36,22 +37,27 @@ class GDQTracker(MarathonBase):
     total = 0
     incentives = {}
 
-    def __init__(self):
+    def __init__(self, url: str = None, streams: int = 1):
+        self.url = url or self.url
+
         self.events = list(gdq_api.get_events(self.url))
-        self.current_event = self.events.pop(-1)
+        for _ in range(streams):
+            self.current_events.insert(0, self.events.pop(-1))
+
         self.records = sorted(
             [(event.total, event.short_name.upper()) for event in self.events]
         )
 
     def refresh_all(self):
-        self.schedules = [gdq_api.get_runs(self.url, self.current_event.event_id)]
+        self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
         self.read_incentives()
 
     def read_incentives(self) -> None:
         incentives = {}
-        incentives.update(
-            gdq_tracker.read_incentives(self.url, self.current_event.short_name, money_parser)
-        )
+        for event in self.current_events:
+            incentives.update(
+                gdq_tracker.read_incentives(self.url, event.short_name, money_parser)
+            )
         self.incentives = incentives
 
 
