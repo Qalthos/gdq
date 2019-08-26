@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import Generator, List
 
 import requests
 
@@ -14,7 +14,7 @@ def _get_resource(base_url: str, resource_type: str, **kwargs) -> List:
     return requests.get(resource_url).json()
 
 
-def get_events(base_url: str, event_id: int = None) -> List[Event]:
+def get_events(base_url: str, event_id: int = None) -> Generator:
     kwargs = {}
     if event_id:
         kwargs["id"] = event_id
@@ -36,7 +36,7 @@ def get_events(base_url: str, event_id: int = None) -> List[Event]:
             continue
 
 
-def get_runs(base_url: str, event_id: int) -> List[Run]:
+def get_runs(base_url: str, event_id: int) -> Generator:
     runs = _get_resource(base_url, "run", event=event_id)
     for run in runs:
         run_id = run["pk"]
@@ -58,11 +58,12 @@ def get_runs(base_url: str, event_id: int) -> List[Run]:
         )
 
 
-def get_incentives_for_run(base_url: str, run_id: int):
+def get_incentives_for_run(base_url: str, run_id: int) -> Generator:
     incentives = _get_resource(base_url, "bid", run=run_id, state="OPENED")
 
     for incentive in incentives:
         if incentive["istarget"]:
+            # noinspection PyArgumentList
             yield DonationIncentive(
                 description=incentive["description"],
                 short_desc=incentive["name"],
@@ -70,6 +71,7 @@ def get_incentives_for_run(base_url: str, run_id: int):
                 numeric_total=float(incentive["goal"]),
             )
         else:
+            # noinspection PyArgumentList
             yield ChoiceIncentive(
                 description=incentive["description"],
                 short_desc=incentive["name"],

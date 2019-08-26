@@ -55,10 +55,10 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
     for schedule in marathon.schedules:
         schedule_lines = []
         for run in schedule:
-            if hasattr(marathon, "incentives"):
+            if isinstance(marathon, GDQTracker):
                 schedule_lines.extend(_format_run(run, marathon.incentives, column_width, args))
             else:
-                schedule_lines.extend(_format_run(run, {}, column_width, args))
+                schedule_lines.extend(_format_basic_run(run, column_width))
         rendered_schedules.append(schedule_lines)
 
     first_row = True
@@ -83,7 +83,7 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
             print(f"\x1b[{clear_index}H{clear_row}", end="")
 
 
-def _format_run(run: Run, incentives: IncentiveDict, width: int = 80, args=None) -> str:
+def _format_basic_run(run: Run, width: int = 80):
     # If the estimate has passed, it's probably over.
     if run.remaining < timedelta():
         return
@@ -126,6 +126,11 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80, args=None)
 
         line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┤"
         yield line_two.format(run.str_estimate, run.category, border)
+
+
+def _format_run(run: Run, incentives: IncentiveDict, width: int = 80, args=None) -> str:
+    for line in _format_basic_run(run, width):
+        yield line
 
     incentives = incentives.get(run.game, [])
     if incentives:
