@@ -10,9 +10,8 @@ from gdq.models import Run
 
 @pyplugs.register
 class SpeedrunsRochester(HoraroSchedule):
-    schedule_only = True
-    event = "srrocsm"
-    stream_ids = ("schedule",)
+    group_name = "srrocsm"
+    current_events = ("schedule",)
 
     @staticmethod
     def parse_data(keys, schedule, timezone="UTC") -> Generator:

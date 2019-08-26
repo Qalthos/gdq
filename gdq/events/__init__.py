@@ -63,13 +63,12 @@ class GDQTracker(MarathonBase):
 
 class HoraroSchedule(MarathonBase):
     # horaro.org keys
-    event = ""
-    stream_ids = []
+    group_name = ""
 
     def refresh_all(self):
         self.schedules = [
-            horaro.read_schedule(self.event, stream_id, self.parse_data)
-            for stream_id in self.stream_ids
+            horaro.read_schedule(self.group_name, stream_id, self.parse_data)
+            for stream_id in self.current_events
         ]
 
     @staticmethod

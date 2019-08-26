@@ -10,9 +10,8 @@ from gdq.models import Run
 
 @pyplugs.register
 class FrameFatales(HoraroSchedule):
-    schedule_only = True
-    event = "framefatales"
-    stream_ids = ("a19schedule",)
+    group_name = "framefatales"
+    current_events = ("a19schedule",)
 
     @staticmethod
     def parse_data(keys, schedule, timezone="UTC") -> Generator:
