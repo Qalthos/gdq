@@ -5,7 +5,7 @@ from typing import Dict
 import pyplugs
 
 from gdq.models import Incentive
-from gdq.parsers import gdq_api, gdq_tracker, horaro
+from gdq.parsers import gdq_api, horaro
 
 IncentiveDict = Dict[str, Incentive]
 names = pyplugs.names_factory(__package__)
@@ -49,6 +49,7 @@ class GDQTracker(MarathonBase):
         )
 
     def refresh_all(self):
+        self.total = sum((event.total for event in self.current_events))
         self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
         self.read_incentives()
 
@@ -56,7 +57,7 @@ class GDQTracker(MarathonBase):
         incentives = {}
         for event in self.current_events:
             incentives.update(
-                gdq_tracker.read_incentives(self.url, event.short_name, money_parser)
+                gdq_api.get_incentives_for_event(self.url, event.event_id)
             )
         self.incentives = incentives
 

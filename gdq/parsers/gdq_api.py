@@ -1,12 +1,12 @@
+from collections import defaultdict
 from datetime import datetime
-from typing import Generator, List
 
 import requests
 
-from gdq.models import ChoiceIncentive, DonationIncentive, Event, Run
+from gdq.models import Choice, ChoiceIncentive, DonationIncentive, Event, Run
 
 
-def _get_resource(base_url: str, resource_type: str, **kwargs) -> List:
+def _get_resource(base_url: str, resource_type: str, **kwargs) -> list:
     resource_url = f"{base_url}/api/v1/search/?type={resource_type}"
     for key, value in kwargs.items():
         resource_url += f"&{key}={value}"
@@ -14,7 +14,7 @@ def _get_resource(base_url: str, resource_type: str, **kwargs) -> List:
     return requests.get(resource_url).json()
 
 
-def get_events(base_url: str, event_id: int = None) -> Generator:
+def get_events(base_url: str, event_id: int = None) -> list:
     kwargs = {}
     if event_id:
         kwargs["id"] = event_id
@@ -36,7 +36,7 @@ def get_events(base_url: str, event_id: int = None) -> Generator:
             continue
 
 
-def get_runs(base_url: str, event_id: int) -> Generator:
+def get_runs(base_url: str, event_id: int) -> list:
     runs = _get_resource(base_url, "run", event=event_id)
     for run in runs:
         run_id = run["pk"]
@@ -63,13 +63,31 @@ def get_runs(base_url: str, event_id: int) -> Generator:
         )
 
 
-def get_incentives_for_run(base_url: str, run_id: int) -> Generator:
-    incentives = _get_resource(base_url, "bid", run=run_id, state="OPENED")
+def get_incentives_for_event(base_url: str, event_id: int) -> dict:
+    """
+    Method to emulate how gdq_tracker requests incentive information.
+    """
+
+    incentives = _get_resource(base_url, "allbids", event=event_id, feed="open")
+    incentive_dict = dict()
+    choices = defaultdict(list)
 
     for incentive in incentives:
-        if incentive["istarget"]:
+        incentive = incentive["fields"]
+        game = incentive["speedrun__name"]
+
+        if incentive.get('parent__name'):
+            parent_name = incentive["parent__name"]
+            choice = Choice(
+                name=incentive["name"],
+                description=incentive["description"],
+                numeric_total=float(incentive["total"]),
+            )
+            choices[parent_name].append(choice)
+            continue
+        elif incentive["istarget"]:
             # noinspection PyArgumentList
-            yield DonationIncentive(
+            incentive_obj = DonationIncentive(
                 description=incentive["description"],
                 short_desc=incentive["name"],
                 current=float(incentive["total"]),
@@ -77,10 +95,38 @@ def get_incentives_for_run(base_url: str, run_id: int) -> Generator:
             )
         else:
             # noinspection PyArgumentList
-            yield ChoiceIncentive(
+            incentive_obj = ChoiceIncentive(
+                description=incentive["description"],
+                short_desc=incentive["name"],
+                current=float(incentive["total"]),
+                options=choices[incentive["name"]],
+            )
+        incentive_dict[game] = incentive_dict.get(game, []) + [incentive_obj]
+    return incentive_dict
+
+
+def get_incentives_for_run(base_url: str, run_id: int) -> list:
+    incentives = _get_resource(base_url, "allbids", run=run_id, feed="open")
+    incentive_list = []
+
+    for incentive in incentives:
+        incentive = incentive["fields"]
+        if incentive["istarget"]:
+            # noinspection PyArgumentList
+            incentive_obj = DonationIncentive(
+                description=incentive["description"],
+                short_desc=incentive["name"],
+                current=float(incentive["total"]),
+                numeric_total=float(incentive["goal"]),
+            )
+        else:
+            # noinspection PyArgumentList
+            incentive_obj = ChoiceIncentive(
                 description=incentive["description"],
                 short_desc=incentive["name"],
                 current=float(incentive["total"]),
                 # TODO: Uhhh...
                 options=[],
             )
+        incentive_list.append(incentive_obj)
+    return incentive_list
