@@ -1,13 +1,12 @@
 from abc import ABC, abstractmethod
 import re
-from typing import Dict
+from typing import Iterator
 
 import pyplugs
 
-from gdq.models import Incentive
+from gdq.models import Run
 from gdq.parsers import gdq_api, horaro
 
-IncentiveDict = Dict[str, Incentive]
 names = pyplugs.names_factory(__package__)
 marathon = pyplugs.call_factory(__package__)
 
@@ -25,7 +24,7 @@ class MarathonBase(ABC):
     schedules = [[]]
 
     @abstractmethod
-    def refresh_all(self):
+    def refresh_all(self) -> None:
         raise NotImplementedError
 
 
@@ -37,7 +36,7 @@ class GDQTracker(MarathonBase):
     total = 0
     incentives = {}
 
-    def __init__(self, url: str = None, streams: int = 1):
+    def __init__(self, url: str = None, streams: int = 1) -> None:
         self.url = url or self.url
 
         self.events = list(gdq_api.get_events(self.url))
@@ -48,7 +47,7 @@ class GDQTracker(MarathonBase):
             [(event.total, event.short_name.upper()) for event in self.events]
         )
 
-    def refresh_all(self):
+    def refresh_all(self) -> None:
         self.total = sum((event.total for event in self.current_events))
         self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
         self.read_incentives()
@@ -66,7 +65,7 @@ class HoraroSchedule(MarathonBase):
     # horaro.org keys
     group_name = ""
 
-    def refresh_all(self):
+    def refresh_all(self) -> None:
         self.schedules = [
             horaro.read_schedule(self.group_name, stream_id, self.parse_data)
             for stream_id in self.current_events
@@ -74,5 +73,5 @@ class HoraroSchedule(MarathonBase):
 
     @staticmethod
     @abstractmethod
-    def parse_data(keys, schedule, timezone="UTC"):
+    def parse_data(keys, schedule, timezone="UTC") -> Iterator[Run]:
         raise NotImplementedError

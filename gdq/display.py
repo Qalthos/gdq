@@ -1,10 +1,10 @@
 from datetime import timedelta
 from itertools import zip_longest
 from textwrap import wrap
-from typing import Generator
+from typing import Dict, Iterator
 
-from gdq.events import MarathonBase, GDQTracker, IncentiveDict
-from gdq.models import Run, ChoiceIncentive, DonationIncentive
+from gdq.events import MarathonBase, GDQTracker
+from gdq.models import Run, Incentive, ChoiceIncentive, DonationIncentive
 from gdq.utils import short_number
 
 
@@ -83,7 +83,7 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
             print(f"\x1b[{clear_index}H{clear_row}", end="")
 
 
-def _format_basic_run(run: Run, width: int = 80):
+def _format_basic_run(run: Run, width: int = 80) -> Iterator[str]:
     # If the estimate has passed, it's probably over.
     if run.remaining < timedelta():
         return
@@ -128,7 +128,7 @@ def _format_basic_run(run: Run, width: int = 80):
         yield line_two.format(run.str_estimate, run.category, border)
 
 
-def _format_run(run: Run, incentives: IncentiveDict, width: int = 80, args=None) -> str:
+def _format_run(run: Run, incentives: Dict[str, Incentive], width: int = 80, args=None) -> str:
     for line in _format_basic_run(run, width):
         yield line
 
@@ -144,7 +144,7 @@ def _format_run(run: Run, incentives: IncentiveDict, width: int = 80, args=None)
                 yield from _render_option(incentive, width, align_width, args)
 
 
-def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> Generator:
+def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> Iterator[str]:
     # Remove fixed elements
     width -= 4
 
@@ -162,7 +162,7 @@ def _render_incentive(incentive: DonationIncentive, width: int, align: int) -> G
     yield progress.format(PREFIX, incentive.short_desc, incentive_bar, incentive.total)
 
 
-def _render_option(incentive: ChoiceIncentive, width: int, align: int, args) -> Generator:
+def _render_option(incentive: ChoiceIncentive, width: int, align: int, args) -> Iterator[str]:
     # Remove fixed elements
     width -= 4
 

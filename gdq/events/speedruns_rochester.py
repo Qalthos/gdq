@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generator
+from typing import Iterator
 
 from dateutil import tz
 import pyplugs
@@ -14,7 +14,7 @@ class SpeedrunsRochester(HoraroSchedule):
     current_events = ("schedule",)
 
     @staticmethod
-    def parse_data(keys, schedule, timezone="UTC") -> Generator:
+    def parse_data(keys, schedule, timezone="UTC") -> Iterator[Run]:
         for run in schedule:
             run_data = dict(zip(keys, run["data"]))
 

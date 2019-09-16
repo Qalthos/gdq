@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Generator
+from typing import Iterator
 
 from dateutil import tz
 import pyplugs
@@ -14,9 +14,10 @@ class FrameFatales(HoraroSchedule):
     current_events = ("a19schedule",)
 
     @staticmethod
-    def parse_data(keys, schedule, timezone="UTC") -> Generator:
+    def parse_data(keys, schedule, timezone="UTC") -> Iterator[Run]:
         for run in schedule:
             run_data = dict(zip(keys, run["data"]))
+            game, runner = "", ""
             for splitval in ("by", "with", "of"):
                 try:
                     game, runner = run_data["Description"].split(f" {splitval} ")
@@ -26,7 +27,6 @@ class FrameFatales(HoraroSchedule):
                     break
             else:
                 game = run_data["Description"]
-                runner = ""
 
             if "%" in game:
                 # Really crappy category detection

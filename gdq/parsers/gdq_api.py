@@ -1,12 +1,13 @@
 from collections import defaultdict
 from datetime import datetime
+from typing import Dict, List, Iterator
 
 import requests
 
-from gdq.models import Choice, ChoiceIncentive, DonationIncentive, Event, Run
+from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive, Event, Run
 
 
-def _get_resource(base_url: str, resource_type: str, **kwargs) -> list:
+def _get_resource(base_url: str, resource_type: str, **kwargs) -> List[dict]:
     resource_url = f"{base_url}/api/v1/search/?type={resource_type}"
     for key, value in kwargs.items():
         resource_url += f"&{key}={value}"
@@ -14,7 +15,7 @@ def _get_resource(base_url: str, resource_type: str, **kwargs) -> list:
     return requests.get(resource_url).json()
 
 
-def get_events(base_url: str, event_id: int = None) -> list:
+def get_events(base_url: str, event_id: int = None) -> Iterator[Event]:
     kwargs = {}
     if event_id:
         kwargs["id"] = event_id
@@ -36,7 +37,7 @@ def get_events(base_url: str, event_id: int = None) -> list:
             continue
 
 
-def get_runs(base_url: str, event_id: int) -> list:
+def get_runs(base_url: str, event_id: int) -> Iterator[Run]:
     runs = _get_resource(base_url, "run", event=event_id)
     for run in runs:
         run_id = run["pk"]
@@ -63,7 +64,7 @@ def get_runs(base_url: str, event_id: int) -> list:
         )
 
 
-def get_incentives_for_event(base_url: str, event_id: int) -> dict:
+def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentive]:
     """
     Method to emulate how gdq_tracker requests incentive information.
     """
@@ -105,7 +106,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> dict:
     return incentive_dict
 
 
-def get_incentives_for_run(base_url: str, run_id: int) -> list:
+def get_incentives_for_run(base_url: str, run_id: int) -> List[Incentive]:
     incentives = _get_resource(base_url, "allbids", run=run_id, feed="open")
     incentive_list = []
 

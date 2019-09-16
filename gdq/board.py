@@ -13,7 +13,7 @@ from gdq import events, display
 from gdq import utils
 
 
-def refresh_event(marathon, terminal, args):
+def refresh_event(marathon, terminal, args) -> None:
     # Update current time for display.
     utils.NOW = datetime.now(tz.UTC)
 

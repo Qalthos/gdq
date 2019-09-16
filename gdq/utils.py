@@ -1,5 +1,4 @@
 from datetime import datetime
-import re
 import shutil
 
 from bs4 import BeautifulSoup
@@ -18,11 +17,6 @@ def short_number(number: float) -> str:
     if number > 10e3:
         return "{0:.1f}k".format(number / 1e3)
     return f"{number:,.0f}"
-
-
-def strip_md(string: str):
-    links = re.compile(r"(?:\[(?P<name>[^]]*)]\([^)]+\))")
-    return links.sub(r"\g<name>", string)
 
 
 def url_to_soup(url: str) -> BeautifulSoup:
