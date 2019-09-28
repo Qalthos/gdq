@@ -1,5 +1,6 @@
 from datetime import timedelta
 from itertools import zip_longest
+from operator import attrgetter
 from textwrap import wrap
 from typing import Dict, Iterator
 
@@ -181,7 +182,7 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int, args) -> 
         yield description.format(PREFIX, incentive.short_desc, "")
 
     max_percent = incentive.max_percent
-    for index, option in enumerate(incentive.options):
+    for index, option in enumerate(sorted(incentive.options, key=attrgetter("numeric_total"), reverse=True)):
         try:
             percent = option.numeric_total / incentive.current * 100
         except ZeroDivisionError:
