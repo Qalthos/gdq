@@ -89,7 +89,6 @@ def _format_basic_run(run: Run, width: int = 80) -> Iterator[str]:
     if run.remaining < timedelta():
         return
 
-    width -= len(PREFIX) + 1
     if not run.runner:
         desc_width = max(len(run.game_desc), len(run.category))
         if desc_width > width:
@@ -130,6 +129,7 @@ def _format_basic_run(run: Run, width: int = 80) -> Iterator[str]:
 
 
 def _format_run(run: Run, incentives: Dict[str, Incentive], width: int = 80, args=None) -> str:
+    width -= len(PREFIX) + 1
     for line in _format_basic_run(run, width):
         yield line
 
