@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Iterator
 
 import requests
@@ -42,16 +42,15 @@ def get_runs(base_url: str, event_id: int) -> Iterator[Run]:
     for run in runs:
         run_id = run["pk"]
         run = run["fields"]
-        # TODO: Probably some wrangling needed here.
-        # keys available: starttime, endtime, setup_time, run_time
+        # Best guess how time works: endtime - starttime = run_time + setup_time
         try:
             start_time = datetime.strptime(run["starttime"], "%Y-%m-%dT%H:%M:%S%z")
-            end_time = datetime.strptime(run["endtime"], "%Y-%m-%dT%H:%M:%S%z")
+            run_h, run_m, run_s = run["run_time"].split(":")
+            estimate = (int(run_h) * 3600) + (int(run_m) * 60) + int(run_s)
         except TypeError:
             # No times attached, huh?
             continue
 
-        estimate = (end_time - start_time).total_seconds()
         yield Run(
             run_id=run_id,
             game=run["name"],
