@@ -39,18 +39,22 @@ class GDQTracker(MarathonBase):
     def __init__(self, url: str = None, streams: int = 1) -> None:
         self.url = url or self.url
 
-        self.events = list(gdq_api.get_events(self.url))
-        for _ in range(streams):
-            self.current_events.insert(0, self.events.pop(-1))
-
+        self.current_events = [None] * streams
+        self.read_events()
         self.records = sorted(
             [(event.total, event.short_name.upper()) for event in self.events]
         )
 
     def refresh_all(self) -> None:
+        self.read_events()
         self.total = sum((event.total for event in self.current_events))
         self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
         self.read_incentives()
+
+    def read_events(self) -> None:
+        self.events = list(gdq_api.get_events(self.url))
+        for i in range(len(self.current_events)):
+            self.current_events[i] = self.events.pop(-1)
 
     def read_incentives(self) -> None:
         incentives = {}
