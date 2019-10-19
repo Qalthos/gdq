@@ -182,14 +182,15 @@ def _render_option(incentive: ChoiceIncentive, width: int, align: int, args) -> 
         yield description.format(PREFIX, incentive.short_desc, "")
 
     max_percent = incentive.max_percent
-    for index, option in enumerate(sorted(incentive.options, key=attrgetter("numeric_total"), reverse=True)):
+    sorted_options = sorted(incentive.options, key=attrgetter("numeric_total"), reverse=True)
+    for index, option in enumerate(sorted_options):
         try:
             percent = option.numeric_total / incentive.current * 100
         except ZeroDivisionError:
             percent = 0
 
         if percent < args.min_percent and index >= args.min_options and index != len(incentive.options) - 1:
-            remaining = incentive.options[index:]
+            remaining = sorted_options[index:]
             total = sum(option.numeric_total for option in remaining)
             try:
                 percent = total / incentive.current * 100
