@@ -13,22 +13,6 @@ PREFIX = " " * 7
 MIN_OFFSET = 20
 
 
-def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
-    chars = " ▏▎▍▌▋▊▉█"
-
-    blocks, fraction = 0, 0
-    if percent:
-        blocks, fraction = divmod(percent * width, out_of)
-        blocks = int(blocks)
-        fraction = int(fraction // (out_of / len(chars)))
-
-    if blocks >= width:
-        blocks = width - 1
-        fraction = -1
-
-    return chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1)
-
-
 def format_milestone(marathon: GDQTracker, width: int = 80) -> str:
     last_record = 0
     for record, name in marathon.records:
@@ -231,9 +215,3 @@ def _join_char(left: str, right: str) -> str:
 def _flatten(string: str) -> str:
     translation = str.maketrans("┼╫┤", "┬╥┐")
     return string.translate(translation)
-
-
-if __name__ == "__main__":
-    import sys
-
-    print(show_progress(float(sys.argv[1])))

@@ -1,12 +1,44 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import shutil
-
-from bs4 import BeautifulSoup
-from dateutil import tz
-import requests
+import time
 
 
-NOW: datetime = datetime.now(tz.UTC)
+NOW: datetime = datetime.now(timezone.utc)
+
+
+def show_progress(percent: float, width: int = 72, out_of: float = 100) -> str:
+    chars = " ▏▎▍▌▋▊▉█"
+
+    blocks, fraction = 0, 0
+    if percent:
+        blocks, fraction = divmod(percent * width, out_of)
+        blocks = int(blocks)
+        fraction = int(fraction // (out_of / len(chars)))
+
+    if blocks >= width:
+        blocks = width - 1
+        fraction = -1
+
+    return chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1)
+
+
+def slow_progress_bar(terminal, interval=30):
+    resolution = 0.10
+    ticks = int(interval / resolution)
+
+    # Don't bother updating the progress bar more often than necessary
+    if ticks > terminal.width * 8:
+        ticks = terminal.width * 8
+        resolution = interval / ticks
+
+    for i in range(ticks):
+        if terminal.refresh():
+            # Terminal shape has changed, skip the countdown and repaint early.
+            break
+
+        repaint_progress = show_progress(i, terminal.width, out_of=ticks)
+        print(f"\x1b[{terminal.height}H{repaint_progress}", end="", flush=True)
+        time.sleep(resolution)
 
 
 def short_number(number: float) -> str:
@@ -17,11 +49,6 @@ def short_number(number: float) -> str:
     if number > 10e3:
         return "{0:.1f}k".format(number / 1e3)
     return f"{number:,.0f}"
-
-
-def url_to_soup(url: str) -> BeautifulSoup:
-    source = requests.get(url).text
-    return BeautifulSoup(source, "html.parser")
 
 
 class Terminal:
