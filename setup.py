@@ -8,6 +8,7 @@ setup(
     entry_points={
         'console_scripts': [
             'gdq=gdq.board:main',
+            'bus=gdq.bus:main',
         ],
     },
 )
