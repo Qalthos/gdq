@@ -15,21 +15,21 @@ SHIFTS = [
     {"color": "\x1b[34", "hour": 8, "name": "Night Watch"},
     {"color": "\x1b[35", "hour": 14, "name": "Zeta"},
 ]
-RECORDS = {
-    22_805.00: {"year": 2007, "name": "Desert Bus for Hope"},
-    70_423.79: {"year": 2008, "name": "Desert Bus for Hope 2: Bus Harder"},
-    140_449.68: {"year": 2009, "name": "Desert Bus for Hope 3: It's Desert Bus 6 in Japan"},
-    209_400.82: {"year": 2010, "name": "Desert Bus for Hope 4: A New Hope"},
-    383_125.10: {"year": 2011, "name": "Desert Bus for Hope 5: De5ert Bus"},
-    443_630.00: {"year": 2012, "name": "Desert Bus for Hope 6: Desert Bus 3 in America"},
-    523_520.00: {"year": 2013, "name": "Desert Bus for Hope 007"},
-    643_242.58: {"year": 2014, "name": "Desert Bus for Hope 8"},
-    683_720.00: {"year": 2015, "name": "Desert Bus for Hope 9: The Joy of Bussing"},
-    695_242.57: {"year": 2016, "name": "Desert Bus X"},
-    655_402.56: {"year": 2017},
-    730_289.37: {"year": 2018},
-    865_000.00: {"year": 2019},
-}
+RECORDS = [
+    {"year": 2007, "total": 22_805.00, "name": "Desert Bus for Hope"},
+    {"year": 2008, "total": 70_423.79, "name": "Desert Bus for Hope 2: Bus Harder"},
+    {"year": 2009, "total": 140_449.68, "name": "Desert Bus for Hope 3: It's Desert Bus 6 in Japan"},
+    {"year": 2010, "total": 209_400.82, "name": "Desert Bus for Hope 4: A New Hope"},
+    {"year": 2011, "total": 383_125.10, "name": "Desert Bus for Hope 5: De5ert Bus"},
+    {"year": 2012, "total": 443_630.00, "name": "Desert Bus for Hope 6: Desert Bus 3 in America"},
+    {"year": 2013, "total": 523_520.00, "name": "Desert Bus for Hope 007"},
+    {"year": 2014, "total": 643_242.58, "name": "Desert Bus for Hope 8"},
+    {"year": 2015, "total": 683_720.00, "name": "Desert Bus for Hope 9: The Joy of Bussing"},
+    {"year": 2016, "total": 695_242.57, "name": "Desert Bus X"},
+    {"year": 2017, "total": 655_402.56},
+    {"year": 2018, "total": 730_289.37},
+    {"year": 2019, "total": 865_000.00},
+]
 terminal = utils.Terminal()
 
 
@@ -52,7 +52,7 @@ def refresh_bus():
     else:
         print("It's over!")
 
-    desert_buck, desert_toonie = list(RECORDS.keys())[:2]
+    desert_buck, desert_toonie = [record["total"] for record in RECORDS[:2]]
     print(f"${total:,.2f} | {math.floor(hours)} hours | d฿{total / desert_buck:,.2f} | d฿²{total / desert_toonie:,.2f}")
 
     if utils.NOW > START:
@@ -124,7 +124,7 @@ def bus_progress(hours, overall=False):
     last_record = timedelta()
     future_stops = []
 
-    for record in sorted(RECORDS.keys()):
+    for record in sorted(RECORDS, key=operator.itemgetter("total")):
         td_record = timedelta(hours=dollars_to_hours(record))
         if td_record <= td_bussed:
             # We've passed this record, but make a note that we've come this far.
@@ -154,12 +154,12 @@ def bus_progress(hours, overall=False):
 
 def print_records(total, hours):
     # This number doesn't agree with anyone, and I don't know why
-    #print(f"${total + sum(RECORDS.keys()):,.2f} lifetime total.")
+    #print(f"${total + sum([record['total'] for record in RECORDS]):,.2f} lifetime total.")
     print()
 
     last_hour = math.floor(hours)
     next_level = 0
-    for record, event in sorted(RECORDS.items()):
+    for record, event in sorted(RECORDS, key=operator.itemgetter("total")):
         if record > total:
             hours = dollars_to_hours(record)
             while hours > last_hour:
