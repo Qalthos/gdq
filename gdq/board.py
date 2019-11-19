@@ -11,17 +11,17 @@ from gdq import events, display
 from gdq import utils
 
 
-def refresh_event(marathon, terminal, args) -> None:
+def refresh_event(marathon, args) -> None:
     # Update current time for display.
     utils.NOW = datetime.now(timezone.utc)
 
     # Recaclulate terminal size
-    terminal.refresh()
+    utils.terminal_refresh()
     marathon.refresh_all()
 
-    display.display_marathon(terminal.width, terminal.height, marathon, args)
+    display.display_marathon(utils.term_width, utils.term_height, marathon, args)
 
-    utils.slow_progress_bar(terminal, args.interval)
+    utils.slow_progress_bar(args.interval)
 
 
 def main():
@@ -68,10 +68,9 @@ def main():
         # Select only requested stream
         marathon.current_events = (marathon.current_events[args.stream_index - 1],)
 
-    terminal = utils.Terminal()
     while True:
         try:
-            refresh_event(marathon, terminal, args)
+            refresh_event(marathon, args)
         except KeyboardInterrupt:
             break
 

@@ -30,12 +30,11 @@ RECORDS = [
     {"year": 2018, "total": 730_289.37},
     {"year": 2019, "total": 865_000.00},
 ]
-terminal = utils.Terminal()
 
 
 def refresh_bus():
     utils.NOW = datetime.now(timezone.utc).replace(microsecond=0)
-    terminal.refresh()
+    utils.terminal_refresh()
 
     # Money raised
     state = requests.get("https://desertbus.org/wapi/init").json()
@@ -59,11 +58,11 @@ def refresh_bus():
         if utils.NOW < START + (timedelta(hours=(hours + 1))):
             print(calculate_estimate(total))
             print_records(total, hours)
-            print(f"\x1b[{terminal.height - 1}H{bus_progress(hours)}")
+            print(f"\x1b[{utils.term_height - 1}H{bus_progress(hours)}")
         else:
             return False
 
-    utils.slow_progress_bar(terminal)
+    utils.slow_progress_bar()
     return True
 
 
@@ -80,13 +79,13 @@ def shift_banners():
     min_width = 10 + 12 + 11 + 4 + 3
 
     reflow = 0
-    if terminal.width <= (11 * 4) + 3:
+    if utils.term_width <= (11 * 4) + 3:
         shift_width = 0
-        if terminal.width >= min_width:
-            reflow = min_width - terminal.width
+        if utils.term_width >= min_width:
+            reflow = min_width - utils.term_width
     else:
-        shift_width = (terminal.width - 3) // 4
-        reflow = terminal.width - 3 - (shift_width * 4)
+        shift_width = (utils.term_width - 3) // 4
+        reflow = utils.term_width - 3 - (shift_width * 4)
 
     for index, shift_info in enumerate(SHIFTS):
         boldness = '2'
@@ -118,7 +117,7 @@ def bus_progress(hours, overall=False):
 
     hours_done = f"[{timedelta_as_hours(td_bussed)}]"
     hours_left = f"[-{timedelta_as_hours(START + td_total - utils.NOW)}]"
-    progress_width = terminal.width - len(hours_done) - len(hours_left) - 3
+    progress_width = utils.term_width - len(hours_done) - len(hours_left) - 3
 
     # Scaled to last passed record
     last_record = timedelta()
