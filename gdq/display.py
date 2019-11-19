@@ -6,7 +6,7 @@ from typing import Dict, Iterator
 
 from gdq.events import MarathonBase, GDQTracker
 from gdq.models import Run, Incentive, ChoiceIncentive, DonationIncentive
-from gdq.utils import short_number
+from gdq.utils import short_number, show_progress
 
 
 PREFIX = " " * 7

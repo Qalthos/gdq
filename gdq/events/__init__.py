@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 import re
-from typing import Iterator
+from typing import Iterator, List, Optional
 
 import pyplugs
 
-from gdq.models import Run
+from gdq.models import Event, Run
 from gdq.parsers import gdq_api, horaro
 
 names = pyplugs.names_factory(__package__)
@@ -39,11 +39,8 @@ class GDQTracker(MarathonBase):
     def __init__(self, url: str = None, streams: int = 1) -> None:
         self.url = url or self.url
 
-        self.current_events = [None] * streams
+        self.current_events: List[Optional[Event]] = [None] * streams
         self.read_events()
-        self.records = sorted(
-            [(event.total, event.short_name.upper()) for event in self.events]
-        )
 
     def refresh_all(self) -> None:
         self.read_events()
@@ -52,9 +49,13 @@ class GDQTracker(MarathonBase):
         self.read_incentives()
 
     def read_events(self) -> None:
-        self.events = list(gdq_api.get_events(self.url))
+        events = list(gdq_api.get_events(self.url))
         for i in range(len(self.current_events)):
-            self.current_events[i] = self.events.pop(-1)
+            self.current_events[i] = events.pop(-1)
+
+        self.records = sorted(
+            [(event.total, event.short_name.upper()) for event in events]
+        )
 
     def read_incentives(self) -> None:
         incentives = {}

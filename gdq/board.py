@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import configparser
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import sys
-import time
 
-from dateutil import tz
 import xdg
 
 from gdq import events, display
@@ -15,7 +13,7 @@ from gdq import utils
 
 def refresh_event(marathon, terminal, args) -> None:
     # Update current time for display.
-    utils.NOW = datetime.now(tz.UTC)
+    utils.NOW = datetime.now(timezone.utc)
 
     # Recaclulate terminal size
     terminal.refresh()
@@ -23,7 +21,7 @@ def refresh_event(marathon, terminal, args) -> None:
 
     display.display_marathon(terminal.width, terminal.height, marathon, args)
 
-    slow_progress_bar(terminal, args.interval)
+    utils.slow_progress_bar(terminal, args.interval)
 
 
 def main():
