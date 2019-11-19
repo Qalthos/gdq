@@ -125,7 +125,7 @@ def bus_progress(hours, overall=False):
     future_stops = []
 
     for record in sorted(RECORDS, key=operator.itemgetter("total")):
-        td_record = timedelta(hours=dollars_to_hours(record))
+        td_record = timedelta(hours=dollars_to_hours(record["total"]))
         if td_record <= td_bussed:
             # We've passed this record, but make a note that we've come this far.
             last_record = td_record
@@ -159,7 +159,8 @@ def print_records(total, hours):
 
     last_hour = math.floor(hours)
     next_level = 0
-    for record, event in sorted(RECORDS, key=operator.itemgetter("total")):
+    for event in sorted(RECORDS, key=operator.itemgetter("total")):
+        record = event["total"]
         if record > total:
             hours = dollars_to_hours(record)
             while hours > last_hour:
