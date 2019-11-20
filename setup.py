@@ -5,6 +5,11 @@ setup(
     name="gdq-cli",
     version=0.9,
     packages=find_packages(exclude=['tests']),
+    install_requires=[
+        "pyplugs",
+        "requests",
+        "xdg",
+    ],
     entry_points={
         'console_scripts': [
             'gdq=gdq.board:main',
