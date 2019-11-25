@@ -27,9 +27,9 @@ class Run:
 
     @property
     def delta(self) -> str:
-        if self.start < utils.NOW:
+        if self.start < utils.now:
             return "  NOW  "
-        delta = self.start - utils.NOW
+        delta = self.start - utils.now
         if delta.days >= 10:
             return f"{delta.days} DAYS"
         hours, minutes = divmod(delta.seconds // 60, 60)
@@ -38,8 +38,8 @@ class Run:
     @property
     def remaining(self) -> timedelta:
         remaining = timedelta(seconds=self.estimate)
-        if self.start < utils.NOW:
-            remaining -= utils.NOW - self.start
+        if self.start < utils.now:
+            remaining -= utils.now - self.start
         return remaining
 
     @property

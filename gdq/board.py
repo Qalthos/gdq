@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 import argparse
 import configparser
-from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
 import xdg
 
-from gdq import events, display
-from gdq import utils
+from gdq import events, display, utils
 
 
 def refresh_event(marathon, args) -> None:
     # Update current time for display.
-    utils.NOW = datetime.now(timezone.utc)
+    utils.update_now()
 
     # Recaclulate terminal size
     utils.terminal_refresh()

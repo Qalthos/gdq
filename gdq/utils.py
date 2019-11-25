@@ -3,8 +3,14 @@ import shutil
 import time
 
 
-NOW: datetime = datetime.now(timezone.utc)
+now: datetime = datetime.now(timezone.utc)
 term_width, term_height = shutil.get_terminal_size()
+
+
+def update_now():
+    global now
+    now = datetime.now(timezone.utc)
+    return now
 
 
 def show_progress(percent: float, width: int = term_width, out_of: float = 100) -> str:

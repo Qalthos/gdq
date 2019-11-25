@@ -33,7 +33,7 @@ RECORDS = [
 
 
 def refresh_bus():
-    utils.NOW = datetime.now(timezone.utc).replace(microsecond=0)
+    utils.update_now()
     utils.terminal_refresh()
 
     # Money raised
@@ -44,9 +44,9 @@ def refresh_bus():
     # Clear screen & reset cursor position
     print("\x1b[2J\x1b[H", end="")
 
-    if utils.NOW < START:
-        print(f"Starting in {START - utils.NOW}")
-    elif utils.NOW < (START + timedelta(hours=hours + 1)):
+    if utils.now < START:
+        print(f"Starting in {START - utils.now}")
+    elif utils.now < (START + timedelta(hours=hours + 1)):
         print(shift_banners())
     else:
         print("It's over!")
@@ -55,8 +55,8 @@ def refresh_bus():
     print(f"${total:,.2f} | {math.floor(hours)} hours | d฿{total / desert_buck:,.2f} | d฿²{total / desert_toonie:,.2f}")
     print(f"${total + sum([record['total'] for record in RECORDS]):,.2f} lifetime total.")
 
-    if utils.NOW > START:
-        if utils.NOW < START + (timedelta(hours=(hours + 1))):
+    if utils.now > START:
+        if utils.now < START + (timedelta(hours=(hours + 1))):
             print(calculate_estimate(total))
             print_records(total, hours)
             print(f"\x1b[{utils.term_height - 1}H{bus_progress(hours)}")
@@ -71,7 +71,7 @@ def shift_banners():
     # Shift detection
     shifts = sorted(SHIFTS, key=operator.itemgetter("hour"))
     for shift in shifts:
-        if utils.NOW.hour < shift["hour"]:
+        if utils.now.hour < shift["hour"]:
             break
     else:
         shift = shifts[0]
@@ -108,16 +108,16 @@ def calculate_estimate(total):
     future_total = total
     while future_hours != dollars_to_hours(future_total):
         future_hours = dollars_to_hours(future_total)
-        future_total = (total * timedelta(hours=future_hours)) / (utils.NOW - START)
+        future_total = (total * timedelta(hours=future_hours)) / (utils.now - START)
     return f"${future_total:,.2f} estimated total ({future_hours} hours)"
 
 
 def bus_progress(hours, overall=False):
-    td_bussed = utils.NOW - START
+    td_bussed = utils.now - START
     td_total = timedelta(hours=math.floor(hours))
 
     hours_done = f"[{timedelta_as_hours(td_bussed)}]"
-    hours_left = f"[-{timedelta_as_hours(START + td_total - utils.NOW)}]"
+    hours_left = f"[-{timedelta_as_hours(START + td_total - utils.now)}]"
     progress_width = utils.term_width - len(hours_done) - len(hours_left) - 3
 
     # Scaled to last passed record
