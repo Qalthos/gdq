@@ -1,16 +1,34 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import List
 
 from gdq import utils
 
 
 @dataclass
 class Event:
-    event_id: int
     name: str
     short_name: str
+
+
+@dataclass
+class SingleEvent(Event):
+    event_id: int
     total: float
     target: float
+
+
+@dataclass
+class MultiEvent(Event):
+    subevents: List[SingleEvent]
+
+    @property
+    def total(self):
+        return sum((event.total for event in self.subevents))
+
+    @property
+    def target(self):
+        return sum((event.target for event in self.subevents if event.target))
 
 
 @dataclass

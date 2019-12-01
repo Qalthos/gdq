@@ -1,10 +1,11 @@
+import re
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List, Iterator
 
 import requests
 
-from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive, Event, Run
+from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive, Event, Run, SingleEvent, MultiEvent
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs) -> List[dict]:
@@ -15,17 +16,20 @@ def _get_resource(base_url: str, resource_type: str, **kwargs) -> List[dict]:
     return requests.get(resource_url).json()
 
 
-def get_events(base_url: str, event_id: int = None) -> Iterator[Event]:
+def get_events(base_url: str, event_id: int = None) -> List[Event]:
     kwargs = {}
     if event_id:
         kwargs["id"] = event_id
 
     events = _get_resource(base_url, "event", **kwargs)
+    match_multi = re.compile(r"(.*)s\d+$", re.MULTILINE)
+    multi_events = {}
+    event_objs = []
     for event in events:
         event_id = event["pk"]
         event_data = event["fields"]
         try:
-            yield Event(
+            event = SingleEvent(
                 event_id=event_id,
                 name=event_data["name"],
                 short_name=event_data["short"],
@@ -35,6 +39,23 @@ def get_events(base_url: str, event_id: int = None) -> Iterator[Event]:
         except ValueError:
             # 'amount' is None, not a likely candidate
             continue
+
+        if match := match_multi.match(event.short_name):
+            shorter_name = match.group(1)
+            if shorter_name not in multi_events:
+                mevent = MultiEvent(
+                    subevents=[event],
+                    name=event.name,
+                    short_name=shorter_name,
+                )
+                multi_events[shorter_name] = mevent
+                event_objs.append(mevent)
+            else:
+                multi_events[shorter_name].subevents.append(event)
+        else:
+            event_objs.append(event)
+
+    return event_objs
 
 
 def get_runs(base_url: str, event_id: int) -> Iterator[Run]:
