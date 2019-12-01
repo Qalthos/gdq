@@ -1,8 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import unittest
-
-from dateutil import tz
 
 from gdq.events import framefatales
 from gdq.models import Run
@@ -17,7 +15,7 @@ class TestFrameFatales(unittest.TestCase):
             platform="",
             category="",
             runner="",
-            start=datetime(2019, 5, 14, 0, 45, tzinfo=tz.gettz("UTC")),
+            start=datetime(2019, 5, 14, 0, 45, tzinfo=timezone.utc),
             estimate=5400,
         )
         fixture = (
@@ -36,7 +34,7 @@ class TestFrameFatales(unittest.TestCase):
             platform="",
             category="any%HRH mod",
             runner="Katlink",
-            start=datetime(2019, 5, 14, 4, 53, tzinfo=tz.gettz("UTC")),
+            start=datetime(2019, 5, 14, 4, 53, tzinfo=timezone.utc),
             estimate=7200,
         )
         fixture = (
@@ -55,7 +53,7 @@ class TestFrameFatales(unittest.TestCase):
             platform="",
             category="",
             runner="Netara v Demerine",
-            start=datetime(2019, 5, 14, 20, 50, tzinfo=tz.gettz("UTC")),
+            start=datetime(2019, 5, 14, 20, 50, tzinfo=timezone.utc),
             estimate=7500,
         )
         fixture = (
@@ -74,7 +72,7 @@ class TestFrameFatales(unittest.TestCase):
             platform="",
             category="any%MG, no save+quit Race",
             runner="EmoSaru and Kelpsey",
-            start=datetime(2019, 8, 20, 18, 39, tzinfo=tz.gettz("UTC")),
+            start=datetime(2019, 8, 20, 18, 39, tzinfo=timezone.utc),
             estimate=5700,
         )
         fixture = (
