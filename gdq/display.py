@@ -14,16 +14,21 @@ MIN_OFFSET = 20
 
 
 def format_milestone(marathon: GDQTracker, width: int = 80) -> str:
-    last_record = 0
-    for record, name in marathon.records:
-        if record < marathon.total:
-            last_record = record
-            continue
+    last_record = (0, "")
+    line_two = ""
+    for record in marathon.records:
+        if record[0] > marathon.total:
+            relative_percent = (marathon.total - last_record[0]) / (record[0] - last_record[0]) * 100
+            record_bar = show_progress(relative_percent, width=(width - 12))
+            line_two = f"\n{short_number(last_record[0]): <5s}▕{record_bar}▏{short_number(record[0]): >5s}"
+            break
+        last_record = record
+    else:
+        record = (0, "NEW HIGH SCORE!")
 
-        relative_percent = (marathon.total - last_record) / (record - last_record) * 100
-        record_bar = show_progress(relative_percent, width=(width - 7 - len(name)))
-        return f"{name}▕{record_bar}▏{short_number(record): >5s}"
-    return f"NEW HIGH SCORE!" + " " * (width - 24) + f"{marathon.total:<9,.0f}"
+    dollar_total = f"${marathon.total:,.2f}"
+    max_len = max((len(last_record[1]), len(record[1])))
+    return f"{last_record[1]: <{max_len}s}{dollar_total: ^{width - 2 * max_len}}{record[1]: >{max_len}s}{line_two}"
 
 
 def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> None:
@@ -31,7 +36,7 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
     row_index = 1
     if isinstance(marathon, GDQTracker):
         print(f"\x1b[H{format_milestone(marathon, width)}")
-        row_index += 1
+        row_index += 2
 
     rendered_schedules = []
     column_width = width // len(marathon.schedules)
@@ -81,12 +86,8 @@ def _format_basic_run(run: Run, width: int = 80) -> Iterator[str]:
             run.category = run.category[:width - 1] + "…"
 
         yield "{0}┼{1}┤".format("─" * 7, "─" * (width - 1))
-
-        line_one = "{0}│{1:<" + str(width - 1) + "s}│"
-        yield line_one.format(run.delta, run.game_desc)
-
-        line_two = "{0: >7s}│{1:<" + str(width - 1) + "}│"
-        yield line_two.format(run.str_estimate, run.category)
+        yield f"{run.delta}│{run.game_desc:<{width - 1}s}│"
+        yield f"{run.str_estimate: >7s}│{run.category:<{width - 1}}│"
     else:
         desc_width = max(width - 2 - len(run.runner), len(run.game_desc), len(run.category))
 
@@ -105,11 +106,8 @@ def _format_basic_run(run: Run, width: int = 80) -> Iterator[str]:
         border = "─" * (len(runner) - 2)
         yield "{0}┼{1}┬{2}┤".format("─" * 7, "─" * desc_width, border)
 
-        line_one = "{0}│{1:<" + str(desc_width) + "s}{2}"
-        yield line_one.format(run.delta, run.game_desc, runner)
-
-        line_two = "{0: >7s}│{1:<" + str(desc_width) + "}└{2}┤"
-        yield line_two.format(run.str_estimate, run.category, border)
+        yield f"{run.delta}│{run.game_desc:<{desc_width}s}{runner}"
+        yield f"{run.str_estimate: >7s}│{run.category:<{desc_width}}└{border}┤"
 
 
 def _format_run(run: Run, incentives: Dict[str, Incentive], width: int = 80, args=None) -> str:
