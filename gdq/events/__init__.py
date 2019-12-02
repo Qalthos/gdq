@@ -80,7 +80,7 @@ class HoraroSchedule(MarathonBase):
     current_event: str
 
     def refresh_all(self) -> None:
-        horaro.read_schedule(self.group_name, self.current_event, self.parse_data)
+        self.schedules = [horaro.read_schedule(self.group_name, self.current_event, self.parse_data)]
 
     @staticmethod
     @abstractmethod

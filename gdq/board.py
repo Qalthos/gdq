@@ -59,11 +59,6 @@ def main():
         print(f"Marathon plugin {args.stream_name} not found.")
         sys.exit(1)
 
-    streams = range(1, len(marathon.current_events) + 1)
-    if args.stream_index in streams:
-        # Select only requested stream
-        marathon.current_events = (marathon.current_events[args.stream_index - 1],)
-
     while True:
         try:
             refresh_event(marathon, args)

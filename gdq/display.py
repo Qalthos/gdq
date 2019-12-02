@@ -38,11 +38,16 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
         print(f"\x1b[H{format_milestone(marathon, width)}")
         row_index += 2
 
+    # Limit schedule display based on args
+    schedules = marathon.schedules
+    if args.stream_index <= len(schedules):
+        schedules = [schedules[args.stream_index - 1]]
+
     rendered_schedules = []
-    column_width = width // len(marathon.schedules)
+    column_width = width // len(schedules)
     padding = " " * column_width
 
-    for schedule in marathon.schedules:
+    for schedule in schedules:
         schedule_lines = []
         for run in schedule:
             if isinstance(marathon, GDQTracker):
