@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import argparse
-import configparser
 from pathlib import Path
 import sys
 
 import xdg
+import toml
 
 from gdq import events, display, utils
 
@@ -44,14 +44,12 @@ def main():
     )
     args = parser.parse_args()
 
-    config = configparser.ConfigParser()
-    config_path = Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.ini"
-    config.read(config_path)
-    if config.has_section(args.stream_name):
-        if config.has_option(args.stream_name, "url"):
-            url = config[args.stream_name]["url"]
-            stream_count = int(config[args.stream_name].get("concurrent_streams", 1))
-            marathon = events.GDQTracker(url=url, streams=stream_count)
+    with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml") as toml_file:
+        config = toml.load(toml_file)
+
+    if stream_options := config.get(args.stream_name):
+        if url := stream_options.get("url"):
+            marathon = events.GDQTracker(url=url)
         else:
             print(f"Config for {args.stream_name} is missing 'url' key")
             sys.exit(1)

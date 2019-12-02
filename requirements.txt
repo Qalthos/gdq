@@ -2,3 +2,4 @@ xdg
 pyplugs
 python-dateutil
 requests
+toml
