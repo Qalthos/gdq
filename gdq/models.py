@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List
@@ -6,16 +7,26 @@ from gdq import utils
 
 
 @dataclass
-class Event:
+class Event(metaclass=ABCMeta):
     name: str
     short_name: str
+
+    @property
+    @abstractmethod
+    def target(self) -> float:
+        pass
+
+    @property
+    @abstractmethod
+    def total(self) -> float:
+        pass
 
 
 @dataclass
 class SingleEvent(Event):
     event_id: int
-    total: float
     target: float
+    total: float
 
 
 @dataclass
@@ -23,12 +34,12 @@ class MultiEvent(Event):
     subevents: List[SingleEvent]
 
     @property
-    def total(self):
-        return sum((event.total for event in self.subevents))
+    def target(self) -> float:
+        return sum((event.target for event in self.subevents if event.target))
 
     @property
-    def target(self):
-        return sum((event.target for event in self.subevents if event.target))
+    def total(self) -> float:
+        return sum((event.total for event in self.subevents))
 
 
 @dataclass
@@ -74,7 +85,7 @@ class Run:
 
 
 @dataclass
-class Incentive:
+class Incentive(metaclass=ABCMeta):
     description: str
     short_desc: str
     current: float
