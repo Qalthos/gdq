@@ -47,10 +47,10 @@ class GDQTracker(MarathonBase):
 
     @property
     def current_events(self) -> List[SingleEvent]:
-        if events := getattr(self.current_event, "subevents", None):
-            return events
-        else:
-            return [self.current_event]
+        events = getattr(self.current_event, "subevents", None)
+        if not events:
+            events = [self.current_event]
+        return events
 
     def refresh_all(self) -> None:
         self.read_events()

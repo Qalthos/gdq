@@ -11,7 +11,7 @@ from gdq.models import Run
 @pyplugs.register
 class FrameFatales(HoraroSchedule):
     group_name = "framefatales"
-    current_events = ("a19schedule",)
+    current_event = "a19schedule"
 
     @staticmethod
     def parse_data(keys, schedule, timezone="UTC") -> Iterator[Run]:

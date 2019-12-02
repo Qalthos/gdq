@@ -11,7 +11,7 @@ from gdq.models import Run
 @pyplugs.register
 class SpeedrunsRochester(HoraroSchedule):
     group_name = "srrocsm"
-    current_events = ("schedule",)
+    current_event = "schedule"
 
     @staticmethod
     def parse_data(keys, schedule, timezone="UTC") -> Iterator[Run]:
