@@ -9,7 +9,7 @@ import toml
 from gdq import events, display, utils
 
 
-def refresh_event(marathon, args) -> None:
+def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bool:
     # Update current time for display.
     utils.update_now()
 
@@ -17,18 +17,20 @@ def refresh_event(marathon, args) -> None:
     utils.terminal_refresh()
     marathon.refresh_all()
 
-    display.display_marathon(utils.term_width, utils.term_height, marathon, args)
+    if not display.display_marathon(utils.term_width, utils.term_height, marathon, args):
+        return False
 
     utils.slow_progress_bar(args.interval)
+    return True
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--stream_index", help="Follow only a single stream", type=int, default=0
+        "-i", "--stream_index", help="follow only a single stream", type=int, default=0
     )
     parser.add_argument(
-        "-n", "--interval", help="Time between screen refreshes", type=int, default=60
+        "-n", "--interval", help="time between screen refreshes", type=int, default=60
     )
     parser.add_argument(
         "-p", "--min-percent", help="Minimum percent before displaying choice incentive.", type=int, default=5
@@ -59,9 +61,10 @@ def main():
         print(f"Marathon plugin {args.stream_name} not found.")
         sys.exit(1)
 
-    while True:
+    active = True
+    while active:
         try:
-            refresh_event(marathon, args)
+            active = refresh_event(marathon, args)
         except KeyboardInterrupt:
             break
 

@@ -31,7 +31,7 @@ def format_milestone(marathon: GDQTracker, width: int = 80) -> str:
     return f"{last_record[1]: <{max_len}s}{dollar_total: ^{width - 2 * max_len}}{record[1]: >{max_len}s}{line_two}"
 
 
-def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> None:
+def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> bool:
     # Terminal lines are apparently 1-indexed.
     row_index = 1
     if isinstance(marathon, GDQTracker):
@@ -73,9 +73,13 @@ def display_marathon(width: int, height: int, marathon: MarathonBase, args) -> N
         if row_index == height:
             break
     else:
+        if first_row:
+            return False
         clear_row = " " * width
         for clear_index in range(row_index, height):
             print(f"\x1b[{clear_index}H{clear_row}", end="")
+
+    return True
 
 
 def _format_basic_run(run: Run, width: int = 80) -> Iterator[str]:
