@@ -40,7 +40,8 @@ def get_events(base_url: str, event_id: int = None) -> List[Event]:
             # 'amount' is None, not a likely candidate
             continue
 
-        if match := match_multi.match(event.short_name):
+        match = match_multi.match(event.short_name)
+        if match:
             shorter_name = match.group(1)
             if shorter_name not in multi_events:
                 mevent = MultiEvent(

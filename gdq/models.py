@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import List
@@ -10,16 +10,6 @@ from gdq import utils
 class Event(metaclass=ABCMeta):
     name: str
     short_name: str
-
-    @property
-    @abstractmethod
-    def target(self) -> float:
-        pass
-
-    @property
-    @abstractmethod
-    def total(self) -> float:
-        pass
 
 
 @dataclass

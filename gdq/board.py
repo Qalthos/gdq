@@ -49,9 +49,9 @@ def main():
     with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml") as toml_file:
         config = toml.load(toml_file)
 
-    if stream_options := config.get(args.stream_name):
-        if url := stream_options.get("url"):
-            marathon = events.GDQTracker(url=url)
+    if config.get(args.stream_name):
+        if config[args.stream_name].get("url"):
+            marathon = events.GDQTracker(url=config[args.stream_name]["url"])
         else:
             print(f"Config for {args.stream_name} is missing 'url' key")
             sys.exit(1)
