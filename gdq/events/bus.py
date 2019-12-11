@@ -61,7 +61,7 @@ class DesertBus:
 
         if utils.now > START:
             if utils.now < START + (timedelta(hours=(self.hours + 1))):
-                print(self.calculate_estimate(self.total))
+                print(self.calculate_estimate())
                 self.print_records()
                 print(f"\x1b[{utils.term_height - 1}H{self.bus_progress()}")
             else:

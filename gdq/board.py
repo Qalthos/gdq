@@ -6,7 +6,7 @@ import sys
 import xdg
 import toml
 
-from gdq import events, display, utils
+from gdq import events, utils
 
 
 def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bool:
@@ -17,7 +17,7 @@ def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bo
     utils.terminal_refresh()
     marathon.refresh_all()
 
-    if not display.display_marathon(utils.term_width, utils.term_height, marathon, args):
+    if not marathon.display(args):
         return False
 
     utils.slow_progress_bar(args.interval)

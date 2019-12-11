@@ -69,3 +69,19 @@ def terminal_refresh() -> bool:
         term_width, term_height = geom
         return True
     return False
+
+
+def join_char(left: str, right: str) -> str:
+    choices = "║╟╢╫"
+    pick = 0
+    if left in "─┐┘┤":
+        pick += 0b10
+    if right == "─":
+        pick += 0b01
+
+    return choices[pick]
+
+
+def flatten(string: str) -> str:
+    translation = str.maketrans("┼╫┤", "┬╥┐")
+    return string.translate(translation)
