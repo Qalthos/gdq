@@ -7,10 +7,20 @@ now: datetime = datetime.now(timezone.utc)
 term_width, term_height = shutil.get_terminal_size()
 
 
-def update_now():
-    global now
-    now = datetime.now(timezone.utc)
-    return now
+def flatten(string: str) -> str:
+    translation = str.maketrans("┼╫┤", "┬╥┐")
+    return string.translate(translation)
+
+
+def join_char(left: str, right: str) -> str:
+    choices = "║╟╢╫"
+    pick = 0
+    if left in "─┐┘┤":
+        pick += 0b10
+    if right == "─":
+        pick += 0b01
+
+    return choices[pick]
 
 
 def show_progress(percent: float, width: int = term_width, out_of: float = 100) -> str:
@@ -27,6 +37,16 @@ def show_progress(percent: float, width: int = term_width, out_of: float = 100) 
         fraction = -1
 
     return chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1)
+
+
+def short_number(number: float) -> str:
+    if number > 1e6:
+        return "{0:.2f}M".format(number / 1e6)
+    if number > 100e3:
+        return "{0:.0f}k".format(number / 1e3)
+    if number > 10e3:
+        return "{0:.1f}k".format(number / 1e3)
+    return f"{number:,.0f}"
 
 
 def slow_progress_bar(interval=30):
@@ -48,16 +68,6 @@ def slow_progress_bar(interval=30):
         time.sleep(resolution)
 
 
-def short_number(number: float) -> str:
-    if number > 1e6:
-        return "{0:.2f}M".format(number / 1e6)
-    if number > 100e3:
-        return "{0:.0f}k".format(number / 1e3)
-    if number > 10e3:
-        return "{0:.1f}k".format(number / 1e3)
-    return f"{number:,.0f}"
-
-
 def terminal_refresh() -> bool:
     """Refresh terminal geometry
 
@@ -71,17 +81,7 @@ def terminal_refresh() -> bool:
     return False
 
 
-def join_char(left: str, right: str) -> str:
-    choices = "║╟╢╫"
-    pick = 0
-    if left in "─┐┘┤":
-        pick += 0b10
-    if right == "─":
-        pick += 0b01
-
-    return choices[pick]
-
-
-def flatten(string: str) -> str:
-    translation = str.maketrans("┼╫┤", "┬╥┐")
-    return string.translate(translation)
+def update_now() -> datetime:
+    global now
+    now = datetime.now(timezone.utc)
+    return now
