@@ -1,24 +1,16 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-import re
-from typing import Iterator, List
+from typing import Generator, Iterator, List
 
 import pyplugs
 
 from gdq import utils
-from gdq.models import PREFIX, Run, Event, SingleEvent
-from gdq.parsers import gdq_api, horaro
+from gdq.models import Run
 
-
-MIN_OFFSET = 20
 
 names = pyplugs.names_factory(__package__)
 marathon = pyplugs.call_factory(__package__)
-
-
-def money_parser(string: str) -> float:
-    return float(re.compile('[$,\n]').sub("", string))
 
 
 class MarathonBase(ABC):
@@ -27,7 +19,7 @@ class MarathonBase(ABC):
 
     # Cached live data
     display_streams: int
-    schedules = [[]]
+    schedules: List[Iterator[Run]] = [[]]
 
     @abstractmethod
     def refresh_all(self) -> None:
