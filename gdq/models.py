@@ -1,4 +1,4 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
@@ -16,12 +16,21 @@ class Event(metaclass=ABCMeta):
     name: str
     short_name: str
 
+    @property
+    @abstractmethod
+    def total(self) -> float:
+        raise NotImplementedError
+
 
 @dataclass
 class SingleEvent(Event):
     event_id: int
     target: float
-    total: float
+    _total: float
+
+    @property
+    def total(self) -> float:
+        return self._total
 
 
 @dataclass

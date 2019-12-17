@@ -33,7 +33,7 @@ def get_events(base_url: str, event_id: int = None) -> List[Event]:
                 event_id=event_id,
                 name=event_data["name"],
                 short_name=event_data["short"],
-                total=float(event_data["amount"]),
+                _total=float(event_data["amount"]),
                 target=float(event_data["targetamount"]),
             )
         except ValueError:
