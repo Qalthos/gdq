@@ -3,12 +3,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import Iterator, List
+from typing import Final, Iterator, List
 
 from gdq import utils
 
 
-PREFIX = " " * 7
+PREFIX: Final[str] = " " * 7
 
 
 @dataclass

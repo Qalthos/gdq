@@ -66,7 +66,7 @@ class MarathonBase(ABC):
 
         return True
 
-    def format_run(self, run: Run, width: int = 80, args=None) -> Iterator[str]:
+    def format_run(self, run: Run, width: int = 80, args=None) -> Generator[str, None, None]:
         # If the estimate has passed, it's probably over.
         if run.remaining < timedelta():
             return

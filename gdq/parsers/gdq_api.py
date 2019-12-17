@@ -1,7 +1,7 @@
 import re
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List, Iterator
+from typing import Dict, Generator, List
 
 import requests
 
@@ -59,7 +59,7 @@ def get_events(base_url: str, event_id: int = None) -> List[Event]:
     return event_objs
 
 
-def get_runs(base_url: str, event_id: int) -> Iterator[Run]:
+def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
     runs = _get_resource(base_url, "run", event=event_id)
     for run in runs:
         run_id = run["pk"]
