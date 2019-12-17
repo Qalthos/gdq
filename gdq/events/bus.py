@@ -43,6 +43,14 @@ class DesertBus:
     def hours(self) -> int:
         return dollars_to_hours(self.total)
 
+    @property
+    def desert_bucks(self) -> float:
+        return self.total / RECORDS[0]["total"]
+
+    @property
+    def desert_toonies(self) -> float:
+        return self.total / RECORDS[1]["total"]
+
     def display(self) -> bool:
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
@@ -54,9 +62,7 @@ class DesertBus:
         else:
             print("It's over!")
 
-        desert_buck, desert_toonie = [record["total"] for record in RECORDS[:2]]
-        print(
-            f"${self.total:,.2f} | {self.hours} hours | d฿{self.total / desert_buck:,.2f} | d฿²{self.total / desert_toonie:,.2f}")
+        print(f"${self.total:,.2f} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
         print(f"${self.total + sum([record['total'] for record in RECORDS]):,.2f} lifetime total.")
 
         if utils.now > START:
