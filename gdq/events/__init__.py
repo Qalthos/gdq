@@ -33,13 +33,7 @@ class MarathonBase(ABC):
     def refresh_all(self) -> None:
         raise NotImplementedError
 
-    def display(self, args) -> bool:
-        # Terminal lines are apparently 1-indexed.
-        row_index = 1
-        if isinstance(self, GDQTracker):
-            print(f"\x1b[H{self.format_milestone()}")
-            row_index += 2
-
+    def display(self, args, row_index=1) -> bool:
         # Limit schedule display based on args
         schedules = self.schedules
         if args.stream_index <= len(schedules):
@@ -115,91 +109,3 @@ class MarathonBase(ABC):
 
         yield f"{run.delta}│{run.game_desc:<{desc_width}s}{runner}"
         yield f"{run.str_estimate: >7s}│{run.category:<{desc_width}}└{border}┤"
-
-
-class GDQTracker(MarathonBase):
-    # Historical donation records
-    records: list = []
-
-    # Cached live data
-    current_event: Event
-    incentives: dict = {}
-
-    def __init__(self, url: str = None, streams: int = 1) -> None:
-        self.url = url or self.url
-        self.display_streams = streams
-        self.read_events()
-
-    @property
-    def total(self):
-        return self.current_event.total
-
-    @property
-    def current_events(self) -> List[SingleEvent]:
-        events = getattr(self.current_event, "subevents", None)
-        if not events:
-            events = [self.current_event]
-        return events
-
-    def refresh_all(self) -> None:
-        self.read_events()
-        self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
-        self.read_incentives()
-
-    def read_events(self) -> None:
-        events = list(gdq_api.get_events(self.url))
-        self.current_event = events.pop(-1)
-
-        self.records = sorted(
-            [(event.total, event.short_name.upper()) for event in events]
-        )
-
-    def read_incentives(self) -> None:
-        incentives = {}
-        for event in self.current_events:
-            incentives.update(
-                gdq_api.get_incentives_for_event(self.url, event.event_id)
-            )
-        self.incentives = incentives
-
-    def format_milestone(self) -> str:
-        last_record = (0, "")
-        line_two = ""
-        for record in self.records:
-            if record[0] > self.total:
-                relative_percent = (self.total - last_record[0]) / (record[0] - last_record[0]) * 100
-                record_bar = utils.show_progress(relative_percent, width=(utils.term_width - 12))
-                line_two = f"\n{utils.short_number(last_record[0]): <5s}▕{record_bar}▏{utils.short_number(record[0]): >5s}"
-                break
-            last_record = record
-        else:
-            record = (0, "NEW HIGH SCORE!")
-
-        dollar_total = f"${self.total:,.2f}"
-        max_len = max((len(last_record[1]), len(record[1])))
-        return f"{last_record[1]: <{max_len}s}{dollar_total: ^{utils.term_width - 2 * max_len}}{record[1]: >{max_len}s}{line_two}"
-
-    def format_run(self, run: Run, width: int = 80, args=None) -> str:
-        width -= len(PREFIX) + 1
-        yield from super().format_run(run, width)
-
-        incentives = self.incentives.get(run.game, [])
-        if incentives:
-            align_width = max(MIN_OFFSET, *(len(incentive) for incentive in incentives))
-            # Handle incentives
-            for incentive in incentives:
-                yield from incentive.render(width, align_width, args)
-
-
-class HoraroSchedule(MarathonBase):
-    # horaro.org keys
-    group_name = ""
-    current_event: str
-
-    def refresh_all(self) -> None:
-        self.schedules = [horaro.read_schedule(self.group_name, self.current_event, self.parse_data)]
-
-    @staticmethod
-    @abstractmethod
-    def parse_data(keys, schedule, timezone="UTC") -> Iterator[Run]:
-        raise NotImplementedError

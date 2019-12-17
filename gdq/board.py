@@ -7,6 +7,7 @@ import xdg
 import toml
 
 from gdq import events, utils
+from gdq.events.gdqbase import GDQTracker
 
 
 def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bool:
@@ -51,7 +52,7 @@ def main():
 
     if config.get(args.stream_name):
         if config[args.stream_name].get("url"):
-            marathon = events.GDQTracker(url=config[args.stream_name]["url"])
+            marathon = GDQTracker(url=config[args.stream_name]["url"])
         else:
             print(f"Config for {args.stream_name} is missing 'url' key")
             sys.exit(1)

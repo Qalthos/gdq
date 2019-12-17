@@ -4,7 +4,7 @@ from typing import Iterator
 from dateutil import tz
 import pyplugs
 
-from gdq.events import HoraroSchedule
+from gdq.events.horarobase import HoraroSchedule
 from gdq.models import Run
 
 
