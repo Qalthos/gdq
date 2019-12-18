@@ -51,7 +51,7 @@ class DesertBus:
     def desert_toonies(self) -> float:
         return self.total / RECORDS[1]["total"]
 
-    def display(self) -> bool:
+    def display(self, args) -> bool:
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
 

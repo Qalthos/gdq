@@ -2,10 +2,10 @@
 import argparse
 
 from gdq import utils
-from gdq.events.bus import DesertBus
+from gdq.events.desert_bus import DesertBus
 
 
-def refresh_bus(marathon: DesertBus, args: argparse.Namespace) -> bool:
+def refresh_event(marathon: DesertBus, args: argparse.Namespace) -> bool:
     # Update current time for display.
     utils.update_now()
 
@@ -13,7 +13,7 @@ def refresh_bus(marathon: DesertBus, args: argparse.Namespace) -> bool:
     utils.terminal_refresh()
     marathon.refresh_all()
 
-    if not marathon.display():
+    if not marathon.display(args):
         return False
 
     utils.slow_progress_bar(args.interval)
@@ -32,7 +32,7 @@ def main():
     active = True
     while active:
         try:
-            active = refresh_bus(marathon, args)
+            active = refresh_event(marathon, args)
         except KeyboardInterrupt:
             break
 
