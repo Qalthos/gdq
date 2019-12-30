@@ -147,8 +147,8 @@ class DesertBus:
 
         for stop in future_stops:
             stop_location = math.floor(((last_record - stop) / (last_record - td_total)) * progress_width)
-            if bus[stop_location:stop_location+2] == "  ":
-                bus = bus[:stop_location] + "🚏" + bus[stop_location+2:]
+            if bus[stop_location:stop_location + 2] == "  ":
+                bus = bus[:stop_location] + "🚏" + bus[stop_location + 2:]
 
         return f"{hours_done}{bus}{hours_left}\x1b[0m"
 
@@ -184,9 +184,9 @@ def shift_banners() -> str:
         reflow = utils.term_width - 3 - (shift_width * 4)
 
     for index, shift_info in enumerate(SHIFTS):
-        boldness = '2'
+        boldness = "2"
         if shift_info == shift:
-            boldness = '7'
+            boldness = "7"
 
         mod = 0
         if reflow < 0 and index == 3:
@@ -195,7 +195,7 @@ def shift_banners() -> str:
             mod = 1
         banners.append(f"{shift_info['color']};{boldness}m{shift_info['name'].center(shift_width+mod, '═')}\x1b[0m")
 
-    return '|'.join(banners)
+    return "|".join(banners)
 
 
 def timedelta_as_hours(delta: timedelta) -> str:

@@ -42,16 +42,12 @@ class GDQTracker(MarathonBase):
         events = list(gdq_api.get_events(self.url))
         self.current_event = events.pop(-1)
 
-        self.records = sorted(
-            [(event.total, event.short_name.upper()) for event in events]
-        )
+        self.records = sorted([(event.total, event.short_name.upper()) for event in events])
 
     def read_incentives(self) -> None:
         incentives = {}
         for event in self.current_events:
-            incentives.update(
-                gdq_api.get_incentives_for_event(self.url, event.event_id)
-            )
+            incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id))
         self.incentives = incentives
 
     def display(self, args, row_index=1) -> bool:
