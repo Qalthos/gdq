@@ -55,6 +55,10 @@ class DesertBus:
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
 
+        if args.test:
+            global START
+            START = utils.now - timedelta(hours=args.test)
+
         if utils.now < START:
             print(f"Starting in {START - utils.now}")
         elif utils.now < (START + timedelta(hours=self.hours + 1)):

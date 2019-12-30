@@ -25,6 +25,9 @@ def main():
     parser.add_argument(
         "-n", "--interval", help="time between screen refreshes", type=int, default=60
     )
+    parser.add_argument(
+        "-t", "--test", help="pretend the run started this many hours ago", type=int, default=0
+    )
     args = parser.parse_args()
 
     marathon = DesertBus()
