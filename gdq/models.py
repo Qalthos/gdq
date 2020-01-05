@@ -101,6 +101,9 @@ class ChoiceIncentive(Incentive):
 
     @property
     def max_percent(self) -> float:
+        if self.current == 0:
+            return 0
+
         nonzero_options = (
             option.numeric_total / self.current
             for option in self.options
@@ -195,7 +198,7 @@ class DonationIncentive(Incentive):
     def __len__(self) -> int:
         return len(self.short_desc)
 
-    def render(self, width: int, align: int) -> Iterator[str]:
+    def render(self, width: int, align: int, args) -> Iterator[str]:
         # Remove fixed elements
         width -= 4
 
