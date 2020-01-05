@@ -1,3 +1,4 @@
+import asyncio
 from typing import Final, Generator, List
 
 from gdq import utils
@@ -20,7 +21,7 @@ class GDQTracker(MarathonBase):
     def __init__(self, url: str = None, streams: int = 1) -> None:
         self.url = url or self.url
         self.display_streams = streams
-        self.read_events()
+        #self.read_events()
 
         self.runners = {}
         for event in self.current_events:
@@ -37,28 +38,33 @@ class GDQTracker(MarathonBase):
             events = [self.current_event]
         return events
 
-    def refresh_all(self) -> None:
-        self.read_events()
-        self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
-        self.read_incentives()
+    async def refresh_all(self) -> None:
+        await self.read_events()
+        await self.read_runs()
+        await self.read_incentives()
 
-    def read_events(self) -> None:
-        events = list(gdq_api.get_events(self.url))
+    async def read_events(self) -> None:
+        events = await asyncio.gather(gdq_api.get_events(self.url))
         self.current_event = events.pop(-1)
 
         self.records = sorted([(event.total, event.short_name.upper()) for event in events])
 
-    def read_incentives(self) -> None:
+    async def read_runs(self) -> None:
+        self.schedules = await asyncio.gather(
+            *[gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
+        )
+
+    async def read_incentives(self) -> None:
         incentives = {}
         for event in self.current_events:
             incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id))
         self.incentives = incentives
 
-    def display(self, args, row_index=1) -> bool:
-        row_index += self.display_milestone()
+    async def display(self, args, row_index=1) -> bool:
+        row_index += await self.display_milestone()
         return super().display(args, row_index)
 
-    def display_milestone(self) -> int:
+    async def display_milestone(self) -> int:
         extra_lines = 1
 
         last_record = (0, "")

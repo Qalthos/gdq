@@ -1,6 +1,6 @@
+import asyncio
 from datetime import datetime, timezone
 import shutil
-import time
 
 
 now: datetime = datetime.now(timezone.utc)
@@ -49,7 +49,7 @@ def short_number(number: float) -> str:
     return f"{number:,.0f}"
 
 
-def slow_progress_bar(interval=30):
+async def slow_progress_bar(interval=30):
     resolution = 0.10
     ticks = int(interval / resolution)
 
@@ -65,7 +65,7 @@ def slow_progress_bar(interval=30):
 
         repaint_progress = show_progress(i, term_width, out_of=ticks)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
-        time.sleep(resolution)
+        await asyncio.sleep(resolution)
 
 
 def terminal_refresh() -> bool:

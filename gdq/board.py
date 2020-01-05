@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import asyncio
 from pathlib import Path
 import sys
 
@@ -10,22 +11,24 @@ from gdq import events, utils
 from gdq.events.gdqbase import GDQTracker
 
 
-def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bool:
+async def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bool:
     # Update current time for display.
     utils.update_now()
 
     # Recaclulate terminal size
     utils.terminal_refresh()
-    marathon.refresh_all()
 
-    if not marathon.display(args):
+    runs_future = asyncio.create_task(marathon.refresh_all())
+    runs_future.add_done_callback(marathon.display(args))
+
+    if marathon.done:
         return False
 
-    utils.slow_progress_bar(args.interval)
+    await utils.slow_progress_bar(args.interval)
     return True
 
 
-def main():
+async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i", "--stream_index", help="follow only a single stream", type=int, default=0
@@ -65,10 +68,10 @@ def main():
     active = True
     while active:
         try:
-            active = refresh_event(marathon, args)
+            active = await refresh_event(marathon, args)
         except KeyboardInterrupt:
             break
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
