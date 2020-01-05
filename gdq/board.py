@@ -18,8 +18,10 @@ async def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace)
     # Recaclulate terminal size
     utils.terminal_refresh()
 
+    def display() -> None:
+        marathon.display(args)
     runs_future = asyncio.create_task(marathon.refresh_all())
-    runs_future.add_done_callback(marathon.display(args))
+    runs_future.add_done_callback(display())
 
     if marathon.done:
         return False

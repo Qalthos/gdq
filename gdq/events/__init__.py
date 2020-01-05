@@ -26,7 +26,7 @@ class MarathonBase(ABC):
     async def refresh_all(self) -> None:
         raise NotImplementedError
 
-    async def display(self, args, row_index=1) -> None:
+    def display(self, args, row_index=1) -> None:
         # Limit schedule display based on args
         schedules = self.schedules
         if args.stream_index <= len(schedules):

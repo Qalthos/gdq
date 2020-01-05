@@ -41,39 +41,34 @@ class GDQTracker(MarathonBase):
     async def refresh_all(self) -> None:
         await self.read_events()
         await self.read_runs()
-        await self.read_incentives()
 
     async def read_events(self) -> None:
         events = await asyncio.gather(gdq_api.get_events(self.url))
         self.current_event = events.pop(-1)
 
         self.records = sorted([(event.total, event.short_name.upper()) for event in events])
+        await self.display_milestone()
 
     async def read_runs(self) -> None:
         self.schedules = await asyncio.gather(
             *[gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
         )
 
-    async def read_incentives(self) -> None:
         incentives = {}
         for event in self.current_events:
             incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id))
         self.incentives = incentives
 
-    async def display(self, args, row_index=1) -> bool:
-        row_index += await self.display_milestone()
-        return super().display(args, row_index)
+    def display(self, args) -> None:
+        super().display(args, 2)
 
-    async def display_milestone(self) -> int:
-        extra_lines = 1
-
+    async def display_milestone(self) -> None:
         last_record = (0, "")
         for record in self.records:
             if record[0] > self.total:
                 relative_percent = (self.total - last_record[0]) / (record[0] - last_record[0]) * 100
                 bar = utils.show_progress(relative_percent, width=(utils.term_width - 12))
                 print(f"\x1b[2H{utils.short_number(last_record[0]): <5s}▕{bar}▏{utils.short_number(record[0]): >5s}")
-                extra_lines += 1
                 break
             last_record = record
         else:
@@ -83,8 +78,6 @@ class GDQTracker(MarathonBase):
         dollar_total = f"${self.total:,.2f}"
         dollar_total = f"{dollar_total: ^{utils.term_width - (2 * max_len)}s}"
         print(f"\x1b[H{last_record[1]: <{max_len}s}{dollar_total}{record[1]: >{max_len}s}")
-
-        return extra_lines
 
     def format_run(self, run: Run, width: int = 80, args=None) -> Generator[str, None, None]:
         width -= len(PREFIX) + 1
