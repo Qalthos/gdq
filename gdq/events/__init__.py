@@ -39,6 +39,8 @@ class MarathonBase(ABC):
             schedule_lines = []
             for run in schedule:
                 schedule_lines.extend(self.format_run(run, column_width, args))
+                if len(schedule_lines) >= utils.term_height:
+                    break
             rendered_schedules.append(schedule_lines)
 
         first_row = True

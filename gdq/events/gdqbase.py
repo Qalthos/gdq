@@ -65,8 +65,8 @@ class GDQTracker(MarathonBase):
         for record in self.records:
             if record[0] > self.total:
                 relative_percent = (self.total - last_record[0]) / (record[0] - last_record[0]) * 100
-                record_bar = utils.show_progress(relative_percent, width=(utils.term_width - 12))
-                print(f"\x1b[2H{utils.short_number(last_record[0]): <5s}▕{record_bar}▏{utils.short_number(record[0]): >5s}")
+                bar = utils.show_progress(relative_percent, width=(utils.term_width - 12))
+                print(f"\x1b[2H{utils.short_number(last_record[0]): <5s}▕{bar}▏{utils.short_number(record[0]): >5s}")
                 extra_lines += 1
                 break
             last_record = record
