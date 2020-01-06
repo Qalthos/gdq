@@ -22,7 +22,7 @@ class SpeedrunsRochester(HoraroSchedule):
                 game=run_data["Game"],
                 platform=run_data["Console"] or "",
                 category=run_data["Category"] or "",
-                runner=run_data["Runner"] or "",
+                runners=[run_data["Runner"] or ""],
                 start=datetime.fromtimestamp(run["scheduled_t"], tz=tz.gettz(timezone)),
                 estimate=run["length_t"],
             )

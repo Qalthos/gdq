@@ -40,7 +40,7 @@ class FrameFatales(HoraroSchedule):
                 game=game,
                 platform="",
                 category=category,
-                runner=runner,
+                runners=[runner],
                 start=datetime.fromtimestamp(run["scheduled_t"], tz=tz.gettz(timezone)),
                 estimate=run["length_t"],
             )

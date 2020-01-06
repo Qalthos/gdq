@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import Final, Iterator, List
+from typing import Final, Iterator, List, Union
 
 from gdq import utils
 
@@ -47,16 +47,30 @@ class MultiEvent(Event):
 
 
 @dataclass
+class Runner:
+    runner_id: int
+    name: str
+    pronouns: str = ""
+
+    def __str__(self):
+        return f"{self.pronouns}{self.name}"
+
+
+@dataclass
 class Run:
     game: str
     platform: str
     category: str
-    runner: str
+    runners: List[Union[Runner, str]]
 
     start: datetime
     estimate: int
 
     run_id: int = None
+
+    @property
+    def runner_str(self):
+        return ", ".join((str(runner) for runner in self.runners))
 
     @property
     def delta(self) -> str:

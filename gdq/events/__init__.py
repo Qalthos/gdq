@@ -71,7 +71,7 @@ class MarathonBase(ABC):
         if run.remaining < timedelta():
             return
 
-        if not run.runner:
+        if not any(run.runners):
             desc_width = max(len(run.game_desc), len(run.category))
             if desc_width > width:
                 # If display too long, truncate run
@@ -82,13 +82,13 @@ class MarathonBase(ABC):
             yield f"{run.delta}│{run.game_desc:<{width - 1}s}│"
             yield f"{run.str_estimate: >7s}│{run.category:<{width - 1}}│"
         else:
-            desc_width = max(width - 2 - len(run.runner), len(run.game_desc), len(run.category))
+            desc_width = max(width - 2 - len(run.runner_str), len(run.game_desc), len(run.category))
 
-        runner = "│" + run.runner + "│"
+        runner = "│" + run.runner_str + "│"
         if desc_width + len(runner) > width:
             # Truncate runner display if too long
             runner_width = width - 3 - desc_width
-            runner = "│" + run.runner[:runner_width] + "…│"
+            runner = "│" + run.runner_str[:runner_width] + "…│"
 
         if desc_width + len(runner) > width:
             # If display still too long, truncate run

@@ -22,6 +22,10 @@ class GDQTracker(MarathonBase):
         self.display_streams = streams
         self.read_events()
 
+        self.runners = {}
+        for event in self.current_events:
+            self.runners.update(gdq_api.get_runners_for_event(self.url, event.event_id))
+
     @property
     def total(self) -> float:
         return self.current_event.total

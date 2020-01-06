@@ -1,19 +1,18 @@
 import re
 from collections import defaultdict
 from datetime import datetime
+import functools
 from typing import Dict, Generator, List
 
 import requests
 
-from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive, Event, Run, SingleEvent, MultiEvent
+from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive
+from gdq.models import Event, SingleEvent, MultiEvent, Run, Runner
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs) -> List[dict]:
-    resource_url = f"{base_url}/api/v1/search/?type={resource_type}"
-    for key, value in kwargs.items():
-        resource_url += f"&{key}={value}"
-
-    return requests.get(resource_url).json()
+    resource_url = f"{base_url}/api/v1/search/"
+    return requests.get(resource_url, params={"type": resource_type, **kwargs}).json()
 
 
 def get_events(base_url: str, event_id: int = None) -> List[Event]:
@@ -61,6 +60,7 @@ def get_events(base_url: str, event_id: int = None) -> List[Event]:
 
 def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
     runs = _get_resource(base_url, "run", event=event_id)
+    runners = get_runners_for_event(base_url, event_id)
     for run in runs:
         run_id = run["pk"]
         run = run["fields"]
@@ -78,11 +78,28 @@ def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
             game=run["name"],
             platform=run["console"],
             category=run["category"],
-            # TODO: pull directly
-            runner=run["deprecated_runners"],
+            runners=[runners[runner] for runner in run["runners"]],
             start=start_time,
             estimate=int(estimate),
         )
+
+
+def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
+    runners = _get_resource(base_url, resource_type="runner", event=event_id)
+    runner_dict = {}
+
+    for runner in runners:
+        runner_id = runner["pk"]
+        runner = runner["fields"]
+        runner_dict[runner_id] = Runner(runner_id=runner_id, name=runner["name"], pronouns=runner["pronouns"])
+
+    return runner_dict
+
+
+@functools.lru_cache
+def get_runner(base_url: str, runner_id: int) -> Runner:
+    runner = _get_resource(base_url, resource_type="runner", id=runner_id)[0]["fields"]
+    return Runner(runner_id, runner["name"], runner["pronouns"])
 
 
 def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentive]:

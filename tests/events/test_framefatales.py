@@ -14,7 +14,7 @@ class TestFrameFatales(unittest.TestCase):
             game="Community Spotlight: Metroid Prime 2 Edition",
             platform="",
             category="",
-            runner="",
+            runners=[""],
             start=datetime(2019, 5, 14, 0, 45, tzinfo=timezone.utc),
             estimate=5400,
         )
@@ -33,7 +33,7 @@ class TestFrameFatales(unittest.TestCase):
             game="Bioshock Infifnite",
             platform="",
             category="any%HRH mod",
-            runner="Katlink",
+            runners=["Katlink"],
             start=datetime(2019, 5, 14, 4, 53, tzinfo=timezone.utc),
             estimate=7200,
         )
@@ -52,7 +52,7 @@ class TestFrameFatales(unittest.TestCase):
             game="Final Fantasy IV Free Enterprise (League Forge) Race",
             platform="",
             category="",
-            runner="Netara v Demerine",
+            runners=["Netara v Demerine"],
             start=datetime(2019, 5, 14, 20, 50, tzinfo=timezone.utc),
             estimate=7500,
         )
@@ -71,7 +71,7 @@ class TestFrameFatales(unittest.TestCase):
             game="The Legend of Zelda: A Link tot he Past",
             platform="",
             category="any%MG, no save+quit Race",
-            runner="EmoSaru and Kelpsey",
+            runners=["EmoSaru and Kelpsey"],
             start=datetime(2019, 8, 20, 18, 39, tzinfo=timezone.utc),
             estimate=5700,
         )
