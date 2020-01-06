@@ -103,10 +103,6 @@ def get_runner(base_url: str, runner_id: int) -> Runner:
 
 
 def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentive]:
-    """
-    Method to emulate how gdq_tracker requests incentive information.
-    """
-
     incentives = _get_resource(base_url, "allbids", event=event_id)
     incentive_dict = dict()
     choices = defaultdict(list)
@@ -143,30 +139,3 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
             )
         incentive_dict[game] = incentive_dict.get(game, []) + [incentive_obj]
     return incentive_dict
-
-
-def get_incentives_for_run(base_url: str, run_id: int) -> List[Incentive]:
-    incentives = _get_resource(base_url, "allbids", run=run_id, feed="open")
-    incentive_list = []
-
-    for incentive in incentives:
-        incentive = incentive["fields"]
-        if incentive["istarget"]:
-            # noinspection PyArgumentList
-            incentive_obj = DonationIncentive(
-                description=incentive["description"],
-                short_desc=incentive["name"],
-                current=float(incentive["total"]),
-                numeric_total=float(incentive["goal"]),
-            )
-        else:
-            # noinspection PyArgumentList
-            incentive_obj = ChoiceIncentive(
-                description=incentive["description"],
-                short_desc=incentive["name"],
-                current=float(incentive["total"]),
-                # TODO: Uhhh...
-                options=[],
-            )
-        incentive_list.append(incentive_obj)
-    return incentive_list

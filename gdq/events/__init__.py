@@ -16,17 +16,16 @@ marathon = pyplugs.call_factory(__package__)
 class MarathonBase(ABC):
     # Tracker base URL
     url = ""
-    done = False
 
     # Cached live data
     display_streams: int
     schedules: List[Iterator[Run]] = [[]]
 
     @abstractmethod
-    async def refresh_all(self) -> None:
+    def refresh_all(self) -> None:
         raise NotImplementedError
 
-    def display(self, args, row_index=1) -> None:
+    def display(self, args, row_index=1) -> bool:
         # Limit schedule display based on args
         schedules = self.schedules
         if args.stream_index <= len(schedules):
@@ -62,11 +61,12 @@ class MarathonBase(ABC):
                 break
         else:
             if first_row:
-                self.done = True
-                return
+                return False
             clear_row = " " * utils.term_width
             for clear_index in range(row_index, utils.term_height):
                 print(f"\x1b[{clear_index}H{clear_row}", end="")
+
+        return True
 
     def format_run(self, run: Run, width: int = 80, args=None) -> Generator[str, None, None]:
         # If the estimate has passed, it's probably over.
