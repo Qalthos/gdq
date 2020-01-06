@@ -112,20 +112,20 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
     choices = defaultdict(list)
 
     for incentive in incentives:
+        incentive_id = incentive["pk"]
         incentive = incentive["fields"]
         game = incentive["speedrun__name"]
 
-        if incentive.get('parent__name'):
-            parent_name = incentive["parent__name"]
+        if incentive.get('parent'):
+            parent_id = incentive["parent"]
             choice = Choice(
                 name=incentive["name"],
                 description=incentive["description"],
                 numeric_total=float(incentive["total"]),
             )
-            choices[parent_name].append(choice)
+            choices[parent_id].append(choice)
             continue
         elif incentive["istarget"]:
-            # noinspection PyArgumentList
             incentive_obj = DonationIncentive(
                 description=incentive["description"],
                 short_desc=incentive["name"],
@@ -134,12 +134,11 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
                 state=incentive["state"],
             )
         else:
-            # noinspection PyArgumentList
             incentive_obj = ChoiceIncentive(
                 description=incentive["description"],
                 short_desc=incentive["name"],
                 current=float(incentive["total"]),
-                options=choices[incentive["name"]],
+                options=choices[incentive_id],
                 state=incentive["state"],
             )
         incentive_dict[game] = incentive_dict.get(game, []) + [incentive_obj]
