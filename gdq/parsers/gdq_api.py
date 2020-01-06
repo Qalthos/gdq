@@ -107,7 +107,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
     Method to emulate how gdq_tracker requests incentive information.
     """
 
-    incentives = _get_resource(base_url, "allbids", event=event_id, feed="open")
+    incentives = _get_resource(base_url, "allbids", event=event_id)
     incentive_dict = dict()
     choices = defaultdict(list)
 
@@ -131,6 +131,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
                 short_desc=incentive["name"],
                 current=float(incentive["total"]),
                 numeric_total=float(incentive["goal"]),
+                state=incentive["state"],
             )
         else:
             # noinspection PyArgumentList
@@ -139,6 +140,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
                 short_desc=incentive["name"],
                 current=float(incentive["total"]),
                 options=choices[incentive["name"]],
+                state=incentive["state"],
             )
         incentive_dict[game] = incentive_dict.get(game, []) + [incentive_obj]
     return incentive_dict

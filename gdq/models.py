@@ -107,6 +107,11 @@ class Incentive(metaclass=ABCMeta):
     description: str
     short_desc: str
     current: float
+    state: str
+
+    @property
+    def closed(self):
+        return self.state == "CLOSED"
 
 
 @dataclass
@@ -133,6 +138,10 @@ class ChoiceIncentive(Incentive):
         return 0
 
     def render(self, width: int, align: int, args) -> Iterator[str]:
+        # Skip incentive if applicable
+        if args.hide_completed and self.closed:
+            return
+
         # Remove fixed elements
         width -= 4
 
@@ -152,6 +161,7 @@ class ChoiceIncentive(Incentive):
 
         max_percent = self.max_percent
         sorted_options = sorted(self.options, key=attrgetter("numeric_total"), reverse=True)
+
         for index, option in enumerate(sorted_options):
             try:
                 percent = option.numeric_total / self.current * 100
@@ -185,6 +195,9 @@ class ChoiceIncentive(Incentive):
                 for line in lines[1:]:
                     yield f"{PREFIX}│{leg[1]}   {line.ljust(width - 1)}│"
 
+            if self.closed:
+                break
+
 
 @dataclass
 class Choice:
@@ -213,6 +226,10 @@ class DonationIncentive(Incentive):
         return len(self.short_desc)
 
     def render(self, width: int, align: int, args) -> Iterator[str]:
+        # Skip incentive if applicable
+        if args.hide_completed and self.closed:
+            return
+
         # Remove fixed elements
         width -= 4
 

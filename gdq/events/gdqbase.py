@@ -82,7 +82,12 @@ class GDQTracker(MarathonBase):
 
     def format_run(self, run: Run, width: int = 80, args=None) -> Generator[str, None, None]:
         width -= len(PREFIX) + 1
-        yield from super().format_run(run, width)
+        run_desc = list(super().format_run(run, width))
+
+        if not run_desc:
+            return
+        for line in run_desc:
+            yield line
 
         incentives = self.incentives.get(run.game, [])
         if incentives:
