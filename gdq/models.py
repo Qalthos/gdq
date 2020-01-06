@@ -151,11 +151,11 @@ class ChoiceIncentive(Incentive):
         description = "{0}├┬{1:<" + str(desc_size) + "s}  {2: <" + str(rest_size) + "s}│"
         if lines:
             yield description.format(PREFIX, self.short_desc, lines[0])
-        for line in lines[1:]:
-            description = (
-                "{0}││{0:<" + str(desc_size) + "s}  {1: <" + str(rest_size) + "s}│"
-            )
-            yield description.format(PREFIX, line)
+            for line in lines[1:]:
+                description = (
+                    "{0}││{0:<" + str(desc_size) + "s}  {1: <" + str(rest_size) + "s}│"
+                )
+                yield description.format(PREFIX, line)
         else:
             yield description.format(PREFIX, self.short_desc, "")
 
