@@ -21,6 +21,9 @@ def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bo
     if not marathon.display(args):
         return False
 
+    if args.oneshot:
+        return False
+
     utils.slow_progress_bar(args.interval)
     return True
 
@@ -41,6 +44,9 @@ def main():
     )
     parser.add_argument(
         "--hide-completed", help="Hide completed donation incentives.", action="store_true"
+    )
+    parser.add_argument(
+        "--oneshot", help="Run only once and then exit", action="store_true"
     )
     parser.add_argument(
         "stream_name", nargs="?", help="The event to follow", type=str, default="gdq",

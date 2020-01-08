@@ -16,6 +16,9 @@ def refresh_event(marathon: DesertBus, args: argparse.Namespace) -> bool:
     if not marathon.display(args):
         return False
 
+    if args.oneshot:
+        return False
+
     utils.slow_progress_bar(args.interval)
     return True
 
@@ -27,6 +30,9 @@ def main():
     )
     parser.add_argument(
         "-t", "--test", help="pretend the run started this many hours ago", type=int, default=0
+    )
+    parser.add_argument(
+        "--oneshot", help="Run only once and then exit", action="store_true"
     )
     args = parser.parse_args()
 
