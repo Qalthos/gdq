@@ -1,8 +1,8 @@
-import re
 from collections import defaultdict
 from datetime import datetime
-import functools
-from typing import Dict, Generator, List
+import json
+import re
+from typing import Dict, Generator, List, Optional
 
 import requests
 
@@ -10,17 +10,21 @@ from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive
 from gdq.models import Event, SingleEvent, MultiEvent, Run, Runner
 
 
-def _get_resource(base_url: str, resource_type: str, **kwargs) -> List[dict]:
+def _get_resource(base_url: str, resource_type: str, **kwargs) -> requests.Response:
     resource_url = f"{base_url}/api/v1/search/"
-    return requests.get(resource_url, params={"type": resource_type, **kwargs}).json()
+    return requests.get(resource_url, params={"type": resource_type, **kwargs})
 
 
-def get_events(base_url: str, event_id: int = None) -> List[Event]:
+def get_events(base_url: str, event_id: int = None) -> Optional[List[Event]]:
     kwargs = {}
     if event_id:
         kwargs["id"] = event_id
 
-    events = _get_resource(base_url, "event", **kwargs)
+    try:
+        events = _get_resource(base_url, "event", **kwargs).json()
+    except json.decoder.JSONDecodeError:
+        return
+
     match_multi = re.compile(r"(.*)s\d+$", re.MULTILINE)
     multi_events = {}
     event_objs = []
@@ -59,7 +63,7 @@ def get_events(base_url: str, event_id: int = None) -> List[Event]:
 
 
 def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
-    runs = _get_resource(base_url, "run", event=event_id)
+    runs = _get_resource(base_url, "run", event=event_id).json()
     runners = get_runners_for_event(base_url, event_id)
     for run in runs:
         run_id = run["pk"]
@@ -85,7 +89,7 @@ def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
 
 
 def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
-    runners = _get_resource(base_url, resource_type="runner", event=event_id)
+    runners = _get_resource(base_url, resource_type="runner", event=event_id).json()
     runner_dict = {}
 
     for runner in runners:
@@ -96,18 +100,8 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
     return runner_dict
 
 
-@functools.lru_cache
-def get_runner(base_url: str, runner_id: int) -> Runner:
-    runner = _get_resource(base_url, resource_type="runner", id=runner_id)[0]["fields"]
-    return Runner(runner_id, runner["name"], runner["pronouns"])
-
-
 def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentive]:
-    """
-    Method to emulate how gdq_tracker requests incentive information.
-    """
-
-    incentives = _get_resource(base_url, "allbids", event=event_id)
+    incentives = _get_resource(base_url, "allbids", event=event_id).json()
     incentive_dict = dict()
     choices = defaultdict(list)
 
@@ -143,30 +137,3 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
             )
         incentive_dict[game] = incentive_dict.get(game, []) + [incentive_obj]
     return incentive_dict
-
-
-def get_incentives_for_run(base_url: str, run_id: int) -> List[Incentive]:
-    incentives = _get_resource(base_url, "allbids", run=run_id, feed="open")
-    incentive_list = []
-
-    for incentive in incentives:
-        incentive = incentive["fields"]
-        if incentive["istarget"]:
-            # noinspection PyArgumentList
-            incentive_obj = DonationIncentive(
-                description=incentive["description"],
-                short_desc=incentive["name"],
-                current=float(incentive["total"]),
-                numeric_total=float(incentive["goal"]),
-            )
-        else:
-            # noinspection PyArgumentList
-            incentive_obj = ChoiceIncentive(
-                description=incentive["description"],
-                short_desc=incentive["name"],
-                current=float(incentive["total"]),
-                # TODO: Uhhh...
-                options=[],
-            )
-        incentive_list.append(incentive_obj)
-    return incentive_list

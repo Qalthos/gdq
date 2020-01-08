@@ -1,30 +1,26 @@
-from typing import Final, Generator, List
+from typing import Dict, Generator, List
 
 from gdq import utils
 from gdq.events import MarathonBase
-from gdq.models import PREFIX, Event, SingleEvent, Run
+from gdq.models import PREFIX, Event, SingleEvent, Run, Runner, Incentive
 from gdq.parsers import gdq_api
 
 
-MIN_OFFSET: Final[int] = 20
+MIN_OFFSET: int = 20
 
 
 class GDQTracker(MarathonBase):
     # Historical donation records
-    records: list = []
+    records: List[tuple] = []
 
     # Cached live data
     current_event: Event
-    incentives: dict = {}
+    runners: Dict[int, Runner] = {}
+    incentives: Dict[str, Incentive] = {}
 
     def __init__(self, url: str = None, streams: int = 1) -> None:
         self.url = url or self.url
         self.display_streams = streams
-        self.read_events()
-
-        self.runners = {}
-        for event in self.current_events:
-            self.runners.update(gdq_api.get_runners_for_event(self.url, event.event_id))
 
     @property
     def total(self) -> float:
@@ -39,20 +35,26 @@ class GDQTracker(MarathonBase):
 
     def refresh_all(self) -> None:
         self.read_events()
+        self.read_runners()
         self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
         self.read_incentives()
 
     def read_events(self) -> None:
-        events = list(gdq_api.get_events(self.url))
+        events = gdq_api.get_events(self.url)
+        if events is None:
+            return
+
         self.current_event = events.pop(-1)
 
         self.records = sorted([(event.total, event.short_name.upper()) for event in events])
 
-    def read_incentives(self) -> None:
-        incentives = {}
+    def read_runners(self) -> None:
         for event in self.current_events:
-            incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id))
-        self.incentives = incentives
+            self.runners.update(gdq_api.get_runners_for_event(self.url, event.event_id))
+
+    def read_incentives(self) -> None:
+        for event in self.current_events:
+            self.incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id))
 
     def display(self, args, row_index=1) -> bool:
         row_index += self.display_milestone()
