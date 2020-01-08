@@ -121,6 +121,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
             continue
         elif incentive["istarget"]:
             incentive_obj = DonationIncentive(
+                incentive_id=incentive_id,
                 description=incentive["description"],
                 short_desc=incentive["name"],
                 current=float(incentive["total"]),
@@ -129,6 +130,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
             )
         else:
             incentive_obj = ChoiceIncentive(
+                incentive_id=incentive_id,
                 description=incentive["description"],
                 short_desc=incentive["name"],
                 current=float(incentive["total"]),

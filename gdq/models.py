@@ -104,6 +104,7 @@ class Run:
 
 @dataclass
 class Incentive(metaclass=ABCMeta):
+    incentive_id: int
     description: str
     short_desc: str
     current: float

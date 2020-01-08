@@ -1,3 +1,4 @@
+import operator
 from typing import Dict, Generator, List
 
 from gdq import utils
@@ -95,5 +96,5 @@ class GDQTracker(MarathonBase):
         if incentives:
             align_width = max(MIN_OFFSET, *(len(incentive) for incentive in incentives))
             # Handle incentives
-            for incentive in incentives:
+            for incentive in sorted(incentives, key=operator.attrgetter("incentive_id")):
                 yield from incentive.render(width, align_width, args)
