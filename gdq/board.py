@@ -46,6 +46,9 @@ def main():
         "--hide-completed", help="Hide completed donation incentives.", action="store_true"
     )
     parser.add_argument(
+        "--hide-basic", help="Hide runs with no active incentives", action="store_true"
+    )
+    parser.add_argument(
         "--oneshot", help="Run only once and then exit", action="store_true"
     )
     parser.add_argument(
