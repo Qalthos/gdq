@@ -1,5 +1,5 @@
 import operator
-from typing import Dict, Generator, List
+from typing import Dict, List
 
 from gdq import utils
 from gdq.events import MarathonBase

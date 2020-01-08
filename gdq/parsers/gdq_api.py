@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 import json
 import re
-from typing import Dict, Generator, List, Optional
+from typing import Dict, List, Optional
 
 import requests
 
@@ -62,8 +62,10 @@ def get_events(base_url: str, event_id: int = None) -> Optional[List[Event]]:
     return event_objs
 
 
-def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
+def get_runs(base_url: str, event_id: int) -> List[Run]:
     runs = _get_resource(base_url, "run", event=event_id).json()
+    run_list = []
+
     runners = get_runners_for_event(base_url, event_id)
     for run in runs:
         run_id = run["pk"]
@@ -77,7 +79,7 @@ def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
             # No times attached, huh?
             continue
 
-        yield Run(
+        run_list.append(Run(
             run_id=run_id,
             game=run["name"],
             platform=run["console"],
@@ -85,7 +87,9 @@ def get_runs(base_url: str, event_id: int) -> Generator[Run, None, None]:
             runners=[runners[runner] for runner in run["runners"]],
             start=start_time,
             estimate=int(estimate),
-        )
+        ))
+
+    return run_list
 
 
 def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
