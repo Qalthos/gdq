@@ -2,6 +2,7 @@
 import argparse
 from pathlib import Path
 import sys
+import time
 
 import xdg
 import toml
@@ -11,20 +12,28 @@ from gdq.events.gdqbase import GDQTracker
 
 
 def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bool:
-    # Update current time for display.
-    utils.update_now()
-
-    # Recaclulate terminal size
-    utils.terminal_refresh()
     marathon.refresh_all()
 
-    if not marathon.display(args):
-        return False
+    resolution = 0.10
+    ticks = int(args.interval / resolution)
 
-    if args.oneshot:
-        return False
+    # Don't bother updating the progress bar more often than necessary
+    if ticks > utils.term_width * 8:
+        ticks = utils.term_width * 8
+        resolution = args.interval / ticks
 
-    utils.slow_progress_bar(args.interval)
+    for i in range(ticks):
+        utils.terminal_refresh()
+        utils.update_now()
+        if not marathon.display(args):
+            return False
+        if args.oneshot:
+            return False
+
+        repaint_progress = utils.show_progress(i, utils.term_width, out_of=ticks)
+        print(f"\x1b[{utils.term_height}H{repaint_progress}", end="", flush=True)
+        time.sleep(resolution)
+
     return True
 
 
