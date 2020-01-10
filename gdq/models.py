@@ -120,16 +120,8 @@ class ChoiceIncentive(Incentive):
     options: list
 
     @property
-    def max_percent(self) -> float:
-        if self.current == 0:
-            return 0
-
-        nonzero_options = (
-            option.numeric_total / self.current
-            for option in self.options
-            if option.numeric_total > 0
-        )
-        return max((0, *nonzero_options)) * 100
+    def max_option(self) -> float:
+        return max((option.numeric_total for option in self.options))
 
     def __len__(self) -> int:
         if self.options:
@@ -160,7 +152,6 @@ class ChoiceIncentive(Incentive):
         else:
             yield description.format(PREFIX, self.short_desc, "")
 
-        max_percent = self.max_percent
         sorted_options = sorted(self.options, key=attrgetter("numeric_total"), reverse=True)
 
         for index, option in enumerate(sorted_options):
@@ -172,24 +163,18 @@ class ChoiceIncentive(Incentive):
             if percent < args.min_percent and index >= args.min_options and index != len(self.options) - 1:
                 remaining = sorted_options[index:]
                 total = sum(option.numeric_total for option in remaining)
-                try:
-                    percent = total / self.current * 100
-                except ZeroDivisionError:
-                    percent = 0
                 description = "And {} more".format(len(remaining))
-                incentive_bar = utils.show_progress(percent, width - align - 7, max_percent)
-                line_one = "{0}│╵ {1:<" + str(align) + "s}▕{2}▏{3: >6s}│"
-                yield line_one.format(PREFIX, description, incentive_bar, utils.short_number(total))
+                incentive_bar = utils.progress_bar(0, total, self.max_option, width - align - 6)
+                yield f"{PREFIX}│╵ {description:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
                 break
 
-            incentive_bar = utils.show_progress(percent, width - align - 7, max_percent)
+            incentive_bar = utils.progress_bar(0, option.numeric_total, self.max_option, width - align - 6)
 
             leg = "├│"
             if index == len(self.options) - 1:
                 leg = "└ "
 
-            line_one = "{0}│{1}▶{2:<" + str(align) + "s}▕{3}▏{4: >6s}│"
-            yield line_one.format(PREFIX, leg[0], option.name, incentive_bar, option.total)
+            yield f"{PREFIX}│{leg[0]}▶{option.name:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
             if option.description:
                 lines = wrap(option.description, width)
                 yield f"{PREFIX}│{leg[1]} └▶{lines[0].ljust(width - 1)}│"
@@ -235,14 +220,13 @@ class DonationIncentive(Incentive):
         width -= 4
 
         lines = wrap(self.description, width + 1)
-        incentive_bar = utils.show_progress(self.percent, width - align - 7)
+        incentive_bar = utils.progress_bar(0, self.current, self.numeric_total, width - align)
         if lines:
             yield f"{PREFIX}├┬{lines[0].ljust(width + 2)}│"
             for line in lines[1:]:
                 yield f"{PREFIX}││{line.ljust(width + 2)}│"
 
-            progress = "{0}│└▶{1:<" + str(align) + "s}▕{2}▏{3: >6s}│"
+            yield f"{PREFIX}│└▶{self.short_desc:<{align}s}▕{incentive_bar}▏{self.total: >5s}│"
         else:
-            progress = "{0}├─▶{1:<" + str(align) + "s}▕{2}▏{3: >6s}│"
+            yield f"{PREFIX}├─▶{self.short_desc:<{align}s}▕{incentive_bar}▏{self.total: >5s}│"
 
-        yield progress.format(PREFIX, self.short_desc, incentive_bar, self.total)

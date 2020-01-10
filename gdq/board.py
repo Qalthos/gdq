@@ -30,7 +30,7 @@ def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bo
         if args.oneshot:
             return False
 
-        repaint_progress = utils.show_progress(i, utils.term_width, out_of=ticks)
+        repaint_progress = utils.progress_bar(0, i, ticks, width=utils.term_width)
         print(f"\x1b[{utils.term_height}H{repaint_progress}", end="", flush=True)
         time.sleep(resolution)
 

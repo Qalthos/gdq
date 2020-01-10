@@ -23,28 +23,30 @@ def join_char(left: str, right: str) -> str:
     return choices[pick]
 
 
-def show_progress(percent: float, width: int = term_width, out_of: float = 100) -> str:
+def progress_bar(start: float, current: float, end: float, width: int = term_width) -> str:
+    percent = ((current - start) / (end - start) * 100)
     chars = " ▏▎▍▌▋▊▉█"
 
     blocks, fraction = 0, 0
     if percent:
-        blocks, fraction = divmod(percent * width, out_of)
+        blocks, fraction = divmod(percent * width, 100)
         blocks = int(blocks)
-        fraction = int(fraction // (out_of / len(chars)))
+        fraction = int(fraction // (100 / len(chars)))
 
     if blocks >= width:
         blocks = width - 1
         fraction = -1
+    remainder = (width - blocks - 1)
+    return f"{chars[-1] * blocks}{chars[fraction]}{' ' * remainder}"
 
-    return chars[-1] * blocks + chars[fraction] + " " * (width - blocks - 1)
 
 
 def short_number(number: float) -> str:
-    if number > 1e6:
+    if number >= 1e6:
         return "{0:.2f}M".format(number / 1e6)
-    if number > 100e3:
+    if number >= 100e3:
         return "{0:.0f}k".format(number / 1e3)
-    if number > 10e3:
+    if number >= 10e3:
         return "{0:.1f}k".format(number / 1e3)
     return f"{number:,.0f}"
 
@@ -63,7 +65,7 @@ def slow_progress_bar(interval=30):
             # Terminal shape has changed, skip the countdown and repaint early.
             break
 
-        repaint_progress = show_progress(i, term_width, out_of=ticks)
+        repaint_progress = progress_bar(0, i, ticks, width=term_width)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
         time.sleep(resolution)
 
