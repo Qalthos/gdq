@@ -3,12 +3,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import Final, Iterator, List, Union
+from typing import Iterator, List, Union
 
 from gdq import utils
-
-
-PREFIX: Final[str] = " " * 7
 
 
 @dataclass
@@ -141,16 +138,12 @@ class ChoiceIncentive(Incentive):
         desc_size = max(align, len(self.short_desc))
         rest_size = width - desc_size
         lines = wrap(self.description, rest_size - 1)
-        description = "{0}├┬{1:<" + str(desc_size) + "s}  {2: <" + str(rest_size) + "s}│"
         if lines:
-            yield description.format(PREFIX, self.short_desc, lines[0])
+            yield f"       ├┬{self.short_desc:<{desc_size}s}  {lines[0]: <{rest_size}s}│"
             for line in lines[1:]:
-                description = (
-                    "{0}││{0:<" + str(desc_size) + "s}  {1: <" + str(rest_size) + "s}│"
-                )
-                yield description.format(PREFIX, line)
+                yield f"       ││{'':<{desc_size}s}  {line: <{rest_size}s}│"
         else:
-            yield description.format(PREFIX, self.short_desc, "")
+            yield f"       ├┬{self.short_desc:<{desc_size}s}  {'': <{rest_size}s}│"
 
         sorted_options = sorted(self.options, key=attrgetter("numeric_total"), reverse=True)
 
@@ -165,7 +158,7 @@ class ChoiceIncentive(Incentive):
                 total = sum(option.numeric_total for option in remaining)
                 description = "And {} more".format(len(remaining))
                 incentive_bar = utils.progress_bar(0, total, self.max_option, width - align - 6)
-                yield f"{PREFIX}│╵ {description:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
+                yield f"       │╵ {description:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
                 break
 
             incentive_bar = utils.progress_bar(0, option.numeric_total, self.max_option, width - align - 6)
@@ -174,12 +167,12 @@ class ChoiceIncentive(Incentive):
             if index == len(self.options) - 1:
                 leg = "└ "
 
-            yield f"{PREFIX}│{leg[0]}▶{option.name:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
+            yield f"       │{leg[0]}▶{option.name:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
             if option.description:
                 lines = wrap(option.description, width)
-                yield f"{PREFIX}│{leg[1]} └▶{lines[0].ljust(width - 1)}│"
+                yield f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│"
                 for line in lines[1:]:
-                    yield f"{PREFIX}│{leg[1]}   {line.ljust(width - 1)}│"
+                    yield f"       │{leg[1]}   {line.ljust(width - 1)}│"
 
             if self.closed:
                 break
@@ -222,10 +215,10 @@ class DonationIncentive(Incentive):
         lines = wrap(self.description, width + 1)
         incentive_bar = utils.progress_bar_decorated(0, self.current, self.numeric_total, width - align)
         if lines:
-            yield f"{PREFIX}├┬{lines[0].ljust(width + 2)}│"
+            yield f"       ├┬{lines[0].ljust(width + 2)}│"
             for line in lines[1:]:
-                yield f"{PREFIX}││{line.ljust(width + 2)}│"
+                yield f"       ││{line.ljust(width + 2)}│"
 
-            yield f"{PREFIX}│└▶{self.short_desc:<{align}s}{incentive_bar}│"
+            yield f"       │└▶{self.short_desc:<{align}s}{incentive_bar}│"
         else:
-            yield f"{PREFIX}├─▶{self.short_desc:<{align}s}{incentive_bar}│"
+            yield f"       ├─▶{self.short_desc:<{align}s}{incentive_bar}│"

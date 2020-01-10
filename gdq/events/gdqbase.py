@@ -3,7 +3,7 @@ from typing import Dict, List
 
 from gdq import utils
 from gdq.events import MarathonBase
-from gdq.models import PREFIX, Event, SingleEvent, Run, Runner, Incentive
+from gdq.models import Event, SingleEvent, Run, Runner, Incentive
 from gdq.parsers import gdq_api
 
 
@@ -80,7 +80,7 @@ class GDQTracker(MarathonBase):
         return extra_lines
 
     def format_run(self, run: Run, width: int = 80, args=None) -> List[str]:
-        width -= len(PREFIX) + 1
+        width -= 8
         run_desc = list(super().format_run(run, width))
         incentives = self.incentives.get(run.game, [])
 
