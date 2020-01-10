@@ -220,13 +220,12 @@ class DonationIncentive(Incentive):
         width -= 4
 
         lines = wrap(self.description, width + 1)
-        incentive_bar = utils.progress_bar(0, self.current, self.numeric_total, width - align)
+        incentive_bar = utils.progress_bar_decorated(0, self.current, self.numeric_total, width - align)
         if lines:
             yield f"{PREFIX}├┬{lines[0].ljust(width + 2)}│"
             for line in lines[1:]:
                 yield f"{PREFIX}││{line.ljust(width + 2)}│"
 
-            yield f"{PREFIX}│└▶{self.short_desc:<{align}s}▕{incentive_bar}▏{self.total: >5s}│"
+            yield f"{PREFIX}│└▶{self.short_desc:<{align}s}{incentive_bar}│"
         else:
-            yield f"{PREFIX}├─▶{self.short_desc:<{align}s}▕{incentive_bar}▏{self.total: >5s}│"
-
+            yield f"{PREFIX}├─▶{self.short_desc:<{align}s}{incentive_bar}│"

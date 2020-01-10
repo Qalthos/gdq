@@ -64,8 +64,8 @@ class GDQTracker(MarathonBase):
         last_record = (0, "")
         for record in self.records:
             if record[0] > self.total:
-                bar = utils.progress_bar(last_record[0], self.total, record[0], width=(utils.term_width - 6))
-                print(f"\x1b[2H{utils.short_number(last_record[0]): <5s}▕{bar}▏{utils.short_number(record[0]): >5s}")
+                bar = utils.progress_bar_decorated(last_record[0], self.total, record[0], width=(utils.term_width - 6))
+                print(f"\x1b[2H{utils.short_number(last_record[0]): <5s}{bar}")
                 extra_lines += 1
                 break
             last_record = record

@@ -40,6 +40,32 @@ def progress_bar(start: float, current: float, end: float, width: int = term_wid
     return f"{chars[-1] * blocks}{chars[fraction]}{' ' * remainder}"
 
 
+def progress_bar_decorated(start: float, current: float, end: float, width: int = term_width) -> str:
+    percent = ((current - start) / (end - start) * 100)
+    width -= 6
+    chars = " ▏▎▍▌▋▊▉█"
+
+    blocks, fraction = 0, 0
+    if percent:
+        blocks, fraction = divmod(percent * width, 100)
+        blocks = int(blocks)
+        fraction = int(fraction // (100 / len(chars)))
+
+    if blocks >= width:
+        blocks = width - 1
+        fraction = -1
+    remainder = (width - blocks - 1)
+
+    current = short_number(current)
+    if remainder > blocks:
+        suffix = " " * (remainder - len(current))
+        bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
+    else:
+        prefix = chars[-1] * (blocks - len(current))
+        bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+
+    return f"▕{bar}▏{short_number(end): >5s}"
+
 
 def short_number(number: float) -> str:
     if number >= 1e6:
