@@ -52,6 +52,9 @@ def main():
         "-o", "--min-options", help="Minimum number of choices before applying percent cutoff.", type=int, default=5
     )
     parser.add_argument(
+        "-w", "--min-width", help="Minimum width for option description names", type=int, default=16
+    )
+    parser.add_argument(
         "--hide-completed", help="Hide completed donation incentives.", action="store_true"
     )
     parser.add_argument(

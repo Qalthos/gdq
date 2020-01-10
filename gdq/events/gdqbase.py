@@ -7,9 +7,6 @@ from gdq.models import PREFIX, Event, SingleEvent, Run, Runner, Incentive
 from gdq.parsers import gdq_api
 
 
-MIN_OFFSET: int = 20
-
-
 class GDQTracker(MarathonBase):
     # Historical donation records
     records: List[tuple] = []
@@ -93,7 +90,7 @@ class GDQTracker(MarathonBase):
         # Handle incentives
         incentive_desc = []
         if incentives:
-            align_width = max(MIN_OFFSET, *(len(incentive) for incentive in incentives))
+            align_width = max(args.min_width, *(len(incentive) for incentive in incentives))
             for incentive in sorted(incentives, key=operator.attrgetter("incentive_id")):
                 incentive_desc.extend(incentive.render(width, align_width, args))
 
