@@ -56,6 +56,9 @@ class GDQTracker(MarathonBase):
 
     def display(self, args, row_index=1) -> bool:
         row_index += self.display_milestone()
+
+        if args.split_pane:
+            return self.display_split(args, row_index)
         return super().display(args, row_index)
 
     def display_milestone(self) -> int:
@@ -79,12 +82,38 @@ class GDQTracker(MarathonBase):
 
         return extra_lines
 
+    def display_split(self, args, row_index):
+        rendered_schedules = []
+        column_width = utils.term_width // 2
+        padding = " " * column_width
+
+        schedule = self.schedules[0]
+        schedule_lines = []
+        args.hide_basic = False
+        args.hide_incentives = True
+        for run in schedule:
+            schedule_lines.extend(self.format_run(run, column_width, args))
+            if len(schedule_lines) >= utils.term_height:
+                break
+        rendered_schedules.append(schedule_lines)
+
+        schedule_lines = []
+        args.hide_basic = True
+        args.hide_incentives = False
+        for run in schedule:
+            schedule_lines.extend(self.format_run(run, column_width, args))
+            if len(schedule_lines) >= utils.term_height:
+                break
+        rendered_schedules.append(schedule_lines)
+
+        return self._real_display(rendered_schedules, row_index)
+
     def format_run(self, run: Run, width: int = 80, args=None) -> List[str]:
         width -= 8
         run_desc = list(super().format_run(run, width))
         incentives = self.incentives.get(run.game, [])
 
-        if not run_desc:
+        if args.hide_incentives or not run_desc:
             return run_desc
 
         # Handle incentives

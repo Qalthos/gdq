@@ -43,8 +43,11 @@ class MarathonBase(ABC):
                     break
             rendered_schedules.append(schedule_lines)
 
+        return self._real_display(rendered_schedules, row_index)
+
+    def _real_display(self, schedules, row_index):
         first_row = True
-        for full_row in zip_longest(*rendered_schedules):
+        for full_row in zip_longest(*schedules):
             full_row = [column or padding for column in full_row]
             for i in range(len(full_row) - 1):
                 full_row[i] = full_row[i][:-1] + utils.join_char(
