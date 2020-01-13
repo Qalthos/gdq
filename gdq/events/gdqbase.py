@@ -85,7 +85,6 @@ class GDQTracker(MarathonBase):
     def display_split(self, args, row_index):
         rendered_schedules = []
         column_width = utils.term_width // 2
-        padding = " " * column_width
 
         schedule = self.schedules[0]
         schedule_lines = []
@@ -106,7 +105,8 @@ class GDQTracker(MarathonBase):
                 break
         rendered_schedules.append(schedule_lines)
 
-        return self._real_display(rendered_schedules, row_index)
+        padding = " " * column_width
+        return self._real_display(rendered_schedules, padding, row_index)
 
     def format_run(self, run: Run, width: int = 80, args=None) -> List[str]:
         width -= 8

@@ -33,7 +33,6 @@ class MarathonBase(ABC):
 
         rendered_schedules = []
         column_width = utils.term_width // len(schedules)
-        padding = " " * column_width
 
         for schedule in schedules:
             schedule_lines = []
@@ -43,9 +42,10 @@ class MarathonBase(ABC):
                     break
             rendered_schedules.append(schedule_lines)
 
-        return self._real_display(rendered_schedules, row_index)
+        padding = " " * column_width
+        return self._real_display(rendered_schedules, padding, row_index)
 
-    def _real_display(self, schedules, row_index):
+    def _real_display(self, schedules, padding, row_index):
         first_row = True
         for full_row in zip_longest(*schedules):
             full_row = [column or padding for column in full_row]
