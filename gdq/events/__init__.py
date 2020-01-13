@@ -40,6 +40,10 @@ class MarathonBase(ABC):
                 schedule_lines.extend(self.format_run(run, column_width, args))
                 if len(schedule_lines) >= utils.term_height:
                     break
+            else:
+                if schedule_lines:
+                    # Add a nice clean end piece
+                    schedule_lines.append(f"───────┴{'─' * column_width}┘")
             rendered_schedules.append(schedule_lines)
 
         padding = " " * column_width
@@ -102,7 +106,6 @@ class MarathonBase(ABC):
             run.game = run.game[: -(overrun + 1)] + "…"
 
         border = "─" * (len(runner) - 2)
-        yield "{0}┼{1}┬{2}┤".format("─" * 7, "─" * desc_width, border)
-
+        yield f"───────┼{'─' * desc_width}┬{border}┤"
         yield f"{run.delta}│{run.game_desc:<{desc_width}s}{runner}"
         yield f"{run.str_estimate: >7s}│{run.category:<{desc_width}}└{border}┤"
