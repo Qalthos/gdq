@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import Iterator, List, Union
+from typing import List, Union
 
 from gdq import utils
 
@@ -127,55 +127,56 @@ class ChoiceIncentive(Incentive):
             return max(*(len(option.name) for option in self.options))
         return 0
 
-    def render(self, width: int, align: int, args) -> Iterator[str]:
+    def render(self, width: int, align: int, args) -> List[str]:
+        incentive = []
+
         # Skip incentive if applicable
-        if args.hide_completed and self.closed:
-            return
+        if not (args.hide_completed and self.closed):
+            # Remove fixed elements
+            width -= 4
 
-        # Remove fixed elements
-        width -= 4
-
-        desc_size = max(align, len(self.short_desc))
-        rest_size = width - desc_size
-        lines = wrap(self.description, rest_size - 1)
-        if lines:
-            yield f"       ├┬{self.short_desc:<{desc_size}s}  {lines[0]: <{rest_size}s}│"
-            for line in lines[1:]:
-                yield f"       ││{'':<{desc_size}s}  {line: <{rest_size}s}│"
-        else:
-            yield f"       ├┬{self.short_desc:<{desc_size}s}  {'': <{rest_size}s}│"
-
-        sorted_options = sorted(self.options, key=attrgetter("numeric_total"), reverse=True)
-
-        for index, option in enumerate(sorted_options):
-            try:
-                percent = option.numeric_total / self.current * 100
-            except ZeroDivisionError:
-                percent = 0
-
-            if percent < args.min_percent and index >= args.min_options and index != len(self.options) - 1:
-                remaining = sorted_options[index:]
-                total = sum(option.numeric_total for option in remaining)
-                description = "And {} more".format(len(remaining))
-                incentive_bar = utils.progress_bar(0, total, self.max_option, width - align - 6)
-                yield f"       │╵ {description:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
-                break
-
-            incentive_bar = utils.progress_bar(0, option.numeric_total, self.max_option, width - align - 6)
-
-            leg = "├│"
-            if index == len(self.options) - 1:
-                leg = "└ "
-
-            yield f"       │{leg[0]}▶{option.name:<{align}s}▕{incentive_bar}▏{option.total: >5s}│"
-            if option.description:
-                lines = wrap(option.description, width)
-                yield f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│"
+            desc_size = max(align, len(self.short_desc))
+            rest_size = width - desc_size
+            lines = wrap(self.description, rest_size - 1)
+            if lines:
+                incentive.append(f"       ├┬{self.short_desc:<{desc_size}s}  {lines[0]: <{rest_size}s}│")
                 for line in lines[1:]:
-                    yield f"       │{leg[1]}   {line.ljust(width - 1)}│"
+                    incentive.append(f"       ││{'':<{desc_size}s}  {line: <{rest_size}s}│")
+            else:
+                incentive.append(f"       ├┬{self.short_desc:<{desc_size}s}  {'': <{rest_size}s}│")
 
-            if self.closed:
-                break
+            sorted_options = sorted(self.options, key=attrgetter("numeric_total"), reverse=True)
+            for index, option in enumerate(sorted_options):
+                try:
+                    percent = option.numeric_total / self.current * 100
+                except ZeroDivisionError:
+                    percent = 0
+
+                if percent < args.min_percent and index >= args.min_options and index != len(self.options) - 1:
+                    remaining = sorted_options[index:]
+                    total = sum(option.numeric_total for option in remaining)
+                    description = f"And {len(remaining)} more"
+                    incentive_bar = utils.progress_bar(0, total, self.max_option, width - align - 6)
+                    incentive.append(f"       │╵ {description:<{align}s}▕{incentive_bar}▏{utils.short_number(total): >5s}│")
+                    break
+
+                incentive_bar = utils.progress_bar(0, option.numeric_total, self.max_option, width - align - 6)
+
+                leg = "├│"
+                if index == len(self.options) - 1:
+                    leg = "└ "
+
+                incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{incentive_bar}▏{option.total: >5s}│")
+                if option.description:
+                    lines = wrap(option.description, width)
+                    incentive.append(f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│")
+                    for line in lines[1:]:
+                        incentive.append(f"       │{leg[1]}   {line.ljust(width - 1)}│")
+
+                if self.closed:
+                    break
+
+        return incentive
 
 
 @dataclass
@@ -204,21 +205,23 @@ class DonationIncentive(Incentive):
     def __len__(self) -> int:
         return len(self.short_desc)
 
-    def render(self, width: int, align: int, args) -> Iterator[str]:
+    def render(self, width: int, align: int, args) -> List[str]:
+        incentive = []
+
         # Skip incentive if applicable
-        if args.hide_completed and self.closed:
-            return
+        if not (args.hide_completed and self.closed):
+            # Remove fixed elements
+            width -= 4
 
-        # Remove fixed elements
-        width -= 4
+            lines = wrap(self.description, width + 1)
+            incentive_bar = utils.progress_bar_decorated(0, self.current, self.numeric_total, width - align)
+            if lines:
+                incentive.append(f"       ├┬{lines[0].ljust(width + 2)}│")
+                for line in lines[1:]:
+                    incentive.append(f"       ││{line.ljust(width + 2)}│")
 
-        lines = wrap(self.description, width + 1)
-        incentive_bar = utils.progress_bar_decorated(0, self.current, self.numeric_total, width - align)
-        if lines:
-            yield f"       ├┬{lines[0].ljust(width + 2)}│"
-            for line in lines[1:]:
-                yield f"       ││{line.ljust(width + 2)}│"
+                incentive.append(f"       │└▶{self.short_desc:<{align}s}{incentive_bar}│")
+            else:
+                incentive.append(f"       ├─▶{self.short_desc:<{align}s}{incentive_bar}│")
 
-            yield f"       │└▶{self.short_desc:<{align}s}{incentive_bar}│"
-        else:
-            yield f"       ├─▶{self.short_desc:<{align}s}{incentive_bar}│"
+        return incentive
