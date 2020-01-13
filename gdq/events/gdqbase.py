@@ -68,16 +68,17 @@ class GDQTracker(MarathonBase):
     def display_milestone(self) -> int:
         extra_lines = 1
 
-        last_record = FakeRecord(total=0, short_name="")
+        last_record = FakeRecord(total=0, short_name="0")
         for record in self.records:
             if record.total > self.total:
                 break
             last_record = record
         else:
-            record = FakeRecord(total=self.total, short_name="!!!")
+            record = self.current_event
 
         trim = len(last_record.short_name) + len(record.short_name) + 2
-        bar = utils.progress_bar_decorated(last_record.total, self.total, record.total, width=(utils.term_width - trim))
+        bar_width = utils.term_width - trim
+        bar = utils.progress_bar_decorated(last_record.total, self.total, record.total, width=bar_width)
         print(f"\x1b[H{last_record.short_name.upper()} {bar} {record.short_name.upper()}")
 
         return extra_lines
