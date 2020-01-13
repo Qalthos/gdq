@@ -127,7 +127,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
             incentive_obj = DonationIncentive(
                 incentive_id=incentive_id,
                 description=incentive["description"],
-                short_desc=incentive["name"],
+                short_desc=incentive["name"].strip(),
                 current=float(incentive["total"]),
                 numeric_total=float(incentive["goal"]),
                 state=incentive["state"],
@@ -142,4 +142,5 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
                 state=incentive["state"],
             )
         incentive_dict[game] = incentive_dict.get(game, []) + [incentive_obj]
+
     return incentive_dict

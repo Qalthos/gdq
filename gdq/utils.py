@@ -45,35 +45,46 @@ def progress_bar_decorated(start: float, current: float, end: float, width: int 
     width -= 6
     chars = " ▏▎▍▌▋▊▉█"
 
-    blocks, fraction = 0, 0
-    if percent:
-        blocks, fraction = divmod(percent * width, 100)
-        blocks = int(blocks)
-        fraction = int(fraction // (100 / len(chars)))
+    if start:
+        width -= 6
 
-    if blocks >= width:
-        blocks = width - 1
-        fraction = -1
-    remainder = (width - blocks - 1)
-
-    current = short_number(current)
-    if remainder > blocks:
-        suffix = " " * (remainder - len(current))
-        bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
+    if current >= end:
+        bar = progress_bar(start, current, end, width)
     else:
-        prefix = chars[-1] * (blocks - len(current))
-        bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+        blocks, fraction = 0, 0
+        if percent:
+            blocks, fraction = divmod(percent * width, 100)
+            blocks = int(blocks)
+            fraction = int(fraction // (100 / len(chars)))
 
+        if blocks >= width:
+            blocks = width - 1
+            fraction = -1
+        remainder = (width - blocks - 1)
+
+        current = short_number(current)
+        if remainder > blocks:
+            suffix = " " * (remainder - len(current))
+            bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
+        else:
+            prefix = chars[-1] * (blocks - len(current))
+            bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+
+    if start:
+        return f"{short_number(start): <5s}▕{bar}▏{short_number(end): >5s}"
     return f"▕{bar}▏{short_number(end): >5s}"
 
 
 def short_number(number: float) -> str:
-    if number >= 1e6:
-        return "{0:.2f}M".format(number / 1e6)
-    if number >= 100e3:
-        return "{0:.0f}k".format(number / 1e3)
-    if number >= 10e3:
-        return "{0:.1f}k".format(number / 1e3)
+    if number >= 1_000_000:
+        number = number // 10_000 / 100
+        return "{0:.2f}M".format(number)
+    if number >= 100_000:
+        number = number // 1_000
+        return "{0:.0f}k".format(number)
+    if number >= 10_000:
+        number = number // 100 / 10
+        return "{0:.1f}k".format(number)
     return f"{number:,.0f}"
 
 

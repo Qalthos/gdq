@@ -1,4 +1,5 @@
 import operator
+from collections import namedtuple
 from typing import Dict, List
 
 from gdq import utils
@@ -7,9 +8,12 @@ from gdq.models import Event, SingleEvent, Run, Runner, Incentive
 from gdq.parsers import gdq_api
 
 
+FakeRecord = namedtuple("FakeRecord", ["short_name", "total"])
+
+
 class GDQTracker(MarathonBase):
     # Historical donation records
-    records: List[tuple] = []
+    records: List[Event] = []
 
     # Cached live data
     current_event: Event
@@ -44,7 +48,7 @@ class GDQTracker(MarathonBase):
 
         self.current_event = events.pop(-1)
 
-        self.records = sorted([(event.total, event.short_name.upper()) for event in events])
+        self.records = sorted(events, key=operator.attrgetter("total"))
 
     def read_runners(self) -> None:
         for event in self.current_events:
@@ -64,21 +68,17 @@ class GDQTracker(MarathonBase):
     def display_milestone(self) -> int:
         extra_lines = 1
 
-        last_record = (0, "")
+        last_record = FakeRecord(total=0, short_name="")
         for record in self.records:
-            if record[0] > self.total:
-                bar = utils.progress_bar_decorated(last_record[0], self.total, record[0], width=(utils.term_width - 6))
-                print(f"\x1b[2H{utils.short_number(last_record[0]): <5s}{bar}")
-                extra_lines += 1
+            if record.total > self.total:
                 break
             last_record = record
         else:
-            record = (0, "NEW HIGH SCORE!")
+            record = FakeRecord(total=self.total, short_name="!!!")
 
-        max_len = max((len(last_record[1]), len(record[1])))
-        dollar_total = f"${self.total:,.2f}"
-        dollar_total = f"{dollar_total: ^{utils.term_width - (2 * max_len)}s}"
-        print(f"\x1b[H{last_record[1]: <{max_len}s}{dollar_total}{record[1]: >{max_len}s}")
+        trim = len(last_record.short_name) + len(record.short_name) + 2
+        bar = utils.progress_bar_decorated(last_record.total, self.total, record.total, width=(utils.term_width - trim))
+        print(f"\x1b[H{last_record.short_name.upper()} {bar} {record.short_name.upper()}")
 
         return extra_lines
 
