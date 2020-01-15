@@ -18,16 +18,26 @@ class Event(metaclass=ABCMeta):
     def total(self) -> float:
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def charity(self):
+        raise NotImplementedError
+
 
 @dataclass
 class SingleEvent(Event):
     event_id: int
     target: float
     _total: float
+    _charity: str
 
     @property
     def total(self) -> float:
         return self._total
+
+    @property
+    def charity(self):
+        return self._charity
 
 
 @dataclass
@@ -41,6 +51,10 @@ class MultiEvent(Event):
     @property
     def total(self) -> float:
         return sum((event.total for event in self.subevents))
+
+    @property
+    def charity(self):
+        return self.subevents[0].charity
 
 
 @dataclass

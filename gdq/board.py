@@ -55,7 +55,8 @@ def main():
         "-w", "--min-width", help="Minimum width for option description names", type=int, default=16
     )
     parser.add_argument(
-        "-s", "--split-pane", help="Display a split view with schedule on the left and incentives on the right", action="store_true"
+        "-s", "--split-pane", action="store_true",
+        help="Display a split view with schedule on the left and incentives on the right"
     )
     parser.add_argument(
         "--hide-completed", help="Hide completed donation incentives.", action="store_true"

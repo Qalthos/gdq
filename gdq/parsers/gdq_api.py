@@ -37,6 +37,7 @@ def get_events(base_url: str, event_id: int = None) -> Optional[List[Event]]:
                 name=event_data["name"],
                 short_name=event_data["short"],
                 _total=float(event_data["amount"]),
+                _charity=event_data["receivername"],
                 target=float(event_data["targetamount"]),
             )
         except ValueError:
@@ -105,6 +106,7 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
 
 
 def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentive]:
+    # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=event_id).json()
     incentive_dict = dict()
     choices = defaultdict(list)
