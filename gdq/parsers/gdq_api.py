@@ -99,7 +99,7 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
     for runner in runners:
         runner_id = runner["pk"]
         runner = runner["fields"]
-        runner_dict[runner_id] = Runner(runner_id=runner_id, name=runner["name"], pronouns=runner["pronouns"])
+        runner_dict[runner_id] = Runner(runner_id=runner_id, name=runner["name"], pronouns=runner.get("pronouns", ""))
 
     return runner_dict
 
