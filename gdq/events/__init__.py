@@ -90,22 +90,23 @@ class MarathonBase(ABC):
             yield "{0}┼{1}┤".format("─" * 7, "─" * (width - 1))
             yield f"{run.delta}│{run.game_desc:<{width - 1}s}│"
             yield f"{run.str_estimate: >7s}│{run.category:<{width - 1}}│"
+
         else:
             desc_width = max(width - 2 - len(run.runner_str), len(run.game_desc), len(run.category))
 
-        runner = "│" + run.runner_str + "│"
-        if desc_width + len(runner) > width:
-            # Truncate runner display if too long
-            runner_width = width - 3 - desc_width
-            runner = "│" + run.runner_str[:runner_width] + "…│"
+            runner = "│" + run.runner_str + "│"
+            if desc_width + len(runner) > width:
+                # Truncate runner display if too long
+                runner_width = width - 3 - desc_width
+                runner = "│" + run.runner_str[:runner_width] + "…│"
 
-        if desc_width + len(runner) > width:
-            # If display still too long, truncate run
-            overrun = desc_width + len(runner) - width
-            desc_width -= overrun
-            run.game = run.game[: -(overrun + 1)] + "…"
+            if desc_width + len(runner) > width:
+                # If display still too long, truncate run
+                overrun = desc_width + len(runner) - width
+                desc_width -= overrun
+                run.game = run.game[: -(overrun + 1)] + "…"
 
-        border = "─" * (len(runner) - 2)
-        yield f"───────┼{'─' * desc_width}┬{border}┤"
-        yield f"{run.delta}│{run.game_desc:<{desc_width}s}{runner}"
-        yield f"{run.str_estimate: >7s}│{run.category:<{desc_width}}└{border}┤"
+            border = "─" * (len(runner) - 2)
+            yield f"───────┼{'─' * desc_width}┬{border}┤"
+            yield f"{run.delta}│{run.game_desc:<{desc_width}s}{runner}"
+            yield f"{run.str_estimate: >7s}│{run.category:<{desc_width}}└{border}┤"
