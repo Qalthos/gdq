@@ -225,14 +225,14 @@ class DonationIncentive(Incentive):
         # Skip incentive if applicable
         if not (args.hide_completed and self.closed):
             # Remove fixed elements
-            width -= 4
+            width -= 3
 
-            lines = wrap(self.description, width + 1)
+            lines = wrap(self.description, width)
             incentive_bar = utils.progress_bar_decorated(0, self.current, self.numeric_total, width - align)
             if lines:
-                incentive.append(f"       ├┬{lines[0].ljust(width + 2)}│")
+                incentive.append(f"       ├┬{lines[0].ljust(width + 1)}│")
                 for line in lines[1:]:
-                    incentive.append(f"       ││{line.ljust(width + 2)}│")
+                    incentive.append(f"       ││{line.ljust(width + 1)}│")
 
                 incentive.append(f"       │└▶{self.short_desc:<{align}s}{incentive_bar}│")
             else:
