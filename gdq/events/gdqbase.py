@@ -59,14 +59,19 @@ class GDQTracker(MarathonBase):
             self.incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id))
 
     def display(self, args, row_index=1) -> bool:
-        row_index += self.display_milestone()
+        row_index += self.display_milestone(args)
 
         if args.split_pane:
             return self.display_split(args, row_index)
         return super().display(args, row_index)
 
-    def display_milestone(self) -> int:
-        extra_lines = 1
+    def display_milestone(self, args) -> int:
+        extra_lines = 0
+        print("\x1b[H", end="")
+
+        if args.extended_header and self.current_event.charity:
+            print(f"{self.current_event.name} supporting {self.current_event.charity}\x1b[K".center(utils.term_width))
+            extra_lines += 1
 
         last_record = FakeRecord(total=0, short_name="0")
         for record in self.records:
@@ -79,7 +84,16 @@ class GDQTracker(MarathonBase):
         trim = len(last_record.short_name) + len(record.short_name) + 2
         bar_width = utils.term_width - trim
         bar = utils.progress_bar_decorated(last_record.total, self.total, record.total, width=bar_width)
-        print(f"\x1b[H{last_record.short_name.upper()} {bar} {record.short_name.upper()}")
+        print(f"{last_record.short_name.upper()} {bar} {record.short_name.upper()}")
+        extra_lines += 1
+
+        total = self.total
+        for event in self.records:
+            total += event.total
+
+        if args.extended_header:
+            print(f"${total:,.2f} total raised to date\x1b[K")
+            extra_lines += 1
 
         return extra_lines
 

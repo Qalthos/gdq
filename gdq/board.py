@@ -59,6 +59,9 @@ def main():
         help="Display a split view with schedule on the left and incentives on the right"
     )
     parser.add_argument(
+        "-x", "--extended-header", action="store_true", help="Show expanded information in the header"
+    )
+    parser.add_argument(
         "--hide-completed", help="Hide completed donation incentives.", action="store_true"
     )
     parser.add_argument(
