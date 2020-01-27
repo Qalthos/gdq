@@ -24,8 +24,12 @@ def join_char(left: str, right: str) -> str:
 
 
 def progress_bar(start: float, current: float, end: float, width: int = term_width) -> str:
-    percent = ((current - start) / (end - start) * 100)
     chars = " ▏▎▍▌▋▊▉█"
+
+    try:
+        percent = ((current - start) / (end - start) * 100)
+    except ZeroDivisionError:
+        percent = 0
 
     blocks, fraction = 0, 0
     if percent:
