@@ -28,7 +28,7 @@ class MarathonBase(ABC):
     def display(self, args, row_index=1) -> bool:
         # Limit schedule display based on args
         schedules = self.schedules
-        if args.stream_index <= len(schedules):
+        if 0 < args.stream_index <= len(schedules):
             schedules = [schedules[args.stream_index - 1]]
 
         rendered_schedules = []
