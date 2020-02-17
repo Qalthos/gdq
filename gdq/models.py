@@ -27,6 +27,7 @@ class Event(metaclass=ABCMeta):
 @dataclass
 class SingleEvent(Event):
     event_id: int
+    start_time: datetime
     target: float
     _total: float
     _charity: str
@@ -193,7 +194,7 @@ class ChoiceIncentive(Incentive):
         return incentive
 
 
-@dataclass
+@dataclass(order=True)
 class Choice:
     name: str
     description: str

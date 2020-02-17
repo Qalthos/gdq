@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import re
 from typing import Dict, List, Optional
@@ -28,13 +28,26 @@ def get_events(base_url: str, event_id: int = None) -> Optional[List[Event]]:
     match_multi = re.compile(r"(.*)s\d+$", re.MULTILINE)
     multi_events = {}
     event_objs = []
+
     for event in events:
         event_id = event["pk"]
         event_data = event["fields"]
+
+        # There are a few keys for tracking the start time of events
+        start = None
+        for key in ("date", "datetime"):
+            if key in event_data:
+                try:
+                    start = datetime.strptime(event_data[key], "%Y-%m-%dT%H:%M:%S%z")
+                except ValueError:
+                    start = datetime.strptime(event_data[key], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                break
+
         try:
             event = SingleEvent(
                 event_id=event_id,
                 name=event_data["name"],
+                start_time=start,
                 short_name=event_data["short"],
                 _total=float(event_data["amount"]),
                 _charity=event_data["receivername"],
