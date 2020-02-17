@@ -65,7 +65,9 @@ class Runner:
     pronouns: str = ""
 
     def __str__(self):
-        return f"{self.pronouns}{self.name}"
+        if self.pronouns:
+            return f"{self.name}({self.pronouns})"
+        return self.name
 
 
 @dataclass
