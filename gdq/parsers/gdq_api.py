@@ -50,7 +50,7 @@ def get_events(base_url: str, event_id: int = None) -> Optional[List[Event]]:
             if shorter_name not in multi_events:
                 mevent = MultiEvent(
                     subevents=[event],
-                    name=event.name,
+                    name=event.name.split(" Stream")[0],
                     short_name=shorter_name,
                 )
                 multi_events[shorter_name] = mevent

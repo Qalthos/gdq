@@ -91,10 +91,6 @@ class GDQTracker(MarathonBase):
         for event in self.records:
             total += event.total
 
-        if args.extended_header:
-            print(f"${total:,.2f} total raised to date\x1b[K")
-            extra_lines += 1
-
         return extra_lines
 
     def display_split(self, args, row_index):
