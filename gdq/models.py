@@ -32,10 +32,14 @@ class Event(metaclass=ABCMeta):
 @dataclass
 class SingleEvent(Event):
     event_id: int
-    start_time: datetime
     target: float
+    _start_time: datetime
     _total: float
     _charity: str
+
+    @property
+    def start_time(self) -> datetime:
+        return self._start_time
 
     @property
     def total(self) -> float:
