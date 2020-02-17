@@ -15,6 +15,11 @@ class Event(metaclass=ABCMeta):
 
     @property
     @abstractmethod
+    def start_time(self) -> datetime:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def total(self) -> float:
         raise NotImplementedError
 

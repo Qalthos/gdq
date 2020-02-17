@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Generator, Iterator, List
+from typing import Generator, List
 
 import pyplugs
 
@@ -19,7 +19,7 @@ class MarathonBase(ABC):
 
     # Cached live data
     display_streams: int
-    schedules: List[Iterator[Run]] = []
+    schedules: List[List[Run]] = []
 
     @abstractmethod
     def refresh_all(self) -> None:

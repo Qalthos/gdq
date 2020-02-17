@@ -55,6 +55,7 @@ class GDQTracker(MarathonBase):
             self.runners.update(gdq_api.get_runners_for_event(self.url, event.event_id))
 
     def read_schedules(self) -> None:
+        self.schedules = []
         for event in self.current_events:
             self.schedules.append(gdq_api.get_runs(self.url, event.event_id))
 

@@ -4,8 +4,8 @@ from pathlib import Path
 import sys
 import time
 
-import xdg
 import toml
+import xdg
 
 from gdq import events, utils
 from gdq.events.gdqbase import GDQTracker
