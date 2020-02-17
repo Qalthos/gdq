@@ -46,6 +46,10 @@ class MultiEvent(Event):
     subevents: List[SingleEvent]
 
     @property
+    def start_time(self) -> datetime:
+        return min(event.start_time for event in self.subevents)
+
+    @property
     def target(self) -> float:
         return sum((event.target for event in self.subevents if event.target))
 
@@ -102,6 +106,10 @@ class Run:
         if self.start < utils.now:
             remaining -= utils.now - self.start
         return remaining
+
+    @property
+    def is_live(self) -> bool:
+        return self.remaining > timedelta(0)
 
     @property
     def str_estimate(self) -> str:
