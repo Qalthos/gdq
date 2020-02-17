@@ -38,7 +38,7 @@ class GDQTracker(MarathonBase):
     def refresh_all(self) -> None:
         self.read_events()
         self.read_runners()
-        self.schedules = [gdq_api.get_runs(self.url, event.event_id) for event in self.current_events]
+        self.read_schedules()
         self.read_incentives()
 
     def read_events(self) -> None:
@@ -53,6 +53,10 @@ class GDQTracker(MarathonBase):
     def read_runners(self) -> None:
         for event in self.current_events:
             self.runners.update(gdq_api.get_runners_for_event(self.url, event.event_id))
+
+    def read_schedules(self) -> None:
+        for event in self.current_events:
+            self.schedules.append(gdq_api.get_runs(self.url, event.event_id))
 
     def read_incentives(self) -> None:
         for event in self.current_events:
