@@ -19,7 +19,7 @@ class MarathonBase(ABC):
 
     # Cached live data
     display_streams: int
-    schedules: List[Iterator[Run]] = [[]]
+    schedules: List[Iterator[Run]] = []
 
     @abstractmethod
     def refresh_all(self) -> None:
