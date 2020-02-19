@@ -75,7 +75,10 @@ class GDQTracker(MarathonBase):
         print("\x1b[H", end="")
 
         if args.extended_header and self.current_event.charity:
-            print(f"{self.current_event.name} supporting {self.current_event.charity}\x1b[K".center(utils.term_width))
+            header = self.current_event.name
+            if self.current_event.charity:
+                header += f" supporting {self.current_event.charity}"
+            print(header.center(utils.term_width))
             extra_lines += 1
 
         last_record = FakeRecord(total=0, short_name="0")
