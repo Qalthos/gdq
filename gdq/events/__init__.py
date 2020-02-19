@@ -62,7 +62,7 @@ class MarathonBase(ABC):
                 full_row = utils.flatten(full_row)
                 first_row = False
 
-            print(f"\x1b[{row_index}H{full_row}", end="")
+            print(f"\x1b[{row_index}H{full_row}\x1b[K", end="")
             row_index += 1
             if row_index == utils.term_height:
                 break
