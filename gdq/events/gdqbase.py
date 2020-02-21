@@ -105,7 +105,7 @@ class GDQTracker(MarathonBase):
         rendered_schedules = []
         column_width = utils.term_width // 2
 
-        schedule = self.schedules[0]
+        schedule = sorted([run for schedule in self.schedules for run in schedule], key=lambda r: r.start)
         schedule_lines = []
         args.hide_basic = False
         args.hide_incentives = True
