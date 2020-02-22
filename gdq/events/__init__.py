@@ -30,6 +30,15 @@ class MarathonBase(ABC):
         schedules = self.schedules
         if 0 < args.stream_index <= len(schedules):
             schedules = [schedules[args.stream_index - 1]]
+        else:
+            for schedule in self.schedules:
+                # Drop schedules that are over
+                if not any(run.is_live for run in schedule):
+                    schedules.remove(schedule)
+
+        # If we're out of schedules, we're done
+        if not schedules:
+            return
 
         rendered_schedules = []
         column_width = utils.term_width // len(schedules)
