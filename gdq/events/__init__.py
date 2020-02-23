@@ -52,7 +52,7 @@ class MarathonBase(ABC):
             else:
                 if schedule_lines:
                     # Add a nice clean end piece
-                    schedule_lines.append(f"───────┴{'─' * column_width}┘")
+                    schedule_lines.append(f"───────┴{'─' * (column_width - 9)}┘")
             rendered_schedules.append(schedule_lines)
 
         padding = " " * column_width

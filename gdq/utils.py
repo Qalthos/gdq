@@ -82,13 +82,15 @@ def progress_bar_decorated(start: float, current: float, end: float, width: int 
 def short_number(number: float) -> str:
     if number >= 1_000_000:
         number = number // 10_000 / 100
-        return "{0:.2f}M".format(number)
+        return f"{number:.2f}M"
     if number >= 100_000:
         number = number // 1_000
-        return "{0:.0f}k".format(number)
+        return f"{number:.0f}k"
     if number >= 10_000:
         number = number // 100 / 10
-        return "{0:.1f}k".format(number)
+        return f"{number:.1f}k"
+    if number < 100:
+        return f"{number:.2f}"
     return f"{number:,.0f}"
 
 

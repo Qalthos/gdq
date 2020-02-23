@@ -81,7 +81,7 @@ class GDQTracker(MarathonBase):
             print(header.center(utils.term_width))
             extra_lines += 1
 
-        last_record = FakeRecord(total=0, short_name="0")
+        last_record = FakeRecord(total=0, short_name="GO!")
         for record in self.records:
             if record.total > self.total:
                 break
