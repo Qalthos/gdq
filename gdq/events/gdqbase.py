@@ -118,7 +118,13 @@ class GDQTracker(MarathonBase):
         schedule_lines = []
         args.hide_basic = True
         args.hide_incentives = False
-        for run in schedule:
+
+        # I don't know what this means
+        for global_incentive in self.incentives.get(None):
+            schedule_lines.extend(global_incentive.render(column_width - 8, len(global_incentive), args))
+
+        combined_schedules = sorted([run for schedule in self.schedules for run in schedule], key=lambda r: r.start)
+        for run in combined_schedules:
             schedule_lines.extend(self.format_run(run, column_width, args))
             if len(schedule_lines) >= utils.term_height:
                 break

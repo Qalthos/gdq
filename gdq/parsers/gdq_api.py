@@ -127,7 +127,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
     for incentive in incentives:
         incentive_id = incentive["pk"]
         incentive = incentive["fields"]
-        game = incentive["speedrun__name"]
+        game = incentive.get("speedrun__name")
 
         if incentive.get('parent'):
             parent_id = incentive["parent"]
@@ -138,13 +138,14 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
             )
             choices[parent_id].append(choice)
             continue
-        elif incentive["istarget"]:
+
+        if incentive["istarget"]:
             incentive_obj = DonationIncentive(
                 incentive_id=incentive_id,
                 description=incentive["description"],
                 short_desc=incentive["name"].strip(),
                 current=float(incentive["total"]),
-                numeric_total=float(incentive["goal"]),
+                numeric_total=float(incentive["goal"] or 0),
                 state=incentive["state"],
             )
         else:

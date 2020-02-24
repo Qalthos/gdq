@@ -45,7 +45,11 @@ def progress_bar(start: float, current: float, end: float, width: int = term_wid
 
 
 def progress_bar_decorated(start: float, current: float, end: float, width: int = term_width) -> str:
-    percent = ((current - start) / (end - start) * 100)
+    if end - start > 0:
+        percent = ((current - start) / (end - start) * 100)
+    else:
+        percent = 0
+
     width -= 7
     chars = " ▏▎▍▌▋▊▉█"
 
