@@ -117,6 +117,12 @@ def slow_progress_bar(interval=30):
         time.sleep(resolution)
 
 
+def show_iterable_progress(iterable):
+    for i, item in enumerate(iterable):
+        print(f"\x1b[{term_width}H{progress_bar(0, i, len(iterable))}", end="", flush=True)
+        yield item
+
+
 def terminal_refresh() -> bool:
     """Refresh terminal geometry
 

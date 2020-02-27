@@ -36,10 +36,9 @@ class GDQTracker(MarathonBase):
         return events
 
     def refresh_all(self) -> None:
-        self.read_events()
-        self.read_runners()
-        self.read_schedules()
-        self.read_incentives()
+        readers = (self.read_events, self.read_runners, self.read_schedules, self.read_incentives)
+        for reader in utils.show_iterable_progress(readers):
+            reader()
 
     def read_events(self) -> None:
         events = gdq_api.get_events(self.url)
