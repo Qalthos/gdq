@@ -18,7 +18,6 @@ class MarathonBase(ABC):
     url = ""
 
     # Cached live data
-    display_streams: int
     schedules: List[List[Run]] = []
 
     @abstractmethod
@@ -38,7 +37,7 @@ class MarathonBase(ABC):
 
         # If we're out of schedules, we're done
         if not schedules:
-            return
+            return False
 
         rendered_schedules = []
         column_width = utils.term_width // len(schedules)

@@ -40,7 +40,7 @@ def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bo
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-i", "--stream_index", help="follow only a single stream", type=int, default=0
+        "-i", "--stream_index", help="follow only a single stream", type=int, default=1
     )
     parser.add_argument(
         "-n", "--interval", help="time between screen refreshes", type=int, default=60
@@ -83,7 +83,7 @@ def main():
 
     if config.get(args.stream_name):
         if config[args.stream_name].get("url"):
-            marathon = GDQTracker(url=config[args.stream_name]["url"])
+            marathon = GDQTracker(url=config[args.stream_name]["url"], stream_index=-args.stream_index)
         else:
             print(f"Config for {args.stream_name} is missing 'url' key")
             sys.exit(1)

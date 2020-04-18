@@ -20,9 +20,9 @@ class GDQTracker(MarathonBase):
     runners: Dict[int, Runner] = {}
     incentives: Dict[str, Incentive] = {}
 
-    def __init__(self, url: str = None, streams: int = 1) -> None:
+    def __init__(self, url: str = None, stream_index: int = -1) -> None:
         self.url = url or self.url
-        self.display_streams = streams
+        self.stream_index = stream_index
 
     @property
     def total(self) -> float:
@@ -45,7 +45,7 @@ class GDQTracker(MarathonBase):
         if events is None:
             return
 
-        self.current_event = events.pop(-1)
+        self.current_event = events.pop(self.stream_index)
 
         self.records = sorted(events, key=operator.attrgetter("total"))
 
