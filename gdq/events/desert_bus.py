@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import math
 import operator
@@ -7,32 +8,46 @@ import requests
 from gdq import utils
 
 
+@dataclass
+class Record:
+    year: int
+    total: float
+    name: str = ""
+
+
+@dataclass
+class Shift:
+    color: str
+    hour: int
+    name: str
+
+
 START = datetime(2019, 11, 8, 16, tzinfo=timezone.utc)
 SHIFTS = [
-    {"color": "\x1b[33", "hour": 20, "name": "Dawn Guard"},
-    {"color": "\x1b[31", "hour": 2, "name": "Alpha Flight"},
-    {"color": "\x1b[34", "hour": 8, "name": "Night Watch"},
-    {"color": "\x1b[35", "hour": 14, "name": "Zeta"},
+    Shift(color="\x1b[33", hour=20, name="Dawn Guard"),
+    Shift(color="\x1b[31", hour=2, name="Alpha Flight"),
+    Shift(color="\x1b[34", hour=8, name="Night Watch"),
+    Shift(color="\x1b[35", hour=14, name="Zeta"),
 ]
 RECORDS = [
-    {"year": 2007, "total": 22_805.00, "name": "Desert Bus for Hope"},
-    {"year": 2008, "total": 70_423.79, "name": "Desert Bus for Hope 2: Bus Harder"},
-    {"year": 2009, "total": 140_449.68, "name": "Desert Bus for Hope 3: It's Desert Bus 6 in Japan"},
-    {"year": 2010, "total": 208_250.00, "name": "Desert Bus for Hope 4: A New Hope"},
-    {"year": 2011, "total": 383_125.10, "name": "Desert Bus for Hope 5: De5ert Bus"},
-    {"year": 2012, "total": 443_630.00, "name": "Desert Bus for Hope 6: Desert Bus 3 in America"},
-    {"year": 2013, "total": 523_520.00, "name": "Desert Bus for Hope 007"},
-    {"year": 2014, "total": 643_242.58, "name": "Desert Bus for Hope 8"},
-    {"year": 2015, "total": 683_720.00, "name": "Desert Bus for Hope 9: The Joy of Bussing"},
-    {"year": 2016, "total": 695_242.57, "name": "Desert Bus X"},
-    {"year": 2017, "total": 650_215.00},
-    {"year": 2018, "total": 730_099.90},
-    {"year": 2019, "total": 865_000.00},
+    Record(year=2007, total=22_805.00, name="Desert Bus for Hope"),
+    Record(year=2008, total=70_423.79, name="Desert Bus for Hope 2: Bus Harder"),
+    Record(year=2009, total=140_449.68, name="Desert Bus for Hope 3: It's Desert Bus 6 in Japan"),
+    Record(year=2010, total=208_250.00, name="Desert Bus for Hope 4: A New Hope"),
+    Record(year=2011, total=383_125.10, name="Desert Bus for Hope 5: De5ert Bus"),
+    Record(year=2012, total=443_630.00, name="Desert Bus for Hope 6: Desert Bus 3 in America"),
+    Record(year=2013, total=523_520.00, name="Desert Bus for Hope 007"),
+    Record(year=2014, total=643_242.58, name="Desert Bus for Hope 8"),
+    Record(year=2015, total=683_720.00, name="Desert Bus for Hope 9: The Joy of Bussing"),
+    Record(year=2016, total=695_242.57, name="Desert Bus X"),
+    Record(year=2017, total=650_215.00),
+    Record(year=2018, total=730_099.90),
+    Record(year=2019, total=865_000.00),
 ]
 
 
 class DesertBus:
-    total = 0
+    total = 0.0
 
     def refresh_all(self):
         # Money raised
@@ -45,11 +60,11 @@ class DesertBus:
 
     @property
     def desert_bucks(self) -> float:
-        return self.total / RECORDS[0]["total"]
+        return self.total / RECORDS[0].total
 
     @property
     def desert_toonies(self) -> float:
-        return self.total / RECORDS[1]["total"]
+        return self.total / RECORDS[1].total
 
     def display(self, args) -> bool:
         # Clear screen & reset cursor position
@@ -67,7 +82,7 @@ class DesertBus:
             print("It's over!")
 
         print(f"${self.total:,.2f} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
-        print(f"${self.total + sum([record['total'] for record in RECORDS]):,.2f} lifetime total.")
+        print(f"${self.total + sum([record.total for record in RECORDS]):,.2f} lifetime total.")
 
         if utils.now > START:
             if utils.now < START + (timedelta(hours=(self.hours + 1))):
@@ -166,7 +181,7 @@ def shift_banners() -> str:
     # Shift detection
     shifts = sorted(SHIFTS, key=operator.itemgetter("hour"))
     for shift in shifts:
-        if utils.now.hour < shift["hour"]:
+        if utils.now.hour < shift.hour:
             break
     else:
         shift = shifts[0]
@@ -193,7 +208,7 @@ def shift_banners() -> str:
             mod = 4 - reflow
         elif index < reflow:
             mod = 1
-        banners.append(f"{shift_info['color']};{boldness}m{shift_info['name'].center(shift_width+mod, '═')}\x1b[0m")
+        banners.append(f"{shift_info.color};{boldness}m{shift_info.name.center(shift_width+mod, '═')}\x1b[0m")
 
     return "|".join(banners)
 
