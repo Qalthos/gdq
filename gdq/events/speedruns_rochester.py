@@ -25,4 +25,5 @@ class SpeedrunsRochester(HoraroSchedule):
                 runners=[run_data["Runner"] or ""],
                 start=datetime.fromtimestamp(run["scheduled_t"], tz=tz.gettz(timezone)),
                 estimate=run["length_t"],
+                run_id=0,
             )

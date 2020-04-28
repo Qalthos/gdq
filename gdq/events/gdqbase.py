@@ -1,6 +1,6 @@
 import operator
 from collections import namedtuple
-from typing import Dict, List
+from typing import Dict, Iterable, List, Union
 
 from gdq import utils
 from gdq.events import MarathonBase
@@ -18,7 +18,7 @@ class GDQTracker(MarathonBase):
     # Cached live data
     current_event: Event
     runners: Dict[int, Runner] = {}
-    incentives: Dict[str, Incentive] = {}
+    incentives: Dict[str, List[Incentive]] = {}
 
     def __init__(self, url: str = None, stream_index: int = -1) -> None:
         self.url = url or self.url
@@ -80,7 +80,7 @@ class GDQTracker(MarathonBase):
             print(header.center(utils.term_width))
             extra_lines += 1
 
-        last_record = FakeRecord(total=0, short_name="GO!")
+        last_record: Union[Event, FakeRecord] = FakeRecord(total=0, short_name="GO!")
         for record in self.records:
             if record.total > self.total:
                 break
@@ -90,8 +90,8 @@ class GDQTracker(MarathonBase):
 
         trim = len(last_record.short_name) + len(record.short_name) + 2
         bar_width = utils.term_width - trim
-        bar = utils.progress_bar_decorated(last_record.total, self.total, record.total, width=bar_width)
-        print(f"{last_record.short_name.upper()} {bar} {record.short_name.upper()}")
+        prog_bar = utils.progress_bar_decorated(last_record.total, self.total, record.total, width=bar_width)
+        print(f"{last_record.short_name.upper()} {prog_bar} {record.short_name.upper()}")
         extra_lines += 1
 
         total = self.total
@@ -127,7 +127,7 @@ class GDQTracker(MarathonBase):
         padding = " " * column_width
         return self._real_display(rendered_schedules, padding, row_index)
 
-    def format_run(self, run: Run, width: int = 80, args=None) -> List[str]:
+    def format_run(self, run: Run, width: int = 80, args=None) -> Iterable[str]:
         width -= 8
         run_desc = list(super().format_run(run, width))
         incentives = self.incentives.get(run.game, [])

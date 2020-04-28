@@ -15,7 +15,7 @@ def _get_resource(base_url: str, resource_type: str, **kwargs) -> requests.Respo
     return requests.get(resource_url, params={"type": resource_type, **kwargs})
 
 
-def get_events(base_url: str, event_id: int = None) -> Optional[List[Event]]:
+def get_events(base_url: str, event_id: int = 0) -> List[Event]:
     kwargs = {}
     if event_id:
         kwargs["id"] = event_id
@@ -23,18 +23,17 @@ def get_events(base_url: str, event_id: int = None) -> Optional[List[Event]]:
     try:
         events = _get_resource(base_url, "event", **kwargs).json()
     except json.decoder.JSONDecodeError:
-        return
+        return []
 
     match_multi = re.compile(r"(.*)s\d+$", re.MULTILINE)
     multi_events = {}
-    event_objs = []
+    event_objs: List[Event] = []
 
     for event in events:
         event_id = event["pk"]
         event_data = event["fields"]
 
         # There are a few keys for tracking the start time of events
-        start = None
         for key in ("date", "datetime"):
             if key in event_data:
                 try:
@@ -118,10 +117,10 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
     return runner_dict
 
 
-def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentive]:
+def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, List[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=event_id).json()
-    incentive_dict = dict()
+    incentive_dict: Dict[str, List[Incentive]] = dict()
     choices = defaultdict(list)
 
     for incentive in incentives:
@@ -139,6 +138,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, Incentiv
             choices[parent_id].append(choice)
             continue
 
+        incentive_obj: Incentive
         if incentive["istarget"]:
             incentive_obj = DonationIncentive(
                 incentive_id=incentive_id,

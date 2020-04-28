@@ -93,7 +93,7 @@ class Run:
     start: datetime
     estimate: int
 
-    run_id: int = None
+    run_id: int
 
     @property
     def runner_str(self):
@@ -144,6 +144,14 @@ class Incentive(metaclass=ABCMeta):
     @property
     def closed(self):
         return self.state == "CLOSED"
+
+    @abstractmethod
+    def render(self, width: int, align: int, args) -> List[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def __len__(self) -> int:
+        raise NotImplementedError
 
 
 @dataclass

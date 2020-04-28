@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Generator, List
+from typing import Generator, Iterable, List
 
 import pyplugs
 
@@ -43,7 +43,7 @@ class MarathonBase(ABC):
         column_width = utils.term_width // len(schedules)
 
         for schedule in schedules:
-            schedule_lines = []
+            schedule_lines: List[str] = []
             for run in schedule:
                 schedule_lines.extend(self.format_run(run, column_width, args))
                 if len(schedule_lines) >= utils.term_height:
@@ -83,7 +83,7 @@ class MarathonBase(ABC):
 
         return True
 
-    def format_run(self, run: Run, width: int = 80, args=None) -> Generator[str, None, None]:
+    def format_run(self, run: Run, width: int = 80, args=None) -> Iterable[str]:
         # If the estimate has passed, it's probably over.
         if run.remaining < timedelta():
             return

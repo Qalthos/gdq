@@ -33,9 +33,9 @@ def progress_bar(start: float, current: float, end: float, width: int = term_wid
 
     blocks, fraction = 0, 0
     if percent:
-        blocks, fraction = divmod(percent * width, 100)
-        blocks = int(blocks)
-        fraction = int(fraction // (100 / len(chars)))
+        divparts = divmod(percent * width, 100)
+        blocks = int(divparts[0])
+        fraction = int(divparts[1] // (100 / len(chars)))
 
     if blocks >= width:
         blocks = width - 1
@@ -45,42 +45,43 @@ def progress_bar(start: float, current: float, end: float, width: int = term_wid
 
 
 def progress_bar_decorated(start: float, current: float, end: float, width: int = term_width) -> str:
-    if end - start > 0:
-        percent = ((current - start) / (end - start) * 100)
-    else:
-        percent = 0
-
     width -= 7
-    chars = " ▏▎▍▌▋▊▉█"
 
     if start:
         width -= 5
 
     if current >= end:
-        bar = progress_bar(start, current, end, width)
+        prog_bar = progress_bar(start, current, end, width)
     else:
+        chars = " ▏▎▍▌▋▊▉█"
+
+        if end - start > 0:
+            percent = ((current - start) / (end - start) * 100)
+        else:
+            percent = 0
+
         blocks, fraction = 0, 0
         if percent:
-            blocks, fraction = divmod(percent * width, 100)
-            blocks = int(blocks)
-            fraction = int(fraction // (100 / len(chars)))
+            divparts = divmod(percent * width, 100)
+            blocks = int(divparts[0])
+            fraction = int(divparts[1] // (100 / len(chars)))
 
         if blocks >= width:
             blocks = width - 1
             fraction = -1
         remainder = (width - blocks - 1)
 
-        current = short_number(current)
+        current_str = short_number(current)
         if remainder > blocks:
-            suffix = " " * (remainder - len(current))
-            bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
+            suffix = " " * (remainder - len(current_str))
+            prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current_str}{suffix}"
         else:
-            prefix = chars[-1] * (blocks - len(current))
-            bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+            prefix = chars[-1] * (blocks - len(current_str))
+            prog_bar = f"{prefix}\x1b[7m{current_str}\x1b[m{chars[fraction]}{' ' * remainder}"
 
     if start:
-        return f"{short_number(start): <5s}▕{bar}▏{short_number(end): >5s}"
-    return f"▕{bar}▏{short_number(end): >5s}"
+        return f"{short_number(start): <5s}▕{prog_bar}▏{short_number(end): >5s}"
+    return f"▕{prog_bar}▏{short_number(end): >5s}"
 
 
 def short_number(number: float) -> str:

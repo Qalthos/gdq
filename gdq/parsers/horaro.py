@@ -26,14 +26,14 @@ def read_schedule(event: str, stream_id: str, parse_run: Callable) -> List[Run]:
     data = requests.get(f'https://horaro.org/-/api/v1/events/{event}/schedules/{stream_id}', headers=headers)
 
     try:
-        data = data.json()['data']
+        data_dict = data.json()['data']
     except ValueError:
         return runs
 
-    updated = datetime.strptime(data['updated'], '%Y-%m-%dT%H:%M:%S%z')
-    timezone = data['timezone']
-    keys = data['columns']
-    schedule = data['items']
+    updated = datetime.strptime(data_dict['updated'], '%Y-%m-%dT%H:%M:%S%z')
+    timezone = data_dict['timezone']
+    keys = data_dict['columns']
+    schedule = data_dict['items']
 
     runs = list(parse_run(keys, schedule, timezone))
     with shelve.open(str(shelve_file)) as shelf:
