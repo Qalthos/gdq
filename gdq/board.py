@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from datetime import timedelta
 from pathlib import Path
 import sys
 import time
@@ -74,12 +75,29 @@ def main():
         "--oneshot", help="Run only once and then exit", action="store_true"
     )
     parser.add_argument(
+        "--list", help="Show known marathons and status", action="store_true"
+    )
+    parser.add_argument(
         "stream_name", nargs="?", help="The event to follow", type=str, default="gdq",
     )
     args = parser.parse_args()
 
     with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml") as toml_file:
         config = toml.load(toml_file)
+
+    if args.list:
+        for key, marathon in config.items():
+            if "url" in marathon:
+                marathon = GDQTracker(url=marathon["url"])
+                marathon.read_events()
+                start = marathon.current_event.start_time
+                if start > utils.now:
+                    print(f"{key} will start in {start - utils.now}")
+                elif start > utils.now - timedelta(days=7):
+                    print(f"{key} is (probably) ongoing")
+                else:
+                    print(f"{key} (probably) finished on {start + timedelta(days=7)}")
+        sys.exit(0)
 
     if config.get(args.stream_name):
         if config[args.stream_name].get("url"):
