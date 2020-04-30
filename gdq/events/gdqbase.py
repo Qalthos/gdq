@@ -101,23 +101,25 @@ class GDQTracker(MarathonBase):
         return extra_lines
 
     def display_split(self, args, row_index):
-        rendered_schedules = []
         column_width = utils.term_width // 2
+        height = (utils.term_height - row_index - 1) // len(self.schedules)
+        rendered_schedules = [[]]
 
-        schedule = sorted([run for schedule in self.schedules for run in schedule], key=lambda r: r.start)
-        schedule_lines = []
         args.hide_basic = False
         args.hide_incentives = True
-        for run in schedule:
-            schedule_lines.extend(self.format_run(run, column_width, args))
-            if len(schedule_lines) >= utils.term_height:
-                break
-        rendered_schedules.append(schedule_lines)
+        for schedule in self.schedules:
+            schedule_lines = []
+            for run in schedule:
+                schedule_lines.extend(self.format_run(run, column_width, args))
+                if len(schedule_lines) >= height:
+                    break
+            rendered_schedules[0].extend(schedule_lines)
 
         schedule_lines = []
         args.hide_basic = True
         args.hide_incentives = False
         combined_schedules = sorted([run for schedule in self.schedules for run in schedule], key=lambda r: r.start)
+
         for run in combined_schedules:
             schedule_lines.extend(self.format_run(run, column_width, args))
             if len(schedule_lines) >= utils.term_height:
