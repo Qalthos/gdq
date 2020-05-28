@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import math
-import operator
 
 import requests
 
@@ -9,26 +8,26 @@ from gdq import utils
 from gdq.money import Dollar
 
 
-@dataclass
+@dataclass(order=True, frozen=True)
 class Record:
     total: Dollar
     year: int
     name: str = ""
 
 
-@dataclass
+@dataclass(order=True, frozen=True)
 class Shift:
+    end_hour: int
     color: str
-    hour: int
     name: str
 
 
 START = datetime(2019, 11, 8, 16, tzinfo=timezone.utc)
 SHIFTS = [
-    Shift(color="\x1b[33", hour=20, name="Dawn Guard"),
-    Shift(color="\x1b[31", hour=2, name="Alpha Flight"),
-    Shift(color="\x1b[34", hour=8, name="Night Watch"),
-    Shift(color="\x1b[35", hour=14, name="Zeta"),
+    Shift(color="\x1b[33", end_hour=20, name="Dawn Guard"),
+    Shift(color="\x1b[31", end_hour=2, name="Alpha Flight"),
+    Shift(color="\x1b[34", end_hour=8, name="Night Watch"),
+    Shift(color="\x1b[35", end_hour=14, name="Zeta"),
 ]
 RECORDS = [
     Record(year=2007, total=Dollar(22_805.00), name="Desert Bus for Hope"),
@@ -50,7 +49,7 @@ RECORDS = [
 class DesertBus:
     total: Dollar
 
-    def refresh_all(self):
+    def refresh_all(self) -> None:
         # Money raised
         state = requests.get("https://desertbus.org/wapi/init").json()
         self.total = Dollar(state["total"])
@@ -67,13 +66,9 @@ class DesertBus:
     def desert_toonies(self) -> float:
         return self.total / RECORDS[1].total
 
-    def display(self, args) -> bool:
+    def display(self, _args) -> bool:
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
-
-        if args.test:
-            global START
-            START = utils.now - timedelta(hours=args.test)
 
         if utils.now < START:
             print(f"Starting in {START - utils.now}")
@@ -104,12 +99,12 @@ class DesertBus:
             future_total = self.total * future_multiplier
         return f"{future_total} estimated total ({future_hours} hours)"
 
-    def print_records(self):
+    def print_records(self) -> None:
         print()
 
         last_hour = self.hours
         next_level = Dollar(0)
-        for event in sorted(RECORDS, key=operator.itemgetter("total")):
+        for event in sorted(RECORDS):
             record = event["total"]
             if record > self.total:
                 hours = dollars_to_hours(record)
@@ -130,7 +125,7 @@ class DesertBus:
         last_hour += 1
         print(f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}")
 
-    def bus_progress(self, overall=False):
+    def bus_progress(self, overall: bool = False) -> str:
         td_bussed = utils.now - START
         td_total = timedelta(hours=self.hours)
 
@@ -142,8 +137,8 @@ class DesertBus:
         last_record = timedelta()
         future_stops = []
 
-        for record in sorted(RECORDS, key=operator.itemgetter("total")):
-            td_record = timedelta(hours=dollars_to_hours(record["total"]))
+        for record in sorted(RECORDS):
+            td_record = timedelta(hours=dollars_to_hours(record.total))
             if td_record <= td_bussed:
                 # We've passed this record, but make a note that we've come this far.
                 last_record = td_record
@@ -155,11 +150,9 @@ class DesertBus:
                 break
 
         if overall:
-            percent_done = td_bussed / td_total
             last_record = timedelta()
-        else:
-            percent_done = (last_record - td_bussed) / (last_record - td_total)
-        bussed_width = math.floor(progress_width * percent_done)
+
+        bussed_width = math.floor(progress_width * (td_bussed - last_record) / (td_total - last_record))
         bus = f"{'─' * bussed_width}🚍{' ' * (progress_width - bussed_width - 1)}🏁"
 
         for stop in future_stops:
@@ -170,20 +163,20 @@ class DesertBus:
         return f"{hours_done}{bus}{hours_left}\x1b[0m"
 
 
-def dollars_to_hours(dollars, rate=1.07) -> int:
+def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:
     # NOTE: This is not reflexive with hours_to_dollats
-    return math.floor(math.log((dollars * (rate - 1)) + 1) / math.log(rate))
+    return math.floor(math.log((dollars.to_float() * (rate - 1)) + 1) / math.log(rate))
 
 
-def hours_to_dollars(hours, rate=1.07) -> float:
-    return (1 - (rate ** hours)) / (1 - rate)
+def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
+    return Dollar((1 - (rate ** hours)) / (1 - rate))
 
 
 def shift_banners() -> str:
     # Shift detection
-    shifts = sorted(SHIFTS, key=operator.itemgetter("hour"))
+    shifts = sorted(SHIFTS)
     for shift in shifts:
-        if utils.now.hour < shift.hour:
+        if utils.now.hour < shift.end_hour:
             break
     else:
         shift = shifts[0]
@@ -218,9 +211,7 @@ def shift_banners() -> str:
 def timedelta_as_hours(delta: timedelta) -> str:
     """Format a timedelta in HHH:MM format."""
 
-    minutes = delta.total_seconds() / 60
+    minutes = delta.total_seconds() // 60
     hours, minutes = divmod(minutes, 60)
-    # Avoid :60
-    if math.ceil(minutes) == 60:
-        hours, minutes = hours + 1, 0
+
     return f"{hours:.0f}:{minutes:02.0f}"
