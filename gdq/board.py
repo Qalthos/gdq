@@ -38,6 +38,21 @@ def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bo
     return True
 
 
+def list_events(config):
+    for key, marathon in config.items():
+        if "url" in marathon:
+            marathon = GDQTracker(url=marathon["url"])
+            marathon.read_events()
+            start = marathon.current_event.start_time
+            if start > utils.now:
+                print(f"{key} will start in {start - utils.now}")
+            elif start > utils.now - timedelta(days=7):
+                print(f"{key} is (probably) ongoing")
+            else:
+                print(f"{key} (probably) finished on {start + timedelta(days=7)}")
+    sys.exit(0)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -86,18 +101,7 @@ def main():
         config = toml.load(toml_file)
 
     if args.list:
-        for key, marathon in config.items():
-            if "url" in marathon:
-                marathon = GDQTracker(url=marathon["url"])
-                marathon.read_events()
-                start = marathon.current_event.start_time
-                if start > utils.now:
-                    print(f"{key} will start in {start - utils.now}")
-                elif start > utils.now - timedelta(days=7):
-                    print(f"{key} is (probably) ongoing")
-                else:
-                    print(f"{key} (probably) finished on {start + timedelta(days=7)}")
-        sys.exit(0)
+        list_events(config)
 
     if config.get(args.stream_name):
         if config[args.stream_name].get("url"):
