@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Generator, Iterable, List
+from typing import Iterable, List
 
 import pyplugs
 

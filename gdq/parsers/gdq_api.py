@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 import json
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import requests
 
