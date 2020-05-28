@@ -6,12 +6,13 @@ import operator
 import requests
 
 from gdq import utils
+from gdq.money import Dollar
 
 
 @dataclass
 class Record:
+    total: Dollar
     year: int
-    total: float
     name: str = ""
 
 
@@ -30,29 +31,29 @@ SHIFTS = [
     Shift(color="\x1b[35", hour=14, name="Zeta"),
 ]
 RECORDS = [
-    Record(year=2007, total=22_805.00, name="Desert Bus for Hope"),
-    Record(year=2008, total=70_423.79, name="Desert Bus for Hope 2: Bus Harder"),
-    Record(year=2009, total=140_449.68, name="Desert Bus for Hope 3: It's Desert Bus 6 in Japan"),
-    Record(year=2010, total=208_250.00, name="Desert Bus for Hope 4: A New Hope"),
-    Record(year=2011, total=383_125.10, name="Desert Bus for Hope 5: De5ert Bus"),
-    Record(year=2012, total=443_630.00, name="Desert Bus for Hope 6: Desert Bus 3 in America"),
-    Record(year=2013, total=523_520.00, name="Desert Bus for Hope 007"),
-    Record(year=2014, total=643_242.58, name="Desert Bus for Hope 8"),
-    Record(year=2015, total=683_720.00, name="Desert Bus for Hope 9: The Joy of Bussing"),
-    Record(year=2016, total=695_242.57, name="Desert Bus X"),
-    Record(year=2017, total=650_215.00),
-    Record(year=2018, total=730_099.90),
-    Record(year=2019, total=865_000.00),
+    Record(year=2007, total=Dollar(22_805.00), name="Desert Bus for Hope"),
+    Record(year=2008, total=Dollar(70_423.79), name="Desert Bus for Hope 2: Bus Harder"),
+    Record(year=2009, total=Dollar(140_449.68), name="Desert Bus for Hope 3: It's Desert Bus 6 in Japan"),
+    Record(year=2010, total=Dollar(208_250.00), name="Desert Bus for Hope 4: A New Hope"),
+    Record(year=2011, total=Dollar(383_125.10), name="Desert Bus for Hope 5: De5ert Bus"),
+    Record(year=2012, total=Dollar(443_630.00), name="Desert Bus for Hope 6: Desert Bus 3 in America"),
+    Record(year=2013, total=Dollar(523_520.00), name="Desert Bus for Hope 007"),
+    Record(year=2014, total=Dollar(643_242.58), name="Desert Bus for Hope 8"),
+    Record(year=2015, total=Dollar(683_720.00), name="Desert Bus for Hope 9: The Joy of Bussing"),
+    Record(year=2016, total=Dollar(695_242.57), name="Desert Bus X"),
+    Record(year=2017, total=Dollar(650_215.00)),
+    Record(year=2018, total=Dollar(730_099.90)),
+    Record(year=2019, total=Dollar(865_015.00)),
 ]
 
 
 class DesertBus:
-    total = 0.0
+    total: Dollar
 
     def refresh_all(self):
         # Money raised
         state = requests.get("https://desertbus.org/wapi/init").json()
-        self.total = state["total"]
+        self.total = Dollar(state["total"])
 
     @property
     def hours(self) -> int:
@@ -81,8 +82,8 @@ class DesertBus:
         else:
             print("It's over!")
 
-        print(f"${self.total:,.2f} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
-        print(f"${self.total + sum([record.total for record in RECORDS]):,.2f} lifetime total.")
+        print(f"{self.total} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
+        print(f"{self.total + sum([record.total for record in RECORDS], Dollar(0))} lifetime total.")
 
         if utils.now > START:
             if utils.now < START + (timedelta(hours=(self.hours + 1))):
@@ -99,14 +100,15 @@ class DesertBus:
         future_total = self.total
         while future_hours != dollars_to_hours(future_total):
             future_hours = dollars_to_hours(future_total)
-            future_total = (self.total * timedelta(hours=future_hours)) / (utils.now - START)
-        return f"${future_total:,.2f} estimated total ({future_hours} hours)"
+            future_multiplier = timedelta(hours=future_hours) / (utils.now - START)
+            future_total = self.total * future_multiplier
+        return f"{future_total} estimated total ({future_hours} hours)"
 
     def print_records(self):
         print()
 
         last_hour = self.hours
-        next_level = 0
+        next_level = Dollar(0)
         for event in sorted(RECORDS, key=operator.itemgetter("total")):
             record = event["total"]
             if record > self.total:
@@ -114,19 +116,19 @@ class DesertBus:
                 while hours > last_hour:
                     last_hour += 1
                     next_hour = hours_to_dollars(last_hour) - self.total
-                    print(f"${next_hour:,.2f} until hour {last_hour}")
+                    print(f"{next_hour} until hour {last_hour}")
 
                 next_level = record - self.total
                 if "name" in event:
-                    print(f"${next_level:,.2f} until {event['name']}")
+                    print(f"{next_level} until {event['name']}")
                 else:
-                    print(f"${next_level:,.2f} until Desert Bus {event['year']}")
+                    print(f"{next_level} until Desert Bus {event['year']}")
 
         if next_level == 0:
             print("NEW RECORD!")
 
         last_hour += 1
-        print(f"${hours_to_dollars(last_hour) - self.total:,.2f} until hour {last_hour}")
+        print(f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}")
 
     def bus_progress(self, overall=False):
         td_bussed = utils.now - START
