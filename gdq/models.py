@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
@@ -9,7 +9,7 @@ from gdq import utils
 
 
 @dataclass
-class Event(metaclass=ABCMeta):
+class Event(ABC):
     name: str
     short_name: str
 
@@ -134,7 +134,7 @@ class Run:
 
 
 @dataclass
-class Incentive(metaclass=ABCMeta):
+class Incentive(ABC):
     incentive_id: int
     description: str
     short_desc: str
