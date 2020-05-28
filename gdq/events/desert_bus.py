@@ -105,7 +105,7 @@ class DesertBus:
         last_hour = self.hours
         next_level = Dollar(0)
         for event in sorted(RECORDS):
-            record = event["total"]
+            record = event.total
             if record > self.total:
                 hours = dollars_to_hours(record)
                 while hours > last_hour:
@@ -114,10 +114,10 @@ class DesertBus:
                     print(f"{next_hour} until hour {last_hour}")
 
                 next_level = record - self.total
-                if "name" in event:
-                    print(f"{next_level} until {event['name']}")
+                if event.name:
+                    print(f"{next_level} until {event.name}")
                 else:
-                    print(f"{next_level} until Desert Bus {event['year']}")
+                    print(f"{next_level} until Desert Bus {event.year}")
 
         if next_level == 0:
             print("NEW RECORD!")
