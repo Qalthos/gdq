@@ -6,7 +6,6 @@ setup(
     version=0.9,
     packages=find_packages(exclude=['tests']),
     install_requires=[
-        "pyplugs",
         "requests",
         "xdg",
     ],

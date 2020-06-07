@@ -3,14 +3,8 @@ from datetime import timedelta
 from itertools import zip_longest
 from typing import Iterable, List
 
-import pyplugs
-
 from gdq import utils
 from gdq.models import Run
-
-
-names = pyplugs.names_factory(__package__)
-marathon = pyplugs.call_factory(__package__)
 
 
 class MarathonBase(ABC):

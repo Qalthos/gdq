@@ -2,13 +2,11 @@ from datetime import datetime
 from typing import Iterator
 
 from dateutil import tz
-import pyplugs
 
 from gdq.events.horarobase import HoraroSchedule
 from gdq.models import Run
 
 
-@pyplugs.register
 class SpeedrunsRochester(HoraroSchedule):
     group_name = "srrocsm"
     current_event = "schedule"
