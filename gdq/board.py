@@ -38,7 +38,7 @@ def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bo
     return True
 
 
-def list_events(config):
+def list_events(config: dict) -> None:
     for key, marathon in config.items():
         if "url" in marathon:
             marathon = GDQTracker(url=marathon["url"])

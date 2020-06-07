@@ -66,14 +66,14 @@ class DesertBus:
     def desert_toonies(self) -> float:
         return self.total / RECORDS[1].total
 
-    def display(self, _args) -> bool:
+    def display(self, _args, timestamp: datetime = utils.now) -> bool:
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
 
         if utils.now < START:
-            print(f"Starting in {START - utils.now}")
+            print(f"Starting in {START - timestamp}")
         elif utils.now < (START + timedelta(hours=self.hours + 1)):
-            print(shift_banners())
+            print(shift_banners(timestamp))
         else:
             print("It's over!")
 
@@ -172,11 +172,11 @@ def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
     return Dollar((1 - (rate ** hours)) / (1 - rate))
 
 
-def shift_banners() -> str:
+def shift_banners(timestamp: datetime) -> str:
     # Shift detection
     shifts = sorted(SHIFTS)
     for shift in shifts:
-        if utils.now.hour < shift.end_hour:
+        if timestamp.hour < shift.end_hour:
             break
     else:
         shift = shifts[0]
