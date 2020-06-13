@@ -1,13 +1,15 @@
 from __future__ import annotations
-from abc import ABC, abstractmethod
+
 import functools
-from typing import Dict
-from typing import Type
+from abc import ABC, abstractmethod
+from typing import Dict, Type, TypeVar
 
 from gdq import utils
 
+M = TypeVar("M", bound="Money")
 
-def progress_bar_money(start: Money, current: Money, end: Money, width: int = utils.term_width) -> str:
+
+def progress_bar_money(start: M, current: M, end: M, width: int = utils.term_width) -> str:
     width -= 8
 
     if start:
@@ -47,10 +49,8 @@ def progress_bar_money(start: Money, current: Money, end: Money, width: int = ut
     return f"▕{prog_bar}▏{end.short: >6s}"
 
 
-@functools.total_ordering
 class Money(ABC):
     _value: int
-    _symbol: str = "?"
 
     def __init__(self, value: float):
         self._value = int(value)
@@ -58,27 +58,35 @@ class Money(ABC):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.to_float()})"
 
+    def __bool__(self):
+        return bool(self._value)
+
+    @property
+    @abstractmethod
+    def symbol(self):
+        ...
+
     # Operator methods
-    def __add__(self, other: Money) -> Money:
+    def __add__(self: M, other: M) -> M:
         self._validate(other)
 
         result = type(self)(0)
         result._value = self._value + other._value
         return result
 
-    def __sub__(self, other: Money) -> Money:
+    def __sub__(self: M, other: M) -> M:
         self._validate(other)
 
         result = type(self)(0)
         result._value = self._value - other._value
         return result
 
-    def __mul__(self, other: float) -> Money:
+    def __mul__(self: M, other: float) -> M:
         result = type(self)(0)
         result._value = round(self._value * other)
         return result
 
-    def __truediv__(self, other: Money) -> float:
+    def __truediv__(self: M, other: M) -> float:
         self._validate(other)
 
         return self._value / other._value
@@ -88,13 +96,17 @@ class Money(ABC):
         self._validate(other)
         return self._value == other._value
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self: M, other: M) -> bool:
         self._validate(other)
         return self._value < other._value
 
+    def __ge__(self: M, other: M) -> bool:
+        self._validate(other)
+        return self._value >= other._value
+
     # Casting methods
     def __str__(self) -> str:
-        return f"{self._symbol}{self._value}"
+        return f"{self.symbol}{self._value}"
 
     def to_float(self) -> float:
         return float(self._value)
@@ -105,9 +117,9 @@ class Money(ABC):
         return NotImplementedError
 
     # Type validation check
-    def _validate(self, other) -> None:
+    def _validate(self: M, other: M) -> None:
         if not isinstance(other, type(self)):
-            raise TypeError(f"unsupported operand type(s) for +: '{type(self).__name__}' and '{type(other).__class__}'")
+            raise TypeError(f"unsupported operand type(s) for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
 
 class DecimalMoney(Money):
@@ -115,22 +127,22 @@ class DecimalMoney(Money):
         self._value = round(value * 100)
 
     def __str__(self) -> str:
-        return f"{self._symbol}{self.to_float():02d}"
+        return f"{self.symbol}{self.to_float():02d}"
 
     def to_float(self) -> float:
         return self._value / 100
 
     @property
     def short(self):
-        return f"{self._symbol}{utils.short_number(self.to_float())}"
+        return f"{self.symbol}{utils.short_number(self.to_float())}"
 
 
 class Dollar(DecimalMoney):
-    _symbol = "$"
+    symbol = "$"
 
 
 class Euro(DecimalMoney):
-    _symbol = "€"
+    symbol = "€"
 
 
 CURRENCIES: Dict[str, Type[Money]] = {

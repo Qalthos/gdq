@@ -1,14 +1,14 @@
-from collections import defaultdict
-from datetime import datetime, timezone
 import json
 import re
-from typing import Dict, List
+from collections import defaultdict
+from datetime import datetime, timezone
+from typing import Dict, List, Type
 
 import requests
 
 from gdq import money
-from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive
-from gdq.models import Event, SingleEvent, MultiEvent, Run, Runner
+from gdq.models import (Choice, ChoiceIncentive, DonationIncentive, Event,
+                        Incentive, MultiEvent, Run, Runner, SingleEvent)
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs) -> requests.Response:
@@ -52,15 +52,15 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
         except ValueError:
             total = 0
 
-            event = SingleEvent(
-                event_id=event_id,
-                name=event_data["name"],
-                _start_time=start,
-                short_name=event_data["short"],
-                _total=currency(total),
-                _charity=event_data["receivername"],
-                target=currency(float(event_data["targetamount"])),
-            )
+        event = SingleEvent(
+            event_id=event_id,
+            name=event_data["name"],
+            _start_time=start,
+            short_name=event_data["short"],
+            _total=currency(total),
+            _charity=event_data["receivername"],
+            target=currency(float(event_data["targetamount"])),
+        )
 
         match = match_multi.match(event.short_name)
         if match:
@@ -123,7 +123,7 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
     return runner_dict
 
 
-def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, List[Incentive]]:
+def get_incentives_for_event(base_url: str, event_id: int, currency: Type[money.Money] = money.Dollar) -> Dict[str, List[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=event_id).json()
     incentive_dict: Dict[str, List[Incentive]] = dict()
@@ -139,7 +139,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, List[Inc
             choice = Choice(
                 name=incentive["name"],
                 description=incentive["description"],
-                numeric_total=float(incentive["total"]),
+                total=currency(float(incentive["total"])),
             )
             choices[parent_id].append(choice)
             continue
@@ -150,8 +150,8 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, List[Inc
                 incentive_id=incentive_id,
                 description=incentive["description"],
                 short_desc=incentive["name"].strip(),
-                current=float(incentive["total"]),
-                numeric_total=float(incentive["goal"] or 0),
+                current=currency(float(incentive["total"])),
+                total=currency(float(incentive["goal"] or 0)),
                 state=incentive["state"],
             )
         else:
@@ -159,7 +159,7 @@ def get_incentives_for_event(base_url: str, event_id: int) -> Dict[str, List[Inc
                 incentive_id=incentive_id,
                 description=incentive["description"],
                 short_desc=incentive["name"],
-                current=float(incentive["total"]),
+                current=currency(float(incentive["total"])),
                 options=choices[incentive_id],
                 state=incentive["state"],
             )

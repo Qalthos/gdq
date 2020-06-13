@@ -1,6 +1,6 @@
 import operator
 from collections import namedtuple
-from typing import Dict, Iterable, List, Union
+from typing import Dict, Iterable, List, Type, Union
 
 from gdq import money, utils
 from gdq.events import MarathonBase
@@ -35,6 +35,10 @@ class GDQTracker(MarathonBase):
         return self.current_event.total - self.offset
 
     @property
+    def currency(self) -> Type[money.Money]:
+        return type(self.total)
+
+    @property
     def current_events(self) -> List[SingleEvent]:
         events = getattr(self.current_event, "subevents", None)
         if not events:
@@ -66,7 +70,7 @@ class GDQTracker(MarathonBase):
 
     def read_incentives(self) -> None:
         for event in self.current_events:
-            self.incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id))
+            self.incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id, currency=self.currency))
 
     def display(self, args, row_index=1) -> bool:
         row_index += self.display_milestone(args)
@@ -86,7 +90,7 @@ class GDQTracker(MarathonBase):
             print(header.center(utils.term_width))
             extra_lines += 1
 
-        last_record: Union[Event, FakeRecord] = FakeRecord(total=type(self.total)(0), short_name="GO!")
+        last_record: Union[Event, FakeRecord] = FakeRecord(total=self.currency(0), short_name="GO!")
         for record in self.records:
             if record.total > self.total:
                 break
