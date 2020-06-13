@@ -61,6 +61,9 @@ class Money(ABC):
     def __bool__(self):
         return bool(self._value)
 
+    def __len__(self) -> int:
+        return len(str(self))
+
     @property
     @abstractmethod
     def symbol(self):
@@ -127,7 +130,7 @@ class DecimalMoney(Money):
         self._value = round(value * 100)
 
     def __str__(self) -> str:
-        return f"{self.symbol}{self.to_float():02d}"
+        return f"{self.symbol}{self.to_float():,.02f}"
 
     def to_float(self) -> float:
         return self._value / 100
