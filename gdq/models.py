@@ -5,7 +5,7 @@ from operator import attrgetter
 from textwrap import wrap
 from typing import List, Union
 
-from gdq import utils
+from gdq import money, utils
 
 
 @dataclass
@@ -20,7 +20,7 @@ class Event(ABC):
 
     @property
     @abstractmethod
-    def total(self) -> float:
+    def total(self) -> money.Money:
         raise NotImplementedError
 
     @property
@@ -32,9 +32,9 @@ class Event(ABC):
 @dataclass
 class SingleEvent(Event):
     event_id: int
-    target: float
+    target: money.Money
     _start_time: datetime
-    _total: float
+    _total: money.Money
     _charity: str
 
     @property
@@ -42,7 +42,7 @@ class SingleEvent(Event):
         return self._start_time
 
     @property
-    def total(self) -> float:
+    def total(self) -> money.Money:
         return self._total
 
     @property
@@ -59,12 +59,14 @@ class MultiEvent(Event):
         return min(event.start_time for event in self.subevents)
 
     @property
-    def target(self) -> float:
-        return sum((event.target for event in self.subevents if event.target))
+    def target(self) -> money.Money:
+        targets = [event.target for event in self.subevents if event.target]
+        return sum(targets, type(targets[0])(0))
 
     @property
-    def total(self) -> float:
-        return sum((event.total for event in self.subevents))
+    def total(self) -> money.Money:
+        totals = [event.total for event in self.subevents]
+        return sum(totals, type(totals[0])(0))
 
     @property
     def charity(self):

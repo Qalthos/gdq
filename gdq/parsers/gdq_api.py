@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import requests
 
+from gdq import money
 from gdq.models import Incentive, ChoiceIncentive, Choice, DonationIncentive
 from gdq.models import Event, SingleEvent, MultiEvent, Run, Runner
 
@@ -42,15 +43,19 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
                     start = datetime.strptime(event_data[key], "%Y-%m-%d").replace(tzinfo=timezone.utc)
                 break
 
+        # Set currency from data
+        currency_str = event_data.get("paypalcurrency")
+        currency = money.CURRENCIES.get(currency_str, money.Dollar)
+
         try:
             event = SingleEvent(
                 event_id=event_id,
                 name=event_data["name"],
                 _start_time=start,
                 short_name=event_data["short"],
-                _total=float(event_data["amount"]),
+                _total=currency(float(event_data["amount"])),
                 _charity=event_data["receivername"],
-                target=float(event_data["targetamount"]),
+                target=currency(float(event_data["targetamount"])),
             )
         except ValueError:
             # 'amount' is None, not a likely candidate

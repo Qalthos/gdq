@@ -3,9 +3,48 @@ from abc import ABC, abstractmethod
 import functools
 from typing import Dict
 from typing import Type
-from typing import TypeVar
 
 from gdq import utils
+
+
+def progress_bar_money(start: Money, current: Money, end: Money, width: int = utils.term_width) -> str:
+    width -= 8
+
+    if start:
+        width -= 6
+
+    if current >= end:
+        prog_bar = utils.progress_bar(start.to_float(), current.to_float(), end.to_float(), width)
+    else:
+        chars = " ▏▎▍▌▋▊▉█"
+
+        if (end - start).to_float() > 0:
+            percent = ((current - start) / (end - start) * 100)
+        else:
+            percent = 0
+
+        blocks, fraction = 0, 0
+        if percent:
+            divparts = divmod(percent * width, 100)
+            blocks = int(divparts[0])
+            fraction = int(divparts[1] // (100 / len(chars)))
+
+        if blocks >= width:
+            blocks = width - 1
+            fraction = -1
+        remainder = (width - blocks - 1)
+
+        current_str = current.short
+        if remainder > blocks:
+            suffix = " " * (remainder - len(current_str))
+            prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current_str}{suffix}"
+        else:
+            prefix = chars[-1] * (blocks - len(current_str))
+            prog_bar = f"{prefix}\x1b[7m{current_str}\x1b[m{chars[fraction]}{' ' * remainder}"
+
+    if start:
+        return f"{start.short: <6s}▕{prog_bar}▏{end.short: >6s}"
+    return f"▕{prog_bar}▏{end.short: >6s}"
 
 
 @functools.total_ordering

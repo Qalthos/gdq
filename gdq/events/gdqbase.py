@@ -2,7 +2,7 @@ import operator
 from collections import namedtuple
 from typing import Dict, Iterable, List, Union
 
-from gdq import utils
+from gdq import money, utils
 from gdq.events import MarathonBase
 from gdq.models import Event, Incentive, Run, Runner, SingleEvent
 from gdq.parsers import gdq_api
@@ -31,7 +31,7 @@ class GDQTracker(MarathonBase):
         self.offset = offset
 
     @property
-    def total(self) -> float:
+    def total(self) -> money.Money:
         return self.current_event.total - self.offset
 
     @property
@@ -86,7 +86,7 @@ class GDQTracker(MarathonBase):
             print(header.center(utils.term_width))
             extra_lines += 1
 
-        last_record: Union[Event, FakeRecord] = FakeRecord(total=0, short_name="GO!")
+        last_record: Union[Event, FakeRecord] = FakeRecord(total=type(self.total)(0), short_name="GO!")
         for record in self.records:
             if record.total > self.total:
                 break
@@ -96,7 +96,7 @@ class GDQTracker(MarathonBase):
 
         trim = len(last_record.short_name) + len(record.short_name) + 2
         bar_width = utils.term_width - trim
-        prog_bar = utils.progress_bar_decorated(last_record.total, self.total, record.total, width=bar_width)
+        prog_bar = money.progress_bar_money(last_record.total, self.total, record.total, width=bar_width)
         print(f"{last_record.short_name.upper()} {prog_bar} {record.short_name.upper()}")
         extra_lines += 1
 
