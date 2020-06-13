@@ -48,18 +48,19 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
         currency = money.CURRENCIES.get(currency_str, money.Dollar)
 
         try:
+            total = float(event_data["amount"])
+        except ValueError:
+            total = 0
+
             event = SingleEvent(
                 event_id=event_id,
                 name=event_data["name"],
                 _start_time=start,
                 short_name=event_data["short"],
-                _total=currency(float(event_data["amount"])),
+                _total=currency(total),
                 _charity=event_data["receivername"],
                 target=currency(float(event_data["targetamount"])),
             )
-        except ValueError:
-            # 'amount' is None, not a likely candidate
-            continue
 
         match = match_multi.match(event.short_name)
         if match:
