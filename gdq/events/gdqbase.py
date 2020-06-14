@@ -32,11 +32,11 @@ class GDQTracker(MarathonBase):
 
     @property
     def total(self) -> money.Money:
-        return self.current_event.total - self.offset
+        return self.current_event.total - self.currency(self.offset)
 
     @property
     def currency(self) -> Type[money.Money]:
-        return type(self.total)
+        return type(self.current_event.total)
 
     @property
     def current_events(self) -> List[SingleEvent]:
