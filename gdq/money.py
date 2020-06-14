@@ -36,13 +36,12 @@ def progress_bar_money(start: M, current: M, end: M, width: int = utils.term_wid
             fraction = -1
         remainder = (width - blocks - 1)
 
-        current_str = current.short
         if remainder > blocks:
-            suffix = " " * (remainder - len(current_str))
-            prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current_str}{suffix}"
+            suffix = " " * (remainder - len(current))
+            prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
         else:
-            prefix = chars[-1] * (blocks - len(current_str))
-            prog_bar = f"{prefix}\x1b[7m{current_str}\x1b[m{chars[fraction]}{' ' * remainder}"
+            prefix = chars[-1] * (blocks - len(current))
+            prog_bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
 
     if start:
         return f"{start.short: <6s}▕{prog_bar}▏{end.short: >6s}"
