@@ -6,11 +6,11 @@ import sys
 import toml
 import xdg
 
-from gdq import events, utils
-from gdq.runners import gdq
+from gdq.events import MarathonBase
+from gdq import runners, utils
 
 
-def refresh_event(marathon: events.MarathonBase, args: argparse.Namespace) -> bool:
+def refresh_event(marathon: MarathonBase, args: argparse.Namespace) -> bool:
     # Update current time for display.
     utils.update_now()
 
@@ -29,12 +29,18 @@ def main():
     with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml") as toml_file:
         config = toml.load(toml_file)
 
-    args = gdq.get_options()
-    if args.list:
-        gdq.list_events(config)
-        sys.exit(0)
+    base_parser = runners.get_base_parser()
+    base_args, _extra = base_parser.parse_known_args()
 
-    marathon = gdq.get_marathon(config, args)
+    event_config = config.get(base_args.stream_name)
+    if event_config is None:
+        print(f"No marathon named {base_args.stream_name} found")
+        sys.exit(1)
+
+    runner = runners.get_runner(event_config)
+    args = runner.get_options(base_parser)
+
+    marathon = runner.get_marathon(event_config, args)
     if marathon is None:
         sys.exit(1)
 

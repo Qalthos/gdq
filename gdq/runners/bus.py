@@ -1,21 +1,18 @@
 import argparse
+from typing import Optional
 
 from gdq.events.desert_bus import DesertBus
-from gdq.events.marathon import MarathonBase
+from gdq.events import MarathonBase
 
 
-def get_marathon(config: dict, args: argparse.Namespace) -> MarathonBase:
-    return DesertBus(config["start"])
+def get_marathon(event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
+    if "start" in event_config:
+        return DesertBus(event_config["start"])
+    else:
+        print(f"`start` key missing from {args.stream_name} configuration")
+
+    return None
 
 
-def get_options() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-n", "--interval", type=int, default=60,
-        help="time between screen refreshes",
-    )
-    parser.add_argument(
-        "--oneshot", action="store_true",
-        help="Run only once and then exit",
-    )
+def get_options(parser: argparse.ArgumentParser) -> argparse.Namespace:
     return parser.parse_args()

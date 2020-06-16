@@ -3,44 +3,23 @@ from datetime import timedelta
 from typing import Optional
 
 from gdq import utils
-from gdq.events.desert_bus import DesertBus
 from gdq.events.gdqbase import GDQTracker
-from gdq.events.horarobase import HoraroSchedule
 from gdq.events import MarathonBase
 
 
-def get_marathon(config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
-    if args.stream_name in config:
-        event_config = config[args.stream_name]
-        event_type = event_config.get("type")
-        if event_type == "gdq":
-            if config[args.stream_name].get("url"):
-                return GDQTracker(
-                    url=config[args.stream_name]["url"],
-                    stream_index=-args.stream_index,
-                )
-            else:
-                print(f"Config for {args.stream_name} is missing 'url' key")
-        elif event_type == "bus":
-            return DesertBus(start=event_config["start"])
-        elif event_type == "horaro":
-            return HoraroSchedule(
-                group=event_config["group"],
-                event=event_config["event"],
-                key_map=event_config["keys"],
-            )
-        elif event_type is None:
-            print(f"Event type not set for {args.stream_name}")
-        else:
-            print(f"{args.stream_name} has unknown event type {event_type}")
+def get_marathon(event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
+    if "url" in event_config:
+        return GDQTracker(
+            url=event_config["url"],
+            stream_index=-args.stream_index,
+        )
     else:
-        print(f"Marathon config for {args.stream_name} not found.")
+        print(f"`url` key missing from {args.stream_name} configuration")
 
     return None
 
 
-def get_options() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+def get_options(parser: argparse.ArgumentParser) -> argparse.Namespace:
     parser.add_argument(
         "-d", "--delta-total", type=float, default=0,
         help="Offset to subtract from event total to reconcile discrepencies",
@@ -48,10 +27,6 @@ def get_options() -> argparse.Namespace:
     parser.add_argument(
         "-i", "--stream_index", type=int, default=1,
         help="follow only a single stream",
-    )
-    parser.add_argument(
-        "-n", "--interval", type=int, default=60,
-        help="time between screen refreshes",
     )
     parser.add_argument(
         "-o", "--min-options", type=int, default=5,
@@ -86,16 +61,8 @@ def get_options() -> argparse.Namespace:
         help="Hide run incentives",
     )
     parser.add_argument(
-        "--oneshot", action="store_true",
-        help="Run only once and then exit",
-    )
-    parser.add_argument(
         "--list", action="store_true",
         help="Show known marathons and status",
-    )
-    parser.add_argument(
-        "stream_name", nargs="?", type=str, default="gdq",
-        help="The event to follow",
     )
     return parser.parse_args()
 
