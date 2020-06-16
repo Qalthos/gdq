@@ -5,6 +5,7 @@ import math
 import requests
 
 from gdq import utils
+from gdq.events import MarathonBase
 from gdq.money import Dollar
 
 
@@ -46,7 +47,7 @@ RECORDS = [
 ]
 
 
-class DesertBus:
+class DesertBus(MarathonBase):
     total: Dollar
 
     def refresh_all(self) -> None:
