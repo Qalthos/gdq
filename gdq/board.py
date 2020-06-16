@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from pathlib import Path
+import sys
 
 import toml
 import xdg
@@ -31,8 +32,11 @@ def main():
     args = gdq.get_options()
     if args.list:
         gdq.list_events(config)
+        sys.exit(0)
 
     marathon = gdq.get_marathon(config, args)
+    if marathon is None:
+        sys.exit(1)
 
     active = True
     while active:

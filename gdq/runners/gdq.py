@@ -1,27 +1,35 @@
 import argparse
 from datetime import timedelta
-import sys
+from typing import Optional
 
 from gdq import utils
+from gdq.events.desert_bus import DesertBus
 from gdq.events.gdqbase import GDQTracker
-from gdq.events.marathon import MarathonBase
+from gdq.events import MarathonBase
 
 
-def get_marathon(config: dict, args: argparse.Namespace) -> MarathonBase:
-    if config.get(args.stream_name):
-        if config[args.stream_name].get("url"):
-            marathon = GDQTracker(
-                url=config[args.stream_name]["url"],
-                stream_index=-args.stream_index,
-            )
+def get_marathon(config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
+    if args.stream_name in config:
+        event_config = config[args.stream_name]
+        event_type = event_config.get("type")
+        if event_type == "gdq":
+            if config[args.stream_name].get("url"):
+                return GDQTracker(
+                    url=config[args.stream_name]["url"],
+                    stream_index=-args.stream_index,
+                )
+            else:
+                print(f"Config for {args.stream_name} is missing 'url' key")
+        elif event_type == "bus":
+            return DesertBus(start=event_config["start"])
+        elif event_type is None:
+            print(f"Event type not set for {args.stream_name}")
         else:
-            print(f"Config for {args.stream_name} is missing 'url' key")
-            sys.exit(1)
+            print(f"{args.stream_name} has unknown event type {event_type}")
     else:
         print(f"Marathon config for {args.stream_name} not found.")
-        sys.exit(1)
 
-    return marathon
+    return None
 
 
 def get_options() -> argparse.Namespace:
@@ -87,7 +95,7 @@ def get_options() -> argparse.Namespace:
 
 def list_events(config: dict) -> None:
     for key, marathon in config.items():
-        if "url" in marathon:
+        if marathon.get("type") == "gdq" and "url" in marathon:
             marathon = GDQTracker(url=marathon["url"])
             marathon.read_events()
             start = marathon.current_event.start_time
@@ -97,4 +105,3 @@ def list_events(config: dict) -> None:
                 print(f"{key} is (probably) ongoing")
             else:
                 print(f"{key} (probably) finished on {start + timedelta(days=7)}")
-    sys.exit(0)
