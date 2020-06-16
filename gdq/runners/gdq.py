@@ -5,6 +5,7 @@ from typing import Optional
 from gdq import utils
 from gdq.events.desert_bus import DesertBus
 from gdq.events.gdqbase import GDQTracker
+from gdq.events.horarobase import HoraroSchedule
 from gdq.events import MarathonBase
 
 
@@ -22,6 +23,12 @@ def get_marathon(config: dict, args: argparse.Namespace) -> Optional[MarathonBas
                 print(f"Config for {args.stream_name} is missing 'url' key")
         elif event_type == "bus":
             return DesertBus(start=event_config["start"])
+        elif event_type == "horaro":
+            return HoraroSchedule(
+                group=event_config["group"],
+                event=event_config["event"],
+                key_map=event_config["keys"],
+            )
         elif event_type is None:
             print(f"Event type not set for {args.stream_name}")
         else:

@@ -1,15 +1,16 @@
 from datetime import datetime
 from pathlib import Path
 import shelve
-from typing import Callable, List
+from typing import Dict, List
 
+from dateutil import tz
 import requests
 import xdg
 
 from gdq.models import Run
 
 
-def read_schedule(event: str, stream_id: str, parse_run: Callable) -> List[Run]:
+def read_schedule(event: str, stream_id: str, key_map: Dict[str, str]) -> List[Run]:
     shelve_file = Path(xdg.XDG_CACHE_HOME) / "gdq" / f"{event}-{stream_id}.db"
     if not shelve_file.exists():
         shelve_file.parent.mkdir(parents=True, exist_ok=True)
@@ -31,11 +32,22 @@ def read_schedule(event: str, stream_id: str, parse_run: Callable) -> List[Run]:
         return runs
 
     updated = datetime.strptime(data_dict['updated'], '%Y-%m-%dT%H:%M:%S%z')
-    timezone = data_dict['timezone']
+    timezone = tz.gettz(data_dict['timezone'])
     keys = data_dict['columns']
     schedule = data_dict['items']
 
-    runs = list(parse_run(keys, schedule, timezone))
+    runs = []
+    attr_to_index = {
+        key: keys.index(value) for key, value in key_map.items()
+    }
+    for index, run in enumerate(schedule):
+        runs.append(Run(
+            run_id=index,
+            start=datetime.fromtimestamp(run["scheduled_t"]).astimezone(timezone),
+            estimate=run["length_t"],
+            **{key: run["data"][value] for key, value in attr_to_index.items()},
+        ))
+
     with shelve.open(str(shelve_file)) as shelf:
         shelf['updated'] = updated
         shelf['runs'] = runs
