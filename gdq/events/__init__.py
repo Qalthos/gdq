@@ -1,7 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import ABC
+from abc import abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Iterable, List
+from typing import Iterable
+from typing import List
 
 from gdq import utils
 from gdq.models import Run
@@ -82,6 +84,7 @@ class MarathonBase(ABC):
         if run.remaining < timedelta():
             return
 
+        width -= 8
         if not any(run.runners):
             desc_width = max(len(run.game_desc), len(run.category))
             if desc_width > width:

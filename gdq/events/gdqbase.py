@@ -1,10 +1,17 @@
 import operator
 from collections import namedtuple
-from typing import Dict, Iterable, List, Union
+from typing import Dict
+from typing import Iterable
+from typing import List
+from typing import Union
 
 from gdq import utils
 from gdq.events import MarathonBase
-from gdq.models import Event, SingleEvent, Run, Runner, Incentive
+from gdq.models import Event
+from gdq.models import Incentive
+from gdq.models import Run
+from gdq.models import Runner
+from gdq.models import SingleEvent
 from gdq.parsers import gdq_api
 
 
@@ -130,13 +137,13 @@ class GDQTracker(MarathonBase):
         return self._real_display(rendered_schedules, padding, row_index)
 
     def format_run(self, run: Run, width: int = 80, args=None) -> Iterable[str]:
-        width -= 8
         run_desc = list(super().format_run(run, width))
         incentives = self.incentives.get(run.game, [])
 
         if args.hide_incentives or not run_desc:
             return run_desc
 
+        width -= 8
         # Handle incentives
         incentive_desc = []
         if incentives:
