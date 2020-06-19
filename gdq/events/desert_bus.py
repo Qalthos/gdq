@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import math
 
 import requests
 
 from gdq import utils
+from gdq.events import MarathonBase
 from gdq.money import Dollar
 
 
@@ -22,7 +23,6 @@ class Shift:
     name: str
 
 
-START = datetime(2019, 11, 8, 16, tzinfo=timezone.utc)
 SHIFTS = [
     Shift(color="\x1b[33", end_hour=20, name="Dawn Guard"),
     Shift(color="\x1b[31", end_hour=2, name="Alpha Flight"),
@@ -46,8 +46,12 @@ RECORDS = [
 ]
 
 
-class DesertBus:
+class DesertBus(MarathonBase):
+    start: datetime
     total: Dollar
+
+    def __init__(self, start: datetime):
+        self.start = start
 
     def refresh_all(self) -> None:
         # Money raised
@@ -70,9 +74,9 @@ class DesertBus:
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
 
-        if utils.now < START:
-            print(f"Starting in {START - timestamp}")
-        elif utils.now < (START + timedelta(hours=self.hours + 1)):
+        if utils.now < self.start:
+            print(f"Starting in {self.start - timestamp}")
+        elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
             print(shift_banners(timestamp))
         else:
             print("It's over!")
@@ -80,8 +84,8 @@ class DesertBus:
         print(f"{self.total} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
         print(f"{self.total + sum([record.total for record in RECORDS], Dollar(0))} lifetime total.")
 
-        if utils.now > START:
-            if utils.now < START + (timedelta(hours=(self.hours + 1))):
+        if utils.now > self.start:
+            if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
                 print(self.calculate_estimate())
                 self.print_records()
                 print(f"\x1b[{utils.term_height - 1}H{self.bus_progress()}")
@@ -95,7 +99,7 @@ class DesertBus:
         future_total = self.total
         while future_hours != dollars_to_hours(future_total):
             future_hours = dollars_to_hours(future_total)
-            future_multiplier = timedelta(hours=future_hours) / (utils.now - START)
+            future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
             future_total = self.total * future_multiplier
         return f"{future_total} estimated total ({future_hours} hours)"
 
@@ -126,11 +130,11 @@ class DesertBus:
         print(f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}")
 
     def bus_progress(self, overall: bool = False) -> str:
-        td_bussed = utils.now - START
+        td_bussed = utils.now - self.start
         td_total = timedelta(hours=self.hours)
 
         hours_done = f"[{timedelta_as_hours(td_bussed)}]"
-        hours_left = f"[-{timedelta_as_hours(START + td_total - utils.now)}]"
+        hours_left = f"[-{timedelta_as_hours(self.start + td_total - utils.now)}]"
         progress_width = utils.term_width - len(hours_done) - len(hours_left) - 3
 
         # Scaled to last passed record
@@ -152,11 +156,15 @@ class DesertBus:
         if overall:
             last_record = timedelta()
 
-        bussed_width = math.floor(progress_width * (td_bussed - last_record) / (td_total - last_record))
+        bussed_width = math.floor(
+            progress_width * (td_bussed - last_record) / (td_total - last_record)
+        )
         bus = f"{'─' * bussed_width}🚍{' ' * (progress_width - bussed_width - 1)}🏁"
 
         for stop in future_stops:
-            stop_location = math.floor(((last_record - stop) / (last_record - td_total)) * progress_width)
+            stop_location = math.floor(
+                (last_record - stop) / (last_record - td_total) * progress_width
+            )
             if bus[stop_location:stop_location + 2] == "  ":
                 bus = bus[:stop_location] + "🚏" + bus[stop_location + 2:]
 

@@ -1,8 +1,6 @@
-from abc import abstractmethod
-from typing import Iterator
+from typing import Dict
 
 from gdq.events import MarathonBase
-from gdq.models import Run
 from gdq.parsers import horaro
 
 
@@ -10,11 +8,14 @@ class HoraroSchedule(MarathonBase):
     # horaro.org keys
     group_name = ""
     current_event: str
+    key_map: Dict[str, str]
+
+    def __init__(self, group: str, event: str, key_map: Dict[str, str]):
+        self.group_name = group
+        self.current_event = event
+        self.key_map = key_map
 
     def refresh_all(self) -> None:
-        self.schedules = [horaro.read_schedule(self.group_name, self.current_event, self.parse_data)]
-
-    @staticmethod
-    @abstractmethod
-    def parse_data(keys, schedule, timezone="UTC") -> Iterator[Run]:
-        raise NotImplementedError
+        self.schedules = [
+            horaro.read_schedule(self.group_name, self.current_event, self.key_map)
+        ]
