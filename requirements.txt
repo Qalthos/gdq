@@ -1,4 +1,4 @@
-xdg
 python-dateutil
 requests
 toml
+xdg
