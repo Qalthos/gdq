@@ -27,13 +27,17 @@ class GDQTracker(MarathonBase):
     runners: Dict[int, Runner] = {}
     incentives: Dict[str, List[Incentive]] = {}
 
-    def __init__(self, url: str = None, stream_index: int = -1) -> None:
+    # Set to account for discrepencies between computed and reported totals.
+    offset: float
+
+    def __init__(self, url: str = None, stream_index: int = -1, offset: float = 0) -> None:
         self.url = url or self.url
         self.stream_index = stream_index
+        self.offset = offset
 
     @property
     def total(self) -> float:
-        return self.current_event.total
+        return self.current_event.total - self.offset
 
     @property
     def current_events(self) -> List[SingleEvent]:

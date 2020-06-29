@@ -3,8 +3,8 @@ from datetime import timedelta
 from typing import Optional
 
 from gdq import utils
-from gdq.events.gdqbase import GDQTracker
 from gdq.events import MarathonBase
+from gdq.events.gdqbase import GDQTracker
 
 
 def get_marathon(event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
@@ -12,6 +12,7 @@ def get_marathon(event_config: dict, args: argparse.Namespace) -> Optional[Marat
         return GDQTracker(
             url=event_config["url"],
             stream_index=-args.stream_index,
+            offset=args.delta_total,
         )
     else:
         print(f"`url` key missing from {args.stream_name} configuration")
