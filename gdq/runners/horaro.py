@@ -1,8 +1,8 @@
 import argparse
 from typing import Optional
 
-from gdq.events.horarobase import HoraroSchedule
 from gdq.events import MarathonBase
+from gdq.events.horarobase import HoraroSchedule
 
 
 def get_marathon(event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:

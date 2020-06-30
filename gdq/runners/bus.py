@@ -1,8 +1,8 @@
 import argparse
 from typing import Optional
 
-from gdq.events.desert_bus import DesertBus
 from gdq.events import MarathonBase
+from gdq.events.desert_bus import DesertBus
 
 
 def get_marathon(event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
