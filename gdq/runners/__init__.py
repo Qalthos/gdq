@@ -1,9 +1,28 @@
 import argparse
 import sys
-from types import ModuleType
+from abc import ABC
+from abc import abstractmethod
+from datetime import datetime
 from typing import Dict
+from typing import Optional
 
-from gdq.runners import bus, gdq, horaro
+from gdq.events import MarathonBase
+from gdq.runners import bus
+from gdq.runners import gdq
+from gdq.runners import horaro
+
+
+class RunnerBase(ABC):
+    @abstractmethod
+    def get_marathon(self, event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
+        pass
+
+    @abstractmethod
+    def get_start(self, event_config: dict) -> datetime:
+        pass
+
+    def get_options(self, parser: argparse.ArgumentParser) -> argparse.Namespace:
+        return parser.parse_args()
 
 
 def get_base_parser() -> argparse.ArgumentParser:
@@ -23,17 +42,17 @@ def get_base_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def get_runner(config: Dict[str, str]) -> ModuleType:
+def get_runner(config: Dict[str, str]) -> RunnerBase:
     handler = config.get("type")
     if handler is None:
         print("Marathon type not set in config")
         sys.exit(1)
     if handler == "bus":
-        return bus
+        return bus.Runner()
     if handler == "gdq":
-        return gdq
+        return gdq.Runner()
     if handler == "horaro":
-        return horaro
+        return horaro.Runner()
     else:
         print(f"Marathon type {handler} unknown")
         sys.exit(1)
