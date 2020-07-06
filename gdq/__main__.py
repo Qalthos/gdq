@@ -3,7 +3,7 @@ import argparse
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import toml
 import xdg
@@ -31,7 +31,7 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
 def list_events(config: dict) -> None:
     event_times: Dict[str, Tuple[datetime, Optional[datetime]]] = {}
     for name, marathon_config in utils.show_iterable_progress(config.items()):
-        runner = runners.get_runner(marathon_config, [])
+        runner = runners.get_runner(marathon_config)
         event_times[name] = runner.get_times()
 
     for name, (start, end) in sorted(event_times.items(), key=lambda x: x[1]):
