@@ -1,32 +1,36 @@
 import argparse
-from datetime import datetime, timedelta
-from typing import Optional, Tuple
+from datetime import datetime
+from typing import List, Optional, Tuple
 
-from gdq.events import MarathonBase
 from gdq.events.gdqbase import GDQTracker
 from gdq.runners.base import RunnerBase
 
 
 class Runner(RunnerBase):
-    def get_marathon(self, event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
-        if "url" in event_config:
-            return GDQTracker(
-                url=event_config["url"],
-                stream_index=-args.stream_index,
-                offset=args.delta_total,
-            )
-        else:
-            print(f"`url` key missing from {args.stream_name} configuration")
+    def get_marathon(self) -> GDQTracker:
+        if "url" not in self.event_config:
+            raise KeyError(f"`url` key missing from {self.args.stream_name} configuration")
 
-        return None
+        return GDQTracker(
+            url=self.event_config["url"],
+            stream_index=-self.args.stream_index,
+            offset=self.args.delta_total,
+        )
 
-    def get_times(self, event_config: dict) -> Tuple[datetime, Optional[datetime]]:
-        marathon = GDQTracker(url=event_config["url"])
-        marathon.read_events()
-        start = marathon.current_event.start_time
-        return (start, None)
+    def get_times(self) -> Tuple[datetime, Optional[datetime]]:
+        event = self.get_marathon()
+        event.refresh_all()
 
-    def get_options(self, parser: argparse.ArgumentParser) -> argparse.Namespace:
+        start = event.current_event.start_time
+        try:
+            end = event.schedules[0][-1].start
+        except IndexError:
+            # Schedule hasn't been uploaded yet?
+            end = start
+        return (start, end)
+
+    def set_options(self, event_args: List[str]) -> None:
+        parser = argparse.ArgumentParser()
         parser.add_argument(
             "-d", "--delta-total", type=float, default=0,
             help="Offset to subtract from event total to reconcile discrepencies",
@@ -71,4 +75,5 @@ class Runner(RunnerBase):
             "--list", action="store_true",
             help="Show known marathons and status",
         )
-        return parser.parse_args()
+
+        self.args = parser.parse_args(event_args)

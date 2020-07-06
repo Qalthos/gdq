@@ -1,6 +1,6 @@
 import argparse
 import sys
-from typing import Dict
+from typing import List
 
 from gdq.runners import bus, gdq, horaro
 from gdq.runners.base import RunnerBase
@@ -27,17 +27,17 @@ def get_base_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def get_runner(config: Dict[str, str]) -> RunnerBase:
+def get_runner(config: dict, event_args: List[str]) -> RunnerBase:
     handler = config.get("type")
     if handler is None:
         print("Marathon type not set in config")
         sys.exit(1)
     if handler == "bus":
-        return bus.Runner()
+        return bus.Runner(config, event_args)
     if handler == "gdq":
-        return gdq.Runner()
+        return gdq.Runner(config, event_args)
     if handler == "horaro":
-        return horaro.Runner()
+        return horaro.Runner(config, event_args)
     else:
         print(f"Marathon type {handler} unknown")
         sys.exit(1)

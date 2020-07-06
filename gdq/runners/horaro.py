@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from gdq.events import MarathonBase
 from gdq.events.horarobase import HoraroSchedule
@@ -8,32 +8,26 @@ from gdq.runners.base import RunnerBase
 
 
 class Runner(RunnerBase):
-    def get_marathon(self, event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
-        try:
-            return HoraroSchedule(
-                group=event_config["group"],
-                event=event_config["event"],
-                key_map=event_config["keys"],
-            )
-        except KeyError:
-            print(f"Incomplete configuration for {args.stream_name}")
-
-        return None
-
-    def get_times(self, event_config: dict) -> Tuple[datetime, Optional[datetime]]:
-        marathon = HoraroSchedule(
-            group=event_config["group"],
-            event=event_config["event"],
-            key_map=event_config["keys"],
+    def get_marathon(self) -> MarathonBase:
+        return HoraroSchedule(
+            group=self.event_config["group"],
+            event=self.event_config["event"],
+            key_map=self.event_config["keys"],
         )
-        marathon.refresh_all()
-        start = marathon.schedules[0][0].start
-        end = marathon.schedules[0][-1].start
+
+    def get_times(self) -> Tuple[datetime, Optional[datetime]]:
+        event = self.get_marathon()
+        event.refresh_all()
+
+        start = event.schedules[0][0].start
+        end = event.schedules[0][-1].start
         return (start, end)
 
-    def get_options(self, parser: argparse.ArgumentParser) -> argparse.Namespace:
+    def set_options(self, event_args: List[str]) -> None:
+        parser = argparse.ArgumentParser()
         parser.add_argument(
             "-i", "--stream_index", type=int, default=1,
             help="follow only a single stream",
         )
-        return parser.parse_args()
+
+        self.args = parser.parse_args(event_args)
