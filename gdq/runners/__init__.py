@@ -1,9 +1,9 @@
 import argparse
 import sys
-from types import ModuleType
-from typing import Dict
+from typing import List, Optional
 
 from gdq.runners import bus, gdq, horaro
+from gdq.runners.base import RunnerBase
 
 
 def get_base_parser() -> argparse.ArgumentParser:
@@ -17,23 +17,30 @@ def get_base_parser() -> argparse.ArgumentParser:
         help="Run only once and then exit",
     )
     parser.add_argument(
+        "--list", action="store_true",
+        help="List all known events instead of tracking one",
+    )
+    parser.add_argument(
         "stream_name", nargs="?", type=str, default="gdq",
         help="The event to follow",
     )
     return parser
 
 
-def get_runner(config: Dict[str, str]) -> ModuleType:
+def get_runner(config: dict, event_args: Optional[List[str]] = None) -> RunnerBase:
+    if event_args is None:
+        event_args = []
+
     handler = config.get("type")
     if handler is None:
         print("Marathon type not set in config")
         sys.exit(1)
     if handler == "bus":
-        return bus
+        return bus.Runner(config, event_args)
     if handler == "gdq":
-        return gdq
+        return gdq.Runner(config, event_args)
     if handler == "horaro":
-        return horaro
-    else:
-        print(f"Marathon type {handler} unknown")
-        sys.exit(1)
+        return horaro.Runner(config, event_args)
+
+    print(f"Marathon type {handler} unknown")
+    sys.exit(1)

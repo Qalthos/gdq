@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
 import shutil
 import time
-
+from datetime import datetime, timezone
+from typing import Collection, Iterable
 
 now: datetime = datetime.now(timezone.utc)
 term_width, term_height = shutil.get_terminal_size()
@@ -99,7 +99,7 @@ def short_number(number: float) -> str:
     return f"{number:,.0f}"
 
 
-def slow_progress_bar(interval=30):
+def slow_progress_bar(interval: int = 30) -> None:
     resolution = 0.10
     ticks = int(interval / resolution)
 
@@ -118,7 +118,7 @@ def slow_progress_bar(interval=30):
         time.sleep(resolution)
 
 
-def show_iterable_progress(iterable):
+def show_iterable_progress(iterable: Collection) -> Iterable:
     for i, item in enumerate(iterable):
         print(f"\x1b[{term_width}H{progress_bar(0, i, len(iterable))}", end="", flush=True)
         yield item

@@ -1,18 +1,19 @@
-import argparse
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Optional, Tuple
 
 from gdq.events.desert_bus import DesertBus
-from gdq.events import MarathonBase
+from gdq.runners.base import RunnerBase
 
 
-def get_marathon(event_config: dict, args: argparse.Namespace) -> Optional[MarathonBase]:
-    if "start" in event_config:
-        return DesertBus(event_config["start"])
-    else:
-        print(f"`start` key missing from {args.stream_name} configuration")
+class Runner(RunnerBase):
+    def get_marathon(self) -> DesertBus:
+        if "start" not in self.event_config:
+            raise KeyError("`start` key missing from configuration")
 
-    return None
+        return DesertBus(self.event_config["start"])
 
+    def get_times(self) -> Tuple[datetime, Optional[datetime]]:
+        event = self.get_marathon()
+        event.refresh_all()
 
-def get_options(parser: argparse.ArgumentParser) -> argparse.Namespace:
-    return parser.parse_args()
+        return (event.start, event.start + timedelta(hours=event.hours))
