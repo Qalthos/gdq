@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 
 from gdq.events import MarathonBase
 from gdq.events.horarobase import HoraroSchedule
@@ -20,14 +20,16 @@ class Runner(RunnerBase):
 
         return None
 
-    def get_start(self, event_config: dict) -> datetime:
+    def get_times(self, event_config: dict) -> Tuple[datetime, Optional[datetime]]:
         marathon = HoraroSchedule(
             group=event_config["group"],
             event=event_config["event"],
             key_map=event_config["keys"],
         )
         marathon.refresh_all()
-        return marathon.schedules[0][0].start
+        start = marathon.schedules[0][0].start
+        end = marathon.schedules[0][-1].start
+        return (start, end)
 
     def get_options(self, parser: argparse.ArgumentParser) -> argparse.Namespace:
         parser.add_argument(

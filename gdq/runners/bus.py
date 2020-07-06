@@ -1,6 +1,6 @@
 import argparse
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Optional, Tuple
 
 from gdq.events import MarathonBase
 from gdq.events.desert_bus import DesertBus
@@ -16,5 +16,7 @@ class Runner(RunnerBase):
 
         return None
 
-    def get_start(self, event_config: dict) -> datetime:
-        return event_config["start"]
+    def get_times(self, event_config: dict) -> Tuple[datetime, Optional[datetime]]:
+        event = DesertBus(event_config["start"])
+        event.refresh_all()
+        return (event.start, event.start + timedelta(hours=event.hours))

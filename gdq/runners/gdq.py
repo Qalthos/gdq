@@ -1,6 +1,6 @@
 import argparse
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Optional, Tuple
 
 from gdq.events import MarathonBase
 from gdq.events.gdqbase import GDQTracker
@@ -20,10 +20,11 @@ class Runner(RunnerBase):
 
         return None
 
-    def get_start(self, event_config: dict) -> datetime:
+    def get_times(self, event_config: dict) -> Tuple[datetime, Optional[datetime]]:
         marathon = GDQTracker(url=event_config["url"])
         marathon.read_events()
-        return marathon.current_event.start_time
+        start = marathon.current_event.start_time
+        return (start, None)
 
     def get_options(self, parser: argparse.ArgumentParser) -> argparse.Namespace:
         parser.add_argument(

@@ -12,7 +12,7 @@ class RunnerBase(ABC):
         pass
 
     @abstractmethod
-    def get_start(self, event_config: dict) -> Tuple[datetime, datetime]:
+    def get_times(self, event_config: dict) -> Tuple[datetime, Optional[datetime]]:
         pass
 
     def get_options(self, parser: argparse.ArgumentParser) -> argparse.Namespace:
