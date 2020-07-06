@@ -32,7 +32,10 @@ def list_events(config: dict) -> None:
     event_times: Dict[str, Tuple[datetime, Optional[datetime]]] = {}
     for name, marathon_config in utils.show_iterable_progress(config.items()):
         runner = runners.get_runner(marathon_config)
-        event_times[name] = runner.get_times()
+        try:
+            event_times[name] = runner.get_times()
+        except KeyError as exc:
+            print(str(exc))
 
     for name, (start, end) in sorted(event_times.items(), key=lambda x: x[1]):
         if end is None:
@@ -64,9 +67,11 @@ def main():
 
     runner = runners.get_runner(event_config, extra_args)
 
-    marathon = runner.get_marathon()
-    if marathon is None:
-        sys.exit(1)
+    try:
+        marathon = runner.get_marathon()
+    except KeyError as exc:
+        print(str(exc))
+        sys.exit(2)
 
     active = True
     while active:

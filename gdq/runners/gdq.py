@@ -9,7 +9,7 @@ from gdq.runners.base import RunnerBase
 class Runner(RunnerBase):
     def get_marathon(self) -> GDQTracker:
         if "url" not in self.event_config:
-            raise KeyError(f"`url` key missing from {self.args.stream_name} configuration")
+            raise KeyError("`url` key missing from configuration")
 
         return GDQTracker(
             url=self.event_config["url"],

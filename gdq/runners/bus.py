@@ -8,7 +8,7 @@ from gdq.runners.base import RunnerBase
 class Runner(RunnerBase):
     def get_marathon(self) -> DesertBus:
         if "start" not in self.event_config:
-            raise KeyError(f"`start` key missing from {self.args.stream_name} configuration")
+            raise KeyError("`start` key missing from configuration")
 
         return DesertBus(self.event_config["start"])
 
