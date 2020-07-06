@@ -4,7 +4,7 @@ from typing import Optional
 
 from gdq.events import MarathonBase
 from gdq.events.desert_bus import DesertBus
-from gdq.runners import RunnerBase
+from gdq.runners.base import RunnerBase
 
 
 class Runner(RunnerBase):
