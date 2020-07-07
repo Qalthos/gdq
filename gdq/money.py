@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 from abc import ABC, abstractmethod
 from typing import Dict, Type, TypeVar
 
@@ -50,9 +49,10 @@ def progress_bar_money(start: M, current: M, end: M, width: int = utils.term_wid
 
 class Money(ABC):
     _value: int
+    _exponent: int = 0
 
     def __init__(self, value: float):
-        self._value = int(value)
+        self._value = round(value * (10 ** self._exponent))
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.to_float()})"
@@ -108,15 +108,14 @@ class Money(ABC):
 
     # Casting methods
     def __str__(self) -> str:
-        return f"{self.symbol}{self._value}"
+        return f"{self.symbol}{self.to_float():,.0{self._exponent}f}"
 
     def to_float(self) -> float:
-        return float(self._value)
+        return float(self._value / (10 ** self._exponent))
 
     @property
-    @abstractmethod
     def short(self):
-        return NotImplementedError
+        return f"{self.symbol}{utils.short_number(self.to_float())}"
 
     # Type validation check
     def _validate(self: M, other: M) -> None:
@@ -124,27 +123,14 @@ class Money(ABC):
             raise TypeError(f"unsupported operand type(s) for +: '{type(self).__name__}' and '{type(other).__name__}'")
 
 
-class DecimalMoney(Money):
-    def __init__(self, value: float):
-        self._value = round(value * 100)
-
-    def __str__(self) -> str:
-        return f"{self.symbol}{self.to_float():,.02f}"
-
-    def to_float(self) -> float:
-        return self._value / 100
-
-    @property
-    def short(self):
-        return f"{self.symbol}{utils.short_number(self.to_float())}"
-
-
-class Dollar(DecimalMoney):
+class Dollar(Money):
     symbol = "$"
+    _exponent = 2
 
 
-class Euro(DecimalMoney):
+class Euro(Money):
     symbol = "€"
+    _exponent = 2
 
 
 CURRENCIES: Dict[str, Type[Money]] = {
