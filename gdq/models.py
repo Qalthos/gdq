@@ -201,17 +201,17 @@ class ChoiceIncentive(Incentive):
                     option_totals = [option.total for option in remaining]
                     total = sum(option_totals, type(option_totals[0])(0))
                     description = f"And {len(remaining)} more"
-                    prog_bar = utils.progress_bar(0, total.to_float(), self.max_option.to_float(), width - align - 6)
+                    prog_bar = utils.progress_bar(0, total.to_float(), self.max_option.to_float(), width - align - 7)
                     incentive.append(f"       │╵ {description:<{align}s}▕{prog_bar}▏{total.short: >6s}│")
                     break
 
-                prog_bar = utils.progress_bar(0, option.total.to_float(), self.max_option.to_float(), width - align - 6)
+                prog_bar = utils.progress_bar(0, option.total.to_float(), self.max_option.to_float(), width - align - 7)
 
                 leg = "├│"
                 if index == len(self.options) - 1:
                     leg = "└ "
 
-                incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total.short: >5s}│")
+                incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total.short: >6s}│")
                 if option.description:
                     lines = wrap(option.description, width - 1)
                     incentive.append(f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│")
