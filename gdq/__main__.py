@@ -36,6 +36,8 @@ def list_events(config: dict) -> None:
             event_times[name] = runner.get_times()
         except KeyError as exc:
             print(str(exc))
+        except Exception:  # TODO This is raised in read_events; should find something better
+            print(f"No events found for {name}")
 
     for name, (start, end) in sorted(event_times.items(), key=lambda x: x[1]):
         if end is None:

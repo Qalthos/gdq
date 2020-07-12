@@ -1,19 +1,11 @@
 import operator
 from collections import namedtuple
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Union
+from typing import Dict, Iterable, List, Union
 
 from gdq import utils
 from gdq.events import MarathonBase
-from gdq.models import Event
-from gdq.models import Incentive
-from gdq.models import Run
-from gdq.models import Runner
-from gdq.models import SingleEvent
+from gdq.models import Event, Incentive, Run, Runner, SingleEvent
 from gdq.parsers import gdq_api
-
 
 FakeRecord = namedtuple("FakeRecord", ["short_name", "total"])
 
@@ -53,8 +45,8 @@ class GDQTracker(MarathonBase):
 
     def read_events(self) -> None:
         events = gdq_api.get_events(self.url)
-        if events is None:
-            return
+        if not events:
+            raise Exception("Couldn't find any events")
 
         self.current_event = events.pop(self.stream_index)
 
