@@ -1,18 +1,14 @@
-from abc import ABC
-from abc import abstractmethod
+import argparse
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Iterable
-from typing import List
+from typing import Iterable, List
 
 from gdq import utils
 from gdq.models import Run
 
 
 class MarathonBase(ABC):
-    # Tracker base URL
-    url = ""
-
     # Cached live data
     schedules: List[List[Run]] = []
 
@@ -20,7 +16,7 @@ class MarathonBase(ABC):
     def refresh_all(self) -> None:
         raise NotImplementedError
 
-    def display(self, args, row_index=1) -> bool:
+    def display(self, args: argparse.Namespace, row_index=1) -> bool:
         # Limit schedule display based on args
         schedules = self.schedules
         if 0 < args.stream_index <= len(schedules):
@@ -53,7 +49,7 @@ class MarathonBase(ABC):
         padding = " " * column_width
         return self._real_display(rendered_schedules, padding, row_index)
 
-    def _real_display(self, schedules, padding, row_index):
+    def _real_display(self, schedules: List[List[str]], padding: str, row_index: int) -> bool:
         first_row = True
         for full_row in zip_longest(*schedules):
             full_row = [column or padding for column in full_row]
@@ -79,7 +75,7 @@ class MarathonBase(ABC):
 
         return True
 
-    def format_run(self, run: Run, width: int = 80, args=None) -> Iterable[str]:
+    def format_run(self, run: Run, width: int = 80, args: argparse.Namespace = None) -> Iterable[str]:
         # If the estimate has passed, it's probably over.
         if run.remaining < timedelta():
             return
