@@ -1,18 +1,13 @@
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Iterable
-from typing import List
+from typing import Iterable, List
 
 from gdq import utils
 from gdq.models import Run
 
 
 class MarathonBase(ABC):
-    # Tracker base URL
-    url = ""
-
     # Cached live data
     schedules: List[List[Run]] = []
 
@@ -53,7 +48,7 @@ class MarathonBase(ABC):
         padding = " " * column_width
         return self._real_display(rendered_schedules, padding, row_index)
 
-    def _real_display(self, schedules, padding, row_index):
+    def _real_display(self, schedules, padding, row_index) -> bool:
         first_row = True
         for full_row in zip_longest(*schedules):
             full_row = [column or padding for column in full_row]

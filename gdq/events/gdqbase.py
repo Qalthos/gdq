@@ -11,6 +11,9 @@ FakeRecord = namedtuple("FakeRecord", ["short_name", "total"])
 
 
 class GDQTracker(MarathonBase):
+    # Tracker base URL
+    url: str
+
     # Historical donation records
     records: List[Event] = []
 
