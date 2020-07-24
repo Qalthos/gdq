@@ -46,7 +46,7 @@ class GDQTracker(MarathonBase):
     def read_events(self) -> None:
         events = gdq_api.get_events(self.url)
         if not events:
-            raise Exception("Couldn't find any events")
+            raise IndexError(f"Couldn't find any events at {self.url}")
 
         self.current_event = events.pop(self.stream_index)
 
