@@ -1,6 +1,7 @@
+import argparse
+import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import math
 
 import requests
 
@@ -70,7 +71,7 @@ class DesertBus(MarathonBase):
     def desert_toonies(self) -> float:
         return self.total / RECORDS[1].total
 
-    def display(self, _args, timestamp: datetime = utils.now) -> bool:
+    def display(self, args: argparse.Namespace, timestamp: datetime = utils.now) -> bool:
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
 
