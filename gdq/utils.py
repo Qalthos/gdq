@@ -23,7 +23,7 @@ def join_char(left: str, right: str) -> str:
     return choices[pick]
 
 
-def progress_bar(start: float, current: float, end: float, width: int = term_width) -> str:
+def progress_bar(start: float, current: float, end: float, width: int) -> str:
     chars = " ▏▎▍▌▋▊▉█"
 
     try:
@@ -69,7 +69,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable:
         resolution = interval / ticks
 
     for i in range(ticks):
-        # Get new terminal size
+        # Get new terminal width
         terminal_refresh()
         repaint_progress = progress_bar(0, i, ticks, width=term_width)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
@@ -79,7 +79,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable:
 
 def show_iterable_progress(iterable: Collection) -> Iterable:
     for i, item in enumerate(iterable):
-        print(f"\x1b[{term_width}H{progress_bar(0, i + 1, len(iterable))}", end="", flush=True)
+        print(f"\x1b[{term_width}H{progress_bar(0, i + 1, len(iterable), width=term_width)}", end="", flush=True)
         yield item
 
 
