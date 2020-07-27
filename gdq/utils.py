@@ -69,10 +69,8 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable:
         resolution = interval / ticks
 
     for i in range(ticks):
-        if terminal_refresh():
-            # Terminal shape has changed, skip the countdown and repaint early.
-            return
-
+        # Get new terminal size
+        terminal_refresh()
         repaint_progress = progress_bar(0, i, ticks, width=term_width)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
         yield i
@@ -85,17 +83,12 @@ def show_iterable_progress(iterable: Collection) -> Iterable:
         yield item
 
 
-def terminal_refresh() -> bool:
-    """Refresh terminal geometry
-
-    Returns True if geometry has changed, False otherwise.
-    """
+def terminal_refresh() -> None:
+    """Refresh terminal geometry."""
     global term_width, term_height
     geom = shutil.get_terminal_size()
     if geom != (term_width, term_height):
         term_width, term_height = geom
-        return True
-    return False
 
 
 def update_now() -> datetime:
