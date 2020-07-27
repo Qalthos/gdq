@@ -1,11 +1,11 @@
+import shelve
 from datetime import datetime
 from pathlib import Path
-import shelve
 from typing import Dict, List
 
-from dateutil import tz
 import requests
 import xdg
+from dateutil import tz
 
 from gdq.models import Run
 
@@ -24,7 +24,9 @@ def read_schedule(event: str, stream_id: str, key_map: Dict[str, str]) -> List[R
     headers = {}
     if last_check:
         headers['If-Modified-Since'] = datetime.strftime(last_check, '%a, %d %b %Y %H:%M:%S GMT')
-    data = requests.get(f'https://horaro.org/-/api/v1/events/{event}/schedules/{stream_id}', headers=headers)
+    data = requests.get(
+        f'https://horaro.org/-/api/v1/events/{event}/schedules/{stream_id}', headers=headers
+    )
 
     try:
         data_dict = data.json()['data']
@@ -40,9 +42,11 @@ def read_schedule(event: str, stream_id: str, key_map: Dict[str, str]) -> List[R
     attr_to_index = {
         key: keys.index(value) for key, value in key_map.items()
     }
+    runners = attr_to_index.pop("runners", "")
     for index, run in enumerate(schedule):
         runs.append(Run(
             run_id=index,
+            runners=[run["data"][runners]],
             start=datetime.fromtimestamp(run["scheduled_t"]).astimezone(timezone),
             estimate=run["length_t"],
             **{key: run["data"][value] for key, value in attr_to_index.items()},

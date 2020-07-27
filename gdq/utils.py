@@ -44,46 +44,6 @@ def progress_bar(start: float, current: float, end: float, width: int = term_wid
     return f"{chars[-1] * blocks}{chars[fraction]}{' ' * remainder}"
 
 
-def progress_bar_decorated(start: float, current: float, end: float, width: int = term_width) -> str:
-    width -= 7
-
-    if start:
-        width -= 5
-
-    if current >= end:
-        prog_bar = progress_bar(start, current, end, width)
-    else:
-        chars = " ▏▎▍▌▋▊▉█"
-
-        if end - start > 0:
-            percent = ((current - start) / (end - start) * 100)
-        else:
-            percent = 0
-
-        blocks, fraction = 0, 0
-        if percent:
-            divparts = divmod(percent * width, 100)
-            blocks = int(divparts[0])
-            fraction = int(divparts[1] // (100 / len(chars)))
-
-        if blocks >= width:
-            blocks = width - 1
-            fraction = -1
-        remainder = (width - blocks - 1)
-
-        current_str = short_number(current)
-        if remainder > blocks:
-            suffix = " " * (remainder - len(current_str))
-            prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current_str}{suffix}"
-        else:
-            prefix = chars[-1] * (blocks - len(current_str))
-            prog_bar = f"{prefix}\x1b[7m{current_str}\x1b[m{chars[fraction]}{' ' * remainder}"
-
-    if start:
-        return f"{short_number(start): <5s}▕{prog_bar}▏{short_number(end): >5s}"
-    return f"▕{prog_bar}▏{short_number(end): >5s}"
-
-
 def short_number(number: float) -> str:
     if number >= 1_000_000:
         number = number // 10_000 / 100
@@ -120,7 +80,7 @@ def slow_progress_bar(interval: int = 30) -> None:
 
 def show_iterable_progress(iterable: Collection) -> Iterable:
     for i, item in enumerate(iterable):
-        print(f"\x1b[{term_width}H{progress_bar(0, i, len(iterable))}", end="", flush=True)
+        print(f"\x1b[{term_width}H{progress_bar(0, i + 1, len(iterable))}", end="", flush=True)
         yield item
 
 

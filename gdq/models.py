@@ -5,7 +5,7 @@ from operator import attrgetter
 from textwrap import wrap
 from typing import List, Union
 
-from gdq import utils
+from gdq import money, utils
 
 
 @dataclass
@@ -20,7 +20,7 @@ class Event(ABC):
 
     @property
     @abstractmethod
-    def total(self) -> float:
+    def total(self) -> money.Money:
         raise NotImplementedError
 
     @property
@@ -32,9 +32,9 @@ class Event(ABC):
 @dataclass
 class SingleEvent(Event):
     event_id: int
-    target: float
+    target: money.Money
     _start_time: datetime
-    _total: float
+    _total: money.Money
     _charity: str
 
     @property
@@ -42,7 +42,7 @@ class SingleEvent(Event):
         return self._start_time
 
     @property
-    def total(self) -> float:
+    def total(self) -> money.Money:
         return self._total
 
     @property
@@ -59,12 +59,14 @@ class MultiEvent(Event):
         return min(event.start_time for event in self.subevents)
 
     @property
-    def target(self) -> float:
-        return sum((event.target for event in self.subevents if event.target))
+    def target(self) -> money.Money:
+        targets = [event.target for event in self.subevents if event.target]
+        return sum(targets, type(targets[0])(0))
 
     @property
-    def total(self) -> float:
-        return sum((event.total for event in self.subevents))
+    def total(self) -> money.Money:
+        totals = [event.total for event in self.subevents]
+        return sum(totals, type(totals[0])(0))
 
     @property
     def charity(self):
@@ -138,7 +140,7 @@ class Incentive(ABC):
     incentive_id: int
     description: str
     short_desc: str
-    current: float
+    current: money.Money
     state: str
 
     @property
@@ -159,8 +161,8 @@ class ChoiceIncentive(Incentive):
     options: list
 
     @property
-    def max_option(self) -> float:
-        return max((option.numeric_total for option in self.options))
+    def max_option(self) -> money.Money:
+        return max((option.total for option in self.options))
 
     def __len__(self) -> int:
         if self.options:
@@ -187,30 +189,31 @@ class ChoiceIncentive(Incentive):
             else:
                 incentive.append(f"       ├┬{self.short_desc:<{desc_size}s}  {'': <{rest_size}s}│")
 
-            sorted_options = sorted(self.options, key=attrgetter("numeric_total"), reverse=True)
+            sorted_options = sorted(self.options, key=attrgetter("total"), reverse=True)
             for index, option in enumerate(sorted_options):
                 try:
-                    percent = option.numeric_total / self.current * 100
+                    percent = option.total / self.current * 100
                 except ZeroDivisionError:
                     percent = 0
 
                 if percent < args.min_percent and index >= args.min_options and index != len(self.options) - 1:
                     remaining = sorted_options[index:]
-                    total = sum(option.numeric_total for option in remaining)
+                    option_totals = [option.total for option in remaining]
+                    total = sum(option_totals, type(option_totals[0])(0))
                     description = f"And {len(remaining)} more"
-                    prog_bar = utils.progress_bar(0, total, self.max_option, width - align - 6)
-                    incentive.append(f"       │╵ {description:<{align}s}▕{prog_bar}▏{utils.short_number(total): >5s}│")
+                    prog_bar = utils.progress_bar(0, total.to_float(), self.max_option.to_float(), width - align - 7)
+                    incentive.append(f"       │╵ {description:<{align}s}▕{prog_bar}▏{total.short: >6s}│")
                     break
 
-                prog_bar = utils.progress_bar(0, option.numeric_total, self.max_option, width - align - 6)
+                prog_bar = utils.progress_bar(0, option.total.to_float(), self.max_option.to_float(), width - align - 7)
 
                 leg = "├│"
                 if index == len(self.options) - 1:
                     leg = "└ "
 
-                incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total: >5s}│")
+                incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total.short: >6s}│")
                 if option.description:
-                    lines = wrap(option.description, width)
+                    lines = wrap(option.description, width - 1)
                     incentive.append(f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│")
                     for line in lines[1:]:
                         incentive.append(f"       │{leg[1]}   {line.ljust(width - 1)}│")
@@ -225,24 +228,12 @@ class ChoiceIncentive(Incentive):
 class Choice:
     name: str
     description: str
-    numeric_total: float
-
-    @property
-    def total(self) -> str:
-        return utils.short_number(self.numeric_total)
+    total: money.Money
 
 
 @dataclass
 class DonationIncentive(Incentive):
-    numeric_total: float
-
-    @property
-    def percent(self) -> float:
-        return self.current / self.numeric_total * 100
-
-    @property
-    def total(self) -> str:
-        return utils.short_number(self.numeric_total)
+    total: money.Money
 
     def __len__(self) -> int:
         return len(self.short_desc)
@@ -256,7 +247,7 @@ class DonationIncentive(Incentive):
             width -= 3
 
             lines = wrap(self.description, width)
-            incentive_bar = utils.progress_bar_decorated(0, self.current, self.numeric_total, width - align)
+            incentive_bar = money.progress_bar_money(type(self.total)(0), self.current, self.total, width - align)
             if lines:
                 incentive.append(f"       ├┬{lines[0].ljust(width + 1)}│")
                 for line in lines[1:]:
