@@ -59,7 +59,7 @@ def short_number(number: float) -> str:
     return f"{number:,.0f}"
 
 
-def slow_progress_bar(interval: int = 30) -> None:
+def slow_refresh_with_progress(interval: int = 30) -> Iterable:
     resolution = 0.10
     ticks = int(interval / resolution)
 
@@ -71,10 +71,11 @@ def slow_progress_bar(interval: int = 30) -> None:
     for i in range(ticks):
         if terminal_refresh():
             # Terminal shape has changed, skip the countdown and repaint early.
-            break
+            return
 
         repaint_progress = progress_bar(0, i, ticks, width=term_width)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
+        yield i
         time.sleep(resolution)
 
 
