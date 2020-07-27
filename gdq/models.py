@@ -235,10 +235,6 @@ class Choice:
 class DonationIncentive(Incentive):
     total: money.Money
 
-    @property
-    def percent(self) -> float:
-        return self.current / self.total * 100
-
     def __len__(self) -> int:
         return len(self.short_desc)
 
