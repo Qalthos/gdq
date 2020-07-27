@@ -120,7 +120,7 @@ def slow_progress_bar(interval: int = 30) -> None:
 
 def show_iterable_progress(iterable: Collection) -> Iterable:
     for i, item in enumerate(iterable):
-        print(f"\x1b[{term_width}H{progress_bar(0, i, len(iterable))}", end="", flush=True)
+        print(f"\x1b[{term_width}H{progress_bar(0, i + 1, len(iterable))}", end="", flush=True)
         yield item
 
 
