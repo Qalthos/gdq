@@ -1,3 +1,4 @@
+import argparse
 import operator
 from collections import namedtuple
 from typing import Dict, Iterable, List, Type, Union
@@ -72,14 +73,15 @@ class GDQTracker(MarathonBase):
         for event in self.current_events:
             self.incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id, currency=self.currency))
 
-    def display(self, args, row_index=1) -> bool:
+    def display(self, args: argparse.Namespace) -> bool:
+        row_index = 1
         row_index += self.display_milestone(args)
 
         if args.split_pane:
             return self.display_split(args, row_index)
-        return super().display(args, row_index)
+        return self._real_display(args, row_index)
 
-    def display_milestone(self, args) -> int:
+    def display_milestone(self, args: argparse.Namespace) -> int:
         extra_lines = 0
         print("\x1b[H", end="")
 
@@ -137,7 +139,7 @@ class GDQTracker(MarathonBase):
         rendered_schedules.append(schedule_lines)
 
         padding = " " * column_width
-        return self._real_display(rendered_schedules, padding, row_index)
+        return self._display_schedules(rendered_schedules, padding, row_index)
 
     def format_run(self, run: Run, width: int = 80, args=None) -> Iterable[str]:
         run_desc = list(super().format_run(run, width))

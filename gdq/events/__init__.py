@@ -16,7 +16,10 @@ class MarathonBase(ABC):
     def refresh_all(self) -> None:
         raise NotImplementedError
 
-    def display(self, args: argparse.Namespace, row_index=1) -> bool:
+    def display(self, args: argparse.Namespace) -> bool:
+        return self._real_display(args)
+
+    def _real_display(self, args: argparse.Namespace, row_index: int = 1) -> bool:
         # Limit schedule display based on args
         schedules = self.schedules
         if 0 < args.stream_index <= len(schedules):
@@ -47,9 +50,9 @@ class MarathonBase(ABC):
             rendered_schedules.append(schedule_lines)
 
         padding = " " * column_width
-        return self._real_display(rendered_schedules, padding, row_index)
+        return self._display_schedules(rendered_schedules, padding, row_index)
 
-    def _real_display(self, schedules: List[List[str]], padding: str, row_index: int) -> bool:
+    def _display_schedules(self, schedules: List[List[str]], padding: str, row_index: int) -> bool:
         first_row = True
         for full_row in zip_longest(*schedules):
             full_row = [column or padding for column in full_row]
@@ -76,6 +79,10 @@ class MarathonBase(ABC):
         return True
 
     def format_run(self, run: Run, width: int = 80, args: argparse.Namespace = None) -> Iterable[str]:
+        if args:
+            # Reserved for future use
+            pass
+
         # If the estimate has passed, it's probably over.
         if run.remaining < timedelta():
             return
