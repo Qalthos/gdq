@@ -16,7 +16,8 @@ class GDQTracker(TrackerBase):
     url: str
 
     # Historical donation records
-    records: List[Event] = []
+    records: List[Event]
+    record_offsets: Dict[str, float]
 
     # Cached live data
     current_event: Event
@@ -26,7 +27,8 @@ class GDQTracker(TrackerBase):
     # Set to account for discrepencies between computed and reported totals.
     offset: float
 
-    def __init__(self, url: str, stream_index: int = -1, offset: float = 0) -> None:
+
+    def __init__(self, url: str, stream_index: int = -1, offset: float = 0, record_offsets: Dict[str, float] = {}):
         # We need to have a trailing '/' for urljoin to work properly
         if url[-1] != "/":
             url += "/"
@@ -34,6 +36,7 @@ class GDQTracker(TrackerBase):
         self.url = url
         self.stream_index = stream_index
         self.offset = offset
+        self.record_offsets = record_offsets
 
     @property
     def total(self) -> money.Money:
@@ -60,6 +63,10 @@ class GDQTracker(TrackerBase):
         events = gdq_api.get_events(self.url)
         if not events:
             raise IndexError(f"Couldn't find any events at {self.url}")
+
+        for event in events:
+            if event.short_name in self.record_offsets:
+                event.offset_total(self.record_offsets[event.short_name])
 
         self.current_event = events.pop(self.stream_index)
 

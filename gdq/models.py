@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import List, Union
+from typing import List, Type, Union
 
 from gdq import money, utils
 
@@ -13,6 +13,7 @@ from gdq import money, utils
 class Event(ABC):
     name: str
     short_name: str
+    _offset: money.Money
 
     @property
     @abstractmethod
@@ -29,6 +30,13 @@ class Event(ABC):
     def charity(self) -> str:
         raise NotImplementedError
 
+    @property
+    def currency(self) -> Type[money.Money]:
+        return type(self.total)
+
+    def offset_total(self, offset: float):
+        self._offset = self.currency(offset)
+
 
 @dataclass
 class SingleEvent(Event):
@@ -44,7 +52,7 @@ class SingleEvent(Event):
 
     @property
     def total(self) -> money.Money:
-        return self._total
+        return self._total - self._offset
 
     @property
     def charity(self) -> str:
@@ -67,7 +75,7 @@ class MultiEvent(Event):
     @property
     def total(self) -> money.Money:
         totals = [event.total for event in self.subevents]
-        return sum(totals, type(totals[0])(0))
+        return sum(totals, type(totals[0])(0)) - self._offset
 
     @property
     def charity(self) -> str:

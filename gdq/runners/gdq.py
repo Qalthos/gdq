@@ -11,10 +11,15 @@ class Runner(RunnerBase):
         if "url" not in self.event_config:
             raise KeyError("`url` key missing from configuration")
 
+        record_offsets = {}
+        if "offsets" in self.event_config:
+            record_offsets = self.event_config["offsets"]
+
         return GDQTracker(
             url=self.event_config["url"],
             stream_index=-self.args.stream_index,
             offset=self.args.delta_total,
+            record_offsets=record_offsets,
         )
 
     def get_times(self) -> Tuple[datetime, Optional[datetime]]:
