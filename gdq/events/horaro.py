@@ -4,7 +4,7 @@ from gdq.events import TrackerBase
 from gdq.parsers import horaro
 
 
-class HoraroSchedule(TrackerBase):
+class HoraroTracker(TrackerBase):
     # horaro.org keys
     group_name = ""
     current_event: str
