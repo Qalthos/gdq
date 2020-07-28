@@ -1,10 +1,10 @@
 from typing import Dict
 
-from gdq.events import MarathonBase
+from gdq.events import TrackerBase
 from gdq.parsers import horaro
 
 
-class HoraroSchedule(MarathonBase):
+class HoraroSchedule(TrackerBase):
     # horaro.org keys
     group_name = ""
     current_event: str

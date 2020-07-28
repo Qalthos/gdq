@@ -2,13 +2,12 @@ import argparse
 from datetime import datetime
 from typing import List, Optional, Tuple
 
-from gdq.events import MarathonBase
 from gdq.events.horarobase import HoraroSchedule
 from gdq.runners.base import RunnerBase
 
 
 class Runner(RunnerBase):
-    def get_marathon(self) -> MarathonBase:
+    def get_marathon(self) -> HoraroSchedule:
         try:
             return HoraroSchedule(
                 group=self.event_config["group"],

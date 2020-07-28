@@ -4,14 +4,14 @@ from collections import namedtuple
 from typing import Dict, Iterable, List, Type, Union
 
 from gdq import money, utils
-from gdq.events import MarathonBase
+from gdq.events import TrackerBase
 from gdq.models import Event, Incentive, Run, Runner, SingleEvent
 from gdq.parsers import gdq_api
 
 FakeRecord = namedtuple("FakeRecord", ["short_name", "total"])
 
 
-class GDQTracker(MarathonBase):
+class GDQTracker(TrackerBase):
     # Tracker base URL
     url: str
 
@@ -112,15 +112,15 @@ class GDQTracker(MarathonBase):
 
         return extra_lines
 
-    def display_split(self, args, row_index):
+    def display_split(self, args: argparse.Namespace, row_index: int) -> bool:
         column_width = utils.term_width // 2
         height = (utils.term_height - row_index - 1) // len(self.schedules)
-        rendered_schedules = [[]]
+        rendered_schedules: List[List[str]] = [[]]
 
         args.hide_basic = False
         args.hide_incentives = True
         for schedule in self.schedules:
-            schedule_lines = []
+            schedule_lines: List[str] = []
             for run in schedule:
                 schedule_lines.extend(self.format_run(run, column_width, args))
                 if len(schedule_lines) >= height:

@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import requests
 
 from gdq import utils
-from gdq.events import MarathonBase
 from gdq.money import Dollar
 
 
@@ -47,7 +46,7 @@ RECORDS = [
 ]
 
 
-class DesertBus(MarathonBase):
+class DesertBus:
     start: datetime
     total: Dollar
 

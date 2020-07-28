@@ -2,13 +2,21 @@ import argparse
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Iterable, List
+from typing import Iterable, List, Protocol
 
 from gdq import utils
 from gdq.models import Run
 
 
-class MarathonBase(ABC):
+class MarathonBase(Protocol):
+    def refresh_all(self) -> None:
+        ...
+
+    def display(self, args: argparse.Namespace) -> bool:
+        ...
+
+
+class TrackerBase(ABC):
     # Cached live data
     schedules: List[List[Run]] = []
 
