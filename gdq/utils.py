@@ -23,7 +23,7 @@ def join_char(left: str, right: str) -> str:
     return choices[pick]
 
 
-def progress_bar(start: float, current: float, end: float, width: int = term_width) -> str:
+def progress_bar(start: float, current: float, end: float, width: int) -> str:
     chars = " ▏▎▍▌▋▊▉█"
 
     try:
@@ -59,7 +59,7 @@ def short_number(number: float) -> str:
     return f"{number:,.0f}"
 
 
-def slow_progress_bar(interval: int = 30) -> None:
+def slow_refresh_with_progress(interval: int = 30) -> Iterable:
     resolution = 0.10
     ticks = int(interval / resolution)
 
@@ -69,32 +69,26 @@ def slow_progress_bar(interval: int = 30) -> None:
         resolution = interval / ticks
 
     for i in range(ticks):
-        if terminal_refresh():
-            # Terminal shape has changed, skip the countdown and repaint early.
-            break
-
+        # Get new terminal width
+        terminal_refresh()
         repaint_progress = progress_bar(0, i, ticks, width=term_width)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
+        yield i
         time.sleep(resolution)
 
 
 def show_iterable_progress(iterable: Collection) -> Iterable:
     for i, item in enumerate(iterable):
-        print(f"\x1b[{term_width}H{progress_bar(0, i + 1, len(iterable))}", end="", flush=True)
+        print(f"\x1b[{term_width}H{progress_bar(0, i + 1, len(iterable), width=term_width)}", end="", flush=True)
         yield item
 
 
-def terminal_refresh() -> bool:
-    """Refresh terminal geometry
-
-    Returns True if geometry has changed, False otherwise.
-    """
+def terminal_refresh() -> None:
+    """Refresh terminal geometry."""
     global term_width, term_height
     geom = shutil.get_terminal_size()
     if geom != (term_width, term_height):
         term_width, term_height = geom
-        return True
-    return False
 
 
 def update_now() -> datetime:
