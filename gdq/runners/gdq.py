@@ -2,7 +2,7 @@ import argparse
 from datetime import datetime
 from typing import List, Optional, Tuple
 
-from gdq.events.gdqbase import GDQTracker
+from gdq.events.gdq import GDQTracker
 from gdq.runners.base import RunnerBase
 
 

@@ -1,16 +1,17 @@
+import argparse
 import operator
 from collections import namedtuple
 from typing import Dict, Iterable, List, Type, Union
 
 from gdq import money, utils
-from gdq.events import MarathonBase
+from gdq.events import TrackerBase
 from gdq.models import Event, Incentive, Run, Runner, SingleEvent
 from gdq.parsers import gdq_api
 
 FakeRecord = namedtuple("FakeRecord", ["short_name", "total"])
 
 
-class GDQTracker(MarathonBase):
+class GDQTracker(TrackerBase):
     # Tracker base URL
     url: str
 
@@ -72,14 +73,15 @@ class GDQTracker(MarathonBase):
         for event in self.current_events:
             self.incentives.update(gdq_api.get_incentives_for_event(self.url, event.event_id, currency=self.currency))
 
-    def display(self, args, row_index=1) -> bool:
+    def display(self, args: argparse.Namespace) -> bool:
+        row_index = 1
         row_index += self.display_milestone(args)
 
         if args.split_pane:
             return self.display_split(args, row_index)
-        return super().display(args, row_index)
+        return self._real_display(args, row_index)
 
-    def display_milestone(self, args) -> int:
+    def display_milestone(self, args: argparse.Namespace) -> int:
         extra_lines = 0
         print("\x1b[H", end="")
 
@@ -110,15 +112,15 @@ class GDQTracker(MarathonBase):
 
         return extra_lines
 
-    def display_split(self, args, row_index):
+    def display_split(self, args: argparse.Namespace, row_index: int) -> bool:
         column_width = utils.term_width // 2
         height = (utils.term_height - row_index - 1) // len(self.schedules)
-        rendered_schedules = [[]]
+        rendered_schedules: List[List[str]] = [[]]
 
         args.hide_basic = False
         args.hide_incentives = True
         for schedule in self.schedules:
-            schedule_lines = []
+            schedule_lines: List[str] = []
             for run in schedule:
                 schedule_lines.extend(self.format_run(run, column_width, args))
                 if len(schedule_lines) >= height:
@@ -137,7 +139,7 @@ class GDQTracker(MarathonBase):
         rendered_schedules.append(schedule_lines)
 
         padding = " " * column_width
-        return self._real_display(rendered_schedules, padding, row_index)
+        return self._display_schedules(rendered_schedules, padding, row_index)
 
     def format_run(self, run: Run, width: int = 80, args=None) -> Iterable[str]:
         run_desc = list(super().format_run(run, width))

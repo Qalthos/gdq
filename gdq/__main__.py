@@ -22,7 +22,7 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
     marathon.refresh_all()
 
     for _ in utils.slow_refresh_with_progress(base_args.interval):
-        if base_args.oneshot or not marathon.display(event_args):
+        if not marathon.display(event_args) or base_args.oneshot:
             return False
 
     return True

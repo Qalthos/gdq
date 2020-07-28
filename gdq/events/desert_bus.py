@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 import requests
 
 from gdq import utils
-from gdq.events import MarathonBase
 from gdq.money import Dollar
 
 
@@ -47,7 +46,7 @@ RECORDS = [
 ]
 
 
-class DesertBus(MarathonBase):
+class DesertBus:
     start: datetime
     total: Dollar
 
@@ -71,14 +70,18 @@ class DesertBus(MarathonBase):
     def desert_toonies(self) -> float:
         return self.total / RECORDS[1].total
 
-    def display(self, args: argparse.Namespace, timestamp: datetime = utils.now) -> bool:
+    def display(self, args: argparse.Namespace) -> bool:
+        if args:
+            # Reserved for future use
+            pass
+
         # Clear screen & reset cursor position
         print("\x1b[2J\x1b[H", end="")
 
         if utils.now < self.start:
-            print(f"Starting in {self.start - timestamp}")
+            print(f"Starting in {self.start - utils.now}")
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
-            print(shift_banners(timestamp))
+            print(shift_banners(utils.now))
         else:
             print("It's over!")
 

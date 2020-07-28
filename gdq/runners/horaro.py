@@ -2,15 +2,14 @@ import argparse
 from datetime import datetime
 from typing import List, Optional, Tuple
 
-from gdq.events import MarathonBase
-from gdq.events.horarobase import HoraroSchedule
+from gdq.events.horaro import HoraroTracker
 from gdq.runners.base import RunnerBase
 
 
 class Runner(RunnerBase):
-    def get_marathon(self) -> MarathonBase:
+    def get_marathon(self) -> HoraroTracker:
         try:
-            return HoraroSchedule(
+            return HoraroTracker(
                 group=self.event_config["group"],
                 event=self.event_config["event"],
                 key_map=self.event_config["keys"],
