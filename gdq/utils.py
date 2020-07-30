@@ -52,17 +52,16 @@ def progress_bar(start: float, current: float, end: float, width: int, color: bo
 
         colorize = "\x1b[38;2;{0};{1};{2}m"
         current_color = -1
-        final_bar = ""
+        full_bar = ""
         for i in range(width):
             if i // blocks_per_color > current_color:
                 current_color += 1
-                final_bar += colorize.format(*colors[current_color])
+                full_bar += colorize.format(*colors[current_color])
 
-            if i > blocks:
-                final_bar += f"{chars[fraction]}\x1b[0m{' ' * remainder}"
-                break
-            final_bar += chars[-1]
-        return final_bar
+            if i == blocks:
+                return f"{full_bar}{chars[fraction]}\x1b[0m{' ' * remainder}"
+
+            full_bar += chars[-1]
 
     return f"{chars[-1] * blocks}{chars[fraction]}{' ' * remainder}"
 
