@@ -1,3 +1,4 @@
+import colorsys
 import shutil
 import time
 from datetime import datetime, timezone
@@ -24,7 +25,7 @@ def join_char(left: str, right: str) -> str:
     return choices[pick]
 
 
-def progress_bar(start: float, current: float, end: float, width: int) -> str:
+def progress_bar(start: float, current: float, end: float, width: int, color: bool = False) -> str:
     chars = " ▏▎▍▌▋▊▉█"
 
     try:
@@ -42,6 +43,27 @@ def progress_bar(start: float, current: float, end: float, width: int) -> str:
         blocks = width - 1
         fraction = -1
     remainder = (width - blocks - 1)
+
+    if color:
+        num_colors = min(int(end - start), width)
+        blocks_per_color = width / num_colors
+        colors = [colorsys.hsv_to_rgb(n / num_colors, 1, 1) for n in range(num_colors)]
+        colors = [(int(r * 255), int(g * 255), int(b * 255)) for r, g, b in colors]
+
+        colorize = "\x1b[38;2;{0};{1};{2}m"
+        current_color = -1
+        final_bar = ""
+        for i in range(width):
+            if i // blocks_per_color > current_color:
+                current_color += 1
+                final_bar += colorize.format(*colors[current_color])
+
+            if i > blocks:
+                final_bar += f"{chars[fraction]}\x1b[0m{' ' * remainder}"
+                break
+            final_bar += chars[-1]
+        return final_bar
+
     return f"{chars[-1] * blocks}{chars[fraction]}{' ' * remainder}"
 
 
@@ -72,7 +94,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
     for i in range(ticks):
         # Get new terminal width
         terminal_refresh()
-        repaint_progress = progress_bar(0, i, ticks, width=term_width)
+        repaint_progress = progress_bar(0, i, ticks, width=term_width, color=True)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
         yield i
         time.sleep(resolution)
@@ -82,7 +104,7 @@ def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable
     for i, item in enumerate(iterable):
         terminal_refresh()
         print(
-            f"\x1b[{term_height - offset}H{progress_bar(0, i + 1, len(iterable), width=term_width)}",
+            f"\x1b[{term_height - offset}H{progress_bar(0, i + 1, len(iterable), width=term_width, color=True)}",
             end="",
             flush=True
         )
