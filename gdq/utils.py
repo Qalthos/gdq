@@ -47,7 +47,7 @@ def progress_bar(start: float, current: float, end: float, width: int, color: bo
     if color:
         num_colors = min(int(end - start), width)
         blocks_per_color = width / num_colors
-        colors = [colorsys.hsv_to_rgb(n / num_colors, 1, 1) for n in range(num_colors)]
+        colors = [colorsys.hsv_to_rgb(n / (num_colors - 1) * 5 / 6, 1, 1) for n in range(num_colors)]
         colors = [(int(r * 255), int(g * 255), int(b * 255)) for r, g, b in colors]
 
         colorize = "\x1b[38;2;{0};{1};{2}m"
