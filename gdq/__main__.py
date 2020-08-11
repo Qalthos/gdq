@@ -14,14 +14,14 @@ from gdq.events import MarathonBase
 
 
 def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_args: argparse.Namespace) -> bool:
-    # Update current time for display.
-    utils.update_now()
-
     # Recaclulate terminal size
     utils.terminal_refresh()
     marathon.refresh_all()
 
     for _ in utils.slow_refresh_with_progress(base_args.interval):
+        # Update current time for display.
+        utils.update_now()
+
         if not marathon.display(event_args) or base_args.oneshot:
             return False
 
