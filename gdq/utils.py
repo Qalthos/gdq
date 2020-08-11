@@ -79,6 +79,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable:
 
 def show_iterable_progress(iterable: Collection) -> Iterable:
     for i, item in enumerate(iterable):
+        terminal_refresh()
         print(f"\x1b[{term_width}H{progress_bar(0, i + 1, len(iterable), width=term_width)}", end="", flush=True)
         yield item
 
