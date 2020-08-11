@@ -131,7 +131,7 @@ class Run:
     @property
     def game_desc(self) -> str:
         if self.platform:
-            return f"{self.game} ({self.platform})"
+            return f"{self.game.strip()} ({self.platform.strip()})"
         return self.game
 
 
