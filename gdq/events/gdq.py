@@ -27,8 +27,9 @@ class GDQTracker(TrackerBase):
     # Set to account for discrepencies between computed and reported totals.
     offset: float
 
-
-    def __init__(self, url: str, stream_index: int = -1, offset: float = 0, record_offsets: Dict[str, float] = {}):
+    def __init__(
+            self, url: str, stream_index: int = -1,
+            offset: float = 0, record_offsets: Dict[str, float] = {}):
         # We need to have a trailing '/' for urljoin to work properly
         if url[-1] != "/":
             url += "/"
@@ -66,7 +67,7 @@ class GDQTracker(TrackerBase):
 
         for event in events:
             if event.short_name in self.record_offsets:
-                event.offset_total(self.record_offsets[event.short_name])
+                event.offset = self.record_offsets[event.short_name]
 
         self.current_event = events.pop(self.stream_index)
 

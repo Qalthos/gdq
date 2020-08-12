@@ -34,7 +34,12 @@ class Event(ABC):
     def currency(self) -> Type[money.Money]:
         return type(self.total)
 
-    def offset_total(self, offset: float):
+    @property
+    def offset(self):
+        return self._offset
+
+    @offset.setter
+    def offset(self, offset: float):
         self._offset = self.currency(offset)
 
 
