@@ -1,8 +1,9 @@
 import shutil
 import time
 from datetime import datetime, timezone
-from typing import Collection, Iterable
+from typing import Collection, Iterable, TypeVar
 
+X = TypeVar("X")
 now: datetime = datetime.now(timezone.utc)
 term_width, term_height = shutil.get_terminal_size()
 
@@ -59,7 +60,7 @@ def short_number(number: float) -> str:
     return f"{number:,.0f}"
 
 
-def slow_refresh_with_progress(interval: int = 30) -> Iterable:
+def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
     resolution = 0.10
     ticks = int(interval / resolution)
 
@@ -77,7 +78,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable:
         time.sleep(resolution)
 
 
-def show_iterable_progress(iterable: Collection, offset: int = 0) -> Iterable:
+def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable[X]:
     for i, item in enumerate(iterable):
         terminal_refresh()
         print(
