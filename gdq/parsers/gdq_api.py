@@ -109,7 +109,7 @@ def get_runs(base_url: str, event_id: int) -> List[Run]:
             category=run["category"],
             runners=[runners[runner] for runner in run["runners"]],
             start=start_time,
-            estimate=int(estimate),
+            estimate=estimate,
         ))
 
     return run_list
