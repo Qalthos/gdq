@@ -90,23 +90,17 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
         ticks = term_width * 8
         resolution = interval / ticks
 
-    for i in range(ticks):
-        # Get new terminal width
-        terminal_refresh()
-        repaint_progress = progress_bar(0, i, ticks, width=term_width, color=True)
-        print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
+    for i in show_iterable_progress(range(ticks)):
         yield i
         time.sleep(resolution)
 
 
 def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable[X]:
     for i, item in enumerate(iterable):
+        # Get new terminal width
         terminal_refresh()
-        print(
-            f"\x1b[{term_height - offset}H{progress_bar(0, i + 1, len(iterable), width=term_width, color=True)}",
-            end="",
-            flush=True
-        )
+        progress = progress_bar(0, i + 1, len(iterable), width=term_width, color=color)
+        print(f"\x1b[{term_height - offset}H{progress}", end="", flush=True)
         yield item
 
 
