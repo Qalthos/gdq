@@ -18,7 +18,7 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
     utils.terminal_refresh()
     marathon.refresh_all()
 
-    for _ in utils.slow_refresh_with_progress(base_args.interval):
+    for _ in utils.slow_refresh_with_progress(base_args.interval, color=base_args.color):
         # Update current time for display.
         utils.update_now()
 
@@ -28,9 +28,9 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
     return True
 
 
-def list_events(config: Mapping[str, Any]) -> None:
+def list_events(config: Mapping[str, Any], args: argparse.Namespace) -> None:
     event_times: Dict[str, Tuple[datetime, Optional[datetime]]] = {}
-    for name, marathon_config in utils.show_iterable_progress(config.items(), offset=1):
+    for name, marathon_config in utils.show_iterable_progress(config.items(), color=args.color):
         runner = runners.get_runner(marathon_config)
         try:
             event_times[name] = runner.get_times()
@@ -57,7 +57,7 @@ def main() -> None:
     base_args, extra_args = base_parser.parse_known_args()
 
     if base_args.list:
-        list_events(config)
+        list_events(config, base_args)
         sys.exit(0)
 
     event_config = config.get(base_args.stream_name)

@@ -81,7 +81,7 @@ def short_number(number: float) -> str:
     return f"{number:,.0f}"
 
 
-def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
+def slow_refresh_with_progress(interval: int = 30, color: bool = True) -> Iterable[int]:
     resolution = 0.10
     ticks = int(interval / resolution)
 
@@ -90,12 +90,12 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
         ticks = term_width * 8
         resolution = interval / ticks
 
-    for i in show_iterable_progress(range(ticks)):
+    for i in show_iterable_progress(range(ticks), color=color):
         yield i
         time.sleep(resolution)
 
 
-def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable[X]:
+def show_iterable_progress(iterable: Collection[X], offset: int = 0, color: bool = True) -> Iterable[X]:
     for i, item in enumerate(iterable):
         # Get new terminal width
         terminal_refresh()
