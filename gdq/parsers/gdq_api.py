@@ -1,5 +1,7 @@
 import json
+import operator
 import re
+import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List, Type
@@ -12,7 +14,7 @@ from gdq.models import (Choice, ChoiceIncentive, DonationIncentive, Event,
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs) -> requests.Response:
-    resource_url = f"{base_url}/api/v1/search/"
+    resource_url = urllib.parse.urljoin(base_url, "api/v1/search")
     return requests.get(resource_url, params={"type": resource_type, **kwargs})
 
 
