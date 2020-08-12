@@ -35,11 +35,11 @@ class Event(ABC):
         return type(self.total)
 
     @property
-    def offset(self):
+    def offset(self) -> money.Money:
         return self._offset
 
     @offset.setter
-    def offset(self, offset: float):
+    def offset(self, offset: float) -> None:
         self._offset = self.currency(offset)
 
 
