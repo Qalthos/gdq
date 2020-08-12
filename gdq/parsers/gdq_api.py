@@ -80,7 +80,7 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
         else:
             event_objs.append(event)
 
-    return event_objs
+    return sorted(event_objs, key=operator.attrgetter("start_time"))
 
 
 def get_runs(base_url: str, event_id: int) -> List[Run]:
@@ -125,7 +125,9 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
     return runner_dict
 
 
-def get_incentives_for_event(base_url: str, event_id: int, currency: Type[money.Money] = money.Dollar) -> Dict[str, List[Incentive]]:
+def get_incentives_for_event(
+        base_url: str, event_id: int,
+        currency: Type[money.Money]) -> Dict[str, List[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=event_id).json()
     incentive_dict: Dict[str, List[Incentive]] = dict()
