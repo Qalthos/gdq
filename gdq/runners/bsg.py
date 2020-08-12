@@ -3,10 +3,10 @@ from datetime import datetime
 from typing import List, Optional, Tuple
 
 from gdq.events.bsg import BSGTracker
-from gdq.runners.base import RunnerBase
+from gdq.runners.gdq import Runner as GDQRunner
 
 
-class Runner(RunnerBase):
+class Runner(GDQRunner):
     def get_marathon(self) -> BSGTracker:
         try:
             return BSGTracker(
@@ -23,12 +23,3 @@ class Runner(RunnerBase):
         start = event.schedules[0][0].start
         end = event.schedules[0][-1].start
         return (start, end)
-
-    def set_options(self, event_args: List[str]) -> None:
-        parser = argparse.ArgumentParser()
-        parser.add_argument(
-            "-i", "--stream_index", type=int, default=1,
-            help="follow only a single stream",
-        )
-
-        self.args = parser.parse_args(event_args)

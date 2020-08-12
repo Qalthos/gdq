@@ -1,4 +1,5 @@
 import csv
+import urllib.parse
 from datetime import datetime
 from typing import List
 
@@ -8,7 +9,7 @@ from gdq.models import Run
 
 
 def _get_resource(base_url: str, event_name: str) -> str:
-    resource_url = f"{base_url}/schema/{event_name}/schedule.csv"
+    resource_url = urllib.parse.urljoin(base_url, f"/schema/{event_name}/schedule.csv")
     return requests.get(resource_url).text
 
 
@@ -18,13 +19,9 @@ def get_runs(base_url: str, event_name: str) -> List[Run]:
     run_list: List[Run] = []
 
     for index, run in enumerate(reader):
-        try:
-            start_time = datetime.strptime(run["Scheduled"], "%a, %d %b %Y %H:%M:%S %z")
-            run_h, run_m, run_s = run["Length"].split(":")
-            estimate = (int(run_h) * 3600) + (int(run_m) * 60) + int(run_s)
-        except TypeError:
-            # No times attached, huh?
-            continue
+        start_time = datetime.strptime(run["Scheduled"], "%a, %d %b %Y %H:%M:%S %z")
+        run_h, run_m, run_s = run["Length"].split(":")
+        estimate = (int(run_h) * 3600) + (int(run_m) * 60) + int(run_s)
 
         run_list.append(Run(
             run_id=index,
