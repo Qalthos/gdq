@@ -26,8 +26,12 @@ class GDQTracker(TrackerBase):
     # Set to account for discrepencies between computed and reported totals.
     offset: float
 
-    def __init__(self, url: str = None, stream_index: int = -1, offset: float = 0) -> None:
-        self.url = url or self.url
+    def __init__(self, url: str, stream_index: int = -1, offset: float = 0) -> None:
+        # We need to have a trailing '/' for urljoin to work properly
+        if url[-1] != "/":
+            url += "/"
+
+        self.url = url
         self.stream_index = stream_index
         self.offset = offset
 

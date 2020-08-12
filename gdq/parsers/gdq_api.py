@@ -1,5 +1,7 @@
 import json
+import operator
 import re
+import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timezone
 from typing import Dict, List, Type
@@ -12,7 +14,7 @@ from gdq.models import (Choice, ChoiceIncentive, DonationIncentive, Event,
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs) -> requests.Response:
-    resource_url = f"{base_url}/api/v1/search/"
+    resource_url = urllib.parse.urljoin(base_url, "api/v1/search")
     return requests.get(resource_url, params={"type": resource_type, **kwargs})
 
 
@@ -78,7 +80,7 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
         else:
             event_objs.append(event)
 
-    return event_objs
+    return sorted(event_objs, key=operator.attrgetter("start_time"))
 
 
 def get_runs(base_url: str, event_id: int) -> List[Run]:
@@ -123,7 +125,9 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
     return runner_dict
 
 
-def get_incentives_for_event(base_url: str, event_id: int, currency: Type[money.Money] = money.Dollar) -> Dict[str, List[Incentive]]:
+def get_incentives_for_event(
+        base_url: str, event_id: int,
+        currency: Type[money.Money]) -> Dict[str, List[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=event_id).json()
     incentive_dict: Dict[str, List[Incentive]] = dict()
