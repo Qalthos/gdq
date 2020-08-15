@@ -1,16 +1,16 @@
 import argparse
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from gdq.events import MarathonBase
 
 
 class RunnerBase(ABC):
     args: argparse.Namespace
-    event_config: dict
+    event_config: Dict[str, Any]
 
-    def __init__(self, event_config: Dict[str, str], event_args: List[str]):
+    def __init__(self, event_config: Dict[str, Any], event_args: List[str]):
         self.event_config = event_config
         self.set_options(event_args)
 

@@ -1,3 +1,4 @@
+import argparse
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -25,7 +26,7 @@ class Event(ABC):
 
     @property
     @abstractmethod
-    def charity(self):
+    def charity(self) -> str:
         raise NotImplementedError
 
 
@@ -46,7 +47,7 @@ class SingleEvent(Event):
         return self._total
 
     @property
-    def charity(self):
+    def charity(self) -> str:
         return self._charity
 
 
@@ -69,7 +70,7 @@ class MultiEvent(Event):
         return sum(totals, type(totals[0])(0))
 
     @property
-    def charity(self):
+    def charity(self) -> str:
         return self.subevents[0].charity
 
 
@@ -79,7 +80,7 @@ class Runner:
     name: str
     pronouns: str = ""
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.pronouns:
             return f"{self.name}({self.pronouns})"
         return self.name
@@ -98,7 +99,7 @@ class Run:
     run_id: int
 
     @property
-    def runner_str(self):
+    def runner_str(self) -> str:
         return ", ".join((str(runner) for runner in self.runners))
 
     @property
@@ -144,11 +145,11 @@ class Incentive(ABC):
     state: str
 
     @property
-    def closed(self):
+    def closed(self) -> bool:
         return self.state == "CLOSED"
 
     @abstractmethod
-    def render(self, width: int, align: int, args) -> List[str]:
+    def render(self, width: int, align: int, args: argparse.Namespace) -> List[str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -158,7 +159,7 @@ class Incentive(ABC):
 
 @dataclass
 class ChoiceIncentive(Incentive):
-    options: list
+    options: List["Choice"]
 
     @property
     def max_option(self) -> money.Money:
@@ -171,7 +172,7 @@ class ChoiceIncentive(Incentive):
             return max(*(len(option.name) for option in self.options))
         return 0
 
-    def render(self, width: int, align: int, args) -> List[str]:
+    def render(self, width: int, align: int, args: argparse.Namespace) -> List[str]:
         incentive = []
 
         # Skip incentive if applicable
@@ -238,7 +239,7 @@ class DonationIncentive(Incentive):
     def __len__(self) -> int:
         return len(self.short_desc)
 
-    def render(self, width: int, align: int, args) -> List[str]:
+    def render(self, width: int, align: int, args: argparse.Namespace) -> List[str]:
         incentive = []
 
         # Skip incentive if applicable

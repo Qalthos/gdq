@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Dict, Type, TypeVar
+from typing import Any, Dict, Type, TypeVar
 
 from gdq import utils
 
@@ -57,7 +57,7 @@ class Money(ABC):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.to_float()})"
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self._value)
 
     def __len__(self) -> int:
@@ -65,7 +65,7 @@ class Money(ABC):
 
     @property
     @abstractmethod
-    def symbol(self):
+    def symbol(self) -> str:
         ...
 
     # Operator methods
@@ -94,9 +94,10 @@ class Money(ABC):
         return self._value / other._value
 
     # Ordering methods
-    def __eq__(self, other) -> bool:
-        self._validate(other)
-        return self._value == other._value
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
+            raise TypeError(f"unsupported operand type(s) for ==: '{type(self).__name__}' and '{type(other).__name__}'")
+        return bool(self._value == other._value)
 
     def __lt__(self: M, other: M) -> bool:
         self._validate(other)
@@ -114,13 +115,13 @@ class Money(ABC):
         return float(self._value / (10 ** self._exponent))
 
     @property
-    def short(self):
+    def short(self) -> str:
         return f"{self.symbol}{utils.short_number(self.to_float())}"
 
     # Type validation check
-    def _validate(self: M, other: M) -> None:
+    def _validate(self, other: Any) -> None:
         if not isinstance(other, type(self)):
-            raise TypeError(f"unsupported operand type(s) for +: '{type(self).__name__}' and '{type(other).__name__}'")
+            raise TypeError(f"unsupported operand type(s): '{type(self).__name__}' and '{type(other).__name__}'")
 
 
 class Dollar(Money):

@@ -1,6 +1,6 @@
 import argparse
 import sys
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from gdq.runners import bus, gdq, horaro
 from gdq.runners.base import RunnerBase
@@ -27,7 +27,7 @@ def get_base_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def get_runner(config: dict, event_args: Optional[List[str]] = None) -> RunnerBase:
+def get_runner(config: Dict[str, str], event_args: Optional[List[str]] = None) -> RunnerBase:
     if event_args is None:
         event_args = []
 

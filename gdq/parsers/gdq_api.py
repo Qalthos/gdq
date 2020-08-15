@@ -13,7 +13,7 @@ from gdq.models import (Choice, ChoiceIncentive, DonationIncentive, Event,
                         Incentive, MultiEvent, Run, Runner, SingleEvent)
 
 
-def _get_resource(base_url: str, resource_type: str, **kwargs) -> requests.Response:
+def _get_resource(base_url: str, resource_type: str, **kwargs: str) -> requests.Response:
     resource_url = urllib.parse.urljoin(base_url, "api/v1/search")
     return requests.get(resource_url, params={"type": resource_type, **kwargs})
 
@@ -21,7 +21,7 @@ def _get_resource(base_url: str, resource_type: str, **kwargs) -> requests.Respo
 def get_events(base_url: str, event_id: int = 0) -> List[Event]:
     kwargs = {}
     if event_id:
-        kwargs["id"] = event_id
+        kwargs["id"] = str(event_id)
 
     try:
         events = _get_resource(base_url, "event", **kwargs).json()
@@ -84,7 +84,7 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
 
 
 def get_runs(base_url: str, event_id: int) -> List[Run]:
-    runs = _get_resource(base_url, "run", event=event_id).json()
+    runs = _get_resource(base_url, "run", event=str(event_id)).json()
     run_list = []
 
     runners = get_runners_for_event(base_url, event_id)
@@ -114,7 +114,7 @@ def get_runs(base_url: str, event_id: int) -> List[Run]:
 
 
 def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
-    runners = _get_resource(base_url, resource_type="runner", event=event_id).json()
+    runners = _get_resource(base_url, resource_type="runner", event=str(event_id)).json()
     runner_dict = {}
 
     for runner in runners:
@@ -129,7 +129,7 @@ def get_incentives_for_event(
         base_url: str, event_id: int,
         currency: Type[money.Money]) -> Dict[str, List[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
-    incentives = _get_resource(base_url, "allbids", event=event_id).json()
+    incentives = _get_resource(base_url, "allbids", event=str(event_id)).json()
     incentive_dict: Dict[str, List[Incentive]] = dict()
     choices = defaultdict(list)
 

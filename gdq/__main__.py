@@ -3,7 +3,7 @@ import argparse
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 import toml
 import xdg
@@ -28,7 +28,7 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
     return True
 
 
-def list_events(config: dict) -> None:
+def list_events(config: Mapping[str, Any]) -> None:
     event_times: Dict[str, Tuple[datetime, Optional[datetime]]] = {}
     for name, marathon_config in utils.show_iterable_progress(config.items(), offset=1):
         runner = runners.get_runner(marathon_config)
@@ -49,7 +49,7 @@ def list_events(config: dict) -> None:
             print(f"{name} is ongoing")
 
 
-def main():
+def main() -> None:
     with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml") as toml_file:
         config = toml.load(toml_file)
 

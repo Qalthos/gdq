@@ -127,7 +127,7 @@ class DesertBus:
                 else:
                     print(f"{next_level} until Desert Bus {event.year}")
 
-        if next_level == 0:
+        if next_level == Dollar(0):
             print("NEW RECORD!")
 
         last_hour += 1

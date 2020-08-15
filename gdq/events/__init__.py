@@ -48,7 +48,7 @@ class TrackerBase(ABC):
         for schedule in schedules:
             schedule_lines: List[str] = []
             for run in schedule:
-                schedule_lines.extend(self.format_run(run, column_width, args))
+                schedule_lines.extend(self.format_run(run, args, column_width))
                 if len(schedule_lines) >= utils.term_height:
                     break
             else:
@@ -86,7 +86,7 @@ class TrackerBase(ABC):
 
         return True
 
-    def format_run(self, run: Run, width: int = 80, args: argparse.Namespace = None) -> Iterable[str]:
+    def format_run(self, run: Run, args: argparse.Namespace, width: int = 80) -> Iterable[str]:
         if args:
             # Reserved for future use
             pass

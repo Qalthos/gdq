@@ -5,7 +5,7 @@ from typing import Dict, Iterable, List, Type, Union
 
 from gdq import money, utils
 from gdq.events import TrackerBase
-from gdq.models import Event, Incentive, Run, Runner, SingleEvent
+from gdq.models import Event, Incentive, MultiEvent, Run, Runner, SingleEvent
 from gdq.parsers import gdq_api
 
 FakeRecord = namedtuple("FakeRecord", ["short_name", "total"])
@@ -45,10 +45,11 @@ class GDQTracker(TrackerBase):
 
     @property
     def current_events(self) -> List[SingleEvent]:
-        events = getattr(self.current_event, "subevents", None)
-        if not events:
-            events = [self.current_event]
-        return events
+        if isinstance(self.current_event, SingleEvent):
+            return [self.current_event]
+        if isinstance(self.current_event, MultiEvent):
+            return self.current_event.subevents
+        raise ValueError("Unexpected event type encountered")
 
     def refresh_all(self) -> None:
         readers = (self.read_events, self.read_runners, self.read_schedules, self.read_incentives)
@@ -126,7 +127,7 @@ class GDQTracker(TrackerBase):
         for schedule in self.schedules:
             schedule_lines: List[str] = []
             for run in schedule:
-                schedule_lines.extend(self.format_run(run, column_width, args))
+                schedule_lines.extend(self.format_run(run, args, column_width))
                 if len(schedule_lines) >= height:
                     break
             rendered_schedules[0].extend(schedule_lines)
@@ -137,7 +138,7 @@ class GDQTracker(TrackerBase):
         combined_schedules = sorted([run for schedule in self.schedules for run in schedule], key=lambda r: r.start)
 
         for run in combined_schedules:
-            schedule_lines.extend(self.format_run(run, column_width, args))
+            schedule_lines.extend(self.format_run(run, args, column_width))
             if len(schedule_lines) >= utils.term_height:
                 break
         rendered_schedules.append(schedule_lines)
@@ -145,8 +146,8 @@ class GDQTracker(TrackerBase):
         padding = " " * column_width
         return self._display_schedules(rendered_schedules, padding, row_index)
 
-    def format_run(self, run: Run, width: int = 80, args=None) -> Iterable[str]:
-        run_desc = list(super().format_run(run, width))
+    def format_run(self, run: Run, args: argparse.Namespace, width: int = 80) -> Iterable[str]:
+        run_desc = list(super().format_run(run, args, width))
         incentives = self.incentives.get(run.game, [])
 
         if args.hide_incentives or not run_desc:
