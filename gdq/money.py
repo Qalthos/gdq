@@ -69,6 +69,11 @@ class Money(ABC):
         ...
 
     # Operator methods
+    def __neg__(self: M) -> M:
+        result = type(self)(0)
+        result._value = -self._value
+        return result
+
     def __add__(self: M, other: M) -> M:
         self._validate(other)
 

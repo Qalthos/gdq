@@ -80,7 +80,7 @@ class MultiEvent(Event):
     @property
     def total(self) -> money.Money:
         totals = [event.total for event in self.subevents]
-        return sum(totals, type(totals[0])(0)) - self._offset
+        return sum(totals, -self._offset)
 
     @property
     def charity(self) -> str:
