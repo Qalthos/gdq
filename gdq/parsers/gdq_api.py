@@ -62,7 +62,7 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
             _total=currency(total),
             _charity=event_data["receivername"],
             target=currency(float(event_data["targetamount"])),
-            _offset=currency(0),
+            _offset=currency(),
         )
 
         match = match_multi.match(event.short_name)
@@ -73,7 +73,7 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
                     subevents=[event],
                     name=event.name.split(" Stream")[0],
                     short_name=shorter_name,
-                    _offset=currency(0),
+                    _offset=currency(),
                 )
                 multi_events[shorter_name] = mevent
                 event_objs.append(mevent)

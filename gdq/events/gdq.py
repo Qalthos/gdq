@@ -105,7 +105,7 @@ class GDQTracker(TrackerBase):
             print(header.center(utils.term_width))
             extra_lines += 1
 
-        last_record: Union[Event, FakeRecord] = FakeRecord(total=self.currency(0), short_name="GO!")
+        last_record: Union[Event, FakeRecord] = FakeRecord(total=self.currency(), short_name="GO!")
         for record in self.records:
             if record.total > self.total:
                 break

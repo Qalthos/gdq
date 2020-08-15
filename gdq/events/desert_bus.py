@@ -86,7 +86,7 @@ class DesertBus:
             print("It's over!")
 
         print(f"{self.total} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
-        print(f"{self.total + sum([record.total for record in RECORDS], Dollar(0))} lifetime total.")
+        print(f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total.")
 
         if utils.now > self.start:
             if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
@@ -111,7 +111,7 @@ class DesertBus:
         print()
 
         last_hour = self.hours
-        next_level = Dollar(0)
+        next_level = Dollar()
         for event in sorted(RECORDS):
             record = event.total
             if record > self.total:
@@ -127,7 +127,7 @@ class DesertBus:
                 else:
                     print(f"{next_level} until Desert Bus {event.year}")
 
-        if next_level == Dollar(0):
+        if next_level == Dollar():
             print("NEW RECORD!")
 
         last_hour += 1

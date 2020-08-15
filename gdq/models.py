@@ -75,7 +75,7 @@ class MultiEvent(Event):
     @property
     def target(self) -> money.Money:
         targets = [event.target for event in self.subevents if event.target]
-        return sum(targets, type(targets[0])(0))
+        return sum(targets, self.currency())
 
     @property
     def total(self) -> money.Money:
@@ -161,6 +161,10 @@ class Incentive(ABC):
     def closed(self) -> bool:
         return self.state == "CLOSED"
 
+    @property
+    def currency(self) -> Type[money.Money]:
+        return type(self.current)
+
     @abstractmethod
     def render(self, width: int, align: int, args: argparse.Namespace) -> List[str]:
         raise NotImplementedError
@@ -213,7 +217,7 @@ class ChoiceIncentive(Incentive):
                 if percent < args.min_percent and index >= args.min_options and index != len(self.options) - 1:
                     remaining = sorted_options[index:]
                     option_totals = [option.total for option in remaining]
-                    total = sum(option_totals, type(option_totals[0])(0))
+                    total = sum(option_totals, self.currency())
                     description = f"And {len(remaining)} more"
                     prog_bar = utils.progress_bar(0, total.to_float(), self.max_option.to_float(), width - align - 7)
                     incentive.append(f"       │╵ {description:<{align}s}▕{prog_bar}▏{total.short: >6s}│")
@@ -261,7 +265,7 @@ class DonationIncentive(Incentive):
             width -= 3
 
             lines = wrap(self.description, width)
-            incentive_bar = money.progress_bar_money(type(self.total)(0), self.current, self.total, width - align)
+            incentive_bar = money.progress_bar_money(self.currency(), self.current, self.total, width - align)
             if lines:
                 incentive.append(f"       ├┬{lines[0].ljust(width + 1)}│")
                 for line in lines[1:]:

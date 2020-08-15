@@ -51,7 +51,7 @@ class Money(ABC):
     _value: int
     _exponent: int = 0
 
-    def __init__(self, value: float):
+    def __init__(self, value: float = 0):
         self._value = round(value * (10 ** self._exponent))
 
     def __repr__(self) -> str:
@@ -70,26 +70,26 @@ class Money(ABC):
 
     # Operator methods
     def __neg__(self: M) -> M:
-        result = type(self)(0)
+        result = type(self)()
         result._value = -self._value
         return result
 
     def __add__(self: M, other: M) -> M:
         self._validate(other)
 
-        result = type(self)(0)
+        result = type(self)()
         result._value = self._value + other._value
         return result
 
     def __sub__(self: M, other: M) -> M:
         self._validate(other)
 
-        result = type(self)(0)
+        result = type(self)()
         result._value = self._value - other._value
         return result
 
     def __mul__(self: M, other: float) -> M:
-        result = type(self)(0)
+        result = type(self)()
         result._value = round(self._value * other)
         return result
 
