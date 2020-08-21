@@ -18,7 +18,7 @@ class Runner(RunnerBase):
         return GDQTracker(
             url=self.event_config["url"],
             stream_index=-self.args.stream_index,
-            color=self.args.color,
+            color=True,  #FIXME: from base_args
             offset=self.args.delta_total,
             record_offsets=record_offsets,
         )

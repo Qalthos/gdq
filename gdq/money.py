@@ -15,7 +15,7 @@ def progress_bar_money(start: M, current: M, end: M, width: int = utils.term_wid
         width -= 6
 
     if current >= end:
-        prog_bar = utils.progress_bar(start.to_float(), current.to_float(), end.to_float(), width)
+        prog_bar = utils.progress_bar(start.to_float(), current.to_float(), end.to_float(), width, color=True)
     else:
         chars = " ▏▎▍▌▋▊▉█"
 
