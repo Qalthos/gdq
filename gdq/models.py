@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import List, Type, Union
+from typing import List, Optional, Type, Union
 
 from gdq import money, utils
 
@@ -101,11 +101,14 @@ class Runner:
 
 @dataclass
 class Run:
+    # Game data
     game: str
+    release_year: Optional[int]
     platform: str
+
+    # Run data
     category: str
     runners: List[Union[Runner, str]]
-
     start: datetime
     estimate: int
 

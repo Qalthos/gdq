@@ -105,6 +105,7 @@ def get_runs(base_url: str, event_id: int) -> List[Run]:
         run_list.append(Run(
             run_id=run_id,
             game=run["name"],
+            release_year=run["release_year"],
             platform=run["console"].strip(),
             category=run["category"],
             runners=[runners[runner] for runner in run["runners"]],
