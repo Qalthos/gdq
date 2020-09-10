@@ -99,5 +99,5 @@ def terminal_refresh() -> None:
 
 def update_now() -> datetime:
     global now
-    now = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc).replace(microsecond=0)
     return now
