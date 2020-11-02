@@ -5,7 +5,7 @@ from typing import Dict, List
 
 import requests
 import xdg
-from dateutil import tz
+from zoneinfo import ZoneInfo
 
 from gdq.models import Run
 
@@ -34,7 +34,7 @@ def read_schedule(event: str, stream_id: str, key_map: Dict[str, str]) -> List[R
         return runs
 
     updated = datetime.strptime(data_dict['updated'], '%Y-%m-%dT%H:%M:%S%z')
-    timezone = tz.gettz(data_dict['timezone'])
+    timezone = ZoneInfo(data_dict['timezone'])
     keys = data_dict['columns']
     schedule = data_dict['items']
 

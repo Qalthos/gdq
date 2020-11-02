@@ -7,7 +7,6 @@ from typing import Any, Dict, Mapping, Optional, Tuple
 
 import toml
 import xdg
-from dateutil import tz
 
 from gdq import runners, utils
 from gdq.events import MarathonBase
@@ -39,12 +38,12 @@ def list_events(config: Mapping[str, Any]) -> None:
 
     for name, (start, end) in sorted(event_times.items(), key=lambda x: x[1]):
         if end is None:
-            end = start + timedelta(days=7)
+            end = start.astimezone() + timedelta(days=7)
 
         if utils.now < start:
             print(f"{name} will start in {start - utils.now}")
         elif end < utils.now:
-            print(f"{name} finished on {end.astimezone(tz.gettz())}")
+            print(f"{name} finished on {end}")
         else:
             print(f"{name} is ongoing")
 
