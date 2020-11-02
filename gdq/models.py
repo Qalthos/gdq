@@ -230,7 +230,7 @@ class ChoiceIncentive(Incentive):
                     leg = "└ "
 
                 incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total.short: >6s}│")
-                if option.description:
+                if option.description and option.description != option.name:
                     lines = wrap(option.description, width - 1)
                     incentive.append(f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│")
                     for line in lines[1:]:
