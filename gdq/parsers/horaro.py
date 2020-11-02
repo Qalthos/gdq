@@ -1,7 +1,6 @@
 import shelve
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
 
 import requests
 import xdg
@@ -10,7 +9,7 @@ from zoneinfo import ZoneInfo
 from gdq.models import Run
 
 
-def read_schedule(event: str, stream_id: str, key_map: Dict[str, str]) -> List[Run]:
+def read_schedule(event: str, stream_id: str, key_map: dict[str, str]) -> list[Run]:
     shelve_file = Path(xdg.XDG_CACHE_HOME) / "gdq" / f"{event}-{stream_id}.db"
     if not shelve_file.exists():
         shelve_file.parent.mkdir(parents=True, exist_ok=True)

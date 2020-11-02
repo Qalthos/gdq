@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, TypeVar
 
 from gdq import utils
 
@@ -139,7 +139,7 @@ class Euro(Money):
     _exponent = 2
 
 
-CURRENCIES: Dict[str, Type[Money]] = {
+CURRENCIES: dict[str, type[Money]] = {
     "EUR": Euro,
     "USD": Dollar,
 }

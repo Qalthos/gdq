@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import sys
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Optional
 
 import toml
 import xdg
@@ -28,7 +29,7 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
 
 
 def list_events(config: Mapping[str, Any]) -> None:
-    event_times: Dict[str, Tuple[datetime, Optional[datetime]]] = {}
+    event_times: dict[str, tuple[datetime, Optional[datetime]]] = {}
     for name, marathon_config in utils.show_iterable_progress(config.items(), offset=1):
         runner = runners.get_runner(marathon_config)
         try:

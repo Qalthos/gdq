@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from gdq.events.gdq import GDQTracker
 from gdq.runners.base import RunnerBase
@@ -22,7 +22,7 @@ class Runner(RunnerBase):
             record_offsets=record_offsets,
         )
 
-    def get_times(self) -> Tuple[datetime, Optional[datetime]]:
+    def get_times(self) -> tuple[datetime, Optional[datetime]]:
         event = self.get_marathon()
         event.refresh_all()
 
@@ -34,7 +34,7 @@ class Runner(RunnerBase):
             end = start
         return (start, end)
 
-    def set_options(self, event_args: List[str]) -> None:
+    def set_options(self, event_args: list[str]) -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "-d", "--delta-total", type=float, default=0,
