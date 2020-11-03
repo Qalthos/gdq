@@ -26,9 +26,10 @@ class GDQTracker(TrackerBase):
 
     # Set to account for discrepencies between computed and reported totals.
     offset: float
+    color: bool
 
     def __init__(
-            self, url: str, stream_index: int = -1,
+            self, url: str, color: bool, stream_index: int = -1,
             offset: float = 0, record_offsets: Dict[str, float] = {}):
         # We need to have a trailing '/' for urljoin to work properly
         if url[-1] != "/":
@@ -38,6 +39,7 @@ class GDQTracker(TrackerBase):
         self.stream_index = stream_index
         self.offset = offset
         self.record_offsets = record_offsets
+        self.color = color
 
     @property
     def total(self) -> money.Money:
@@ -57,7 +59,7 @@ class GDQTracker(TrackerBase):
 
     def refresh_all(self) -> None:
         readers = (self.read_events, self.read_runners, self.read_schedules, self.read_incentives)
-        for reader in utils.show_iterable_progress(readers):
+        for reader in utils.show_iterable_progress(readers, color=self.color):
             reader()
 
     def read_events(self) -> None:

@@ -18,15 +18,16 @@ class Runner(RunnerBase):
         return GDQTracker(
             url=self.event_config["url"],
             stream_index=-self.args.stream_index,
+            color=True,  #FIXME: from base_args
             offset=self.args.delta_total,
             record_offsets=record_offsets,
         )
 
     def get_times(self) -> Tuple[datetime, Optional[datetime]]:
         event = self.get_marathon()
-        event.refresh_all()
-
+        event.read_events()
         start = event.current_event.start_time
+        event.read_schedules()
         try:
             end = event.schedules[0][-1].start
         except IndexError:

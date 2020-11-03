@@ -21,6 +21,10 @@ def get_base_parser() -> argparse.ArgumentParser:
         help="List all known events instead of tracking one",
     )
     parser.add_argument(
+        "--no-color", action="store_false", dest="color",
+        help="Do not colorize the output",
+    )
+    parser.add_argument(
         "stream_name", nargs="?", type=str, default="gdq",
         help="The event to follow",
     )
