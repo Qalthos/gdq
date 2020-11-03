@@ -84,15 +84,15 @@ def get_events(base_url: str, event_id: int = 0) -> list[Event]:
     return sorted(event_objs, key=operator.attrgetter("start_time"))
 
 
-def get_runs(base_url: str, event_id: int) -> list[Run]:
+def get_runs(base_url: str, event_id: int, currency: type[money.Money]) -> list[Run]:
     runs = _get_resource(base_url, "run", event=str(event_id)).json()
     run_list = []
 
     runners = get_runners_for_event(base_url, event_id)
+    incentives = get_incentives_for_event(base_url, event_id, currency)
     for run in runs:
         run_id = run["pk"]
         run = run["fields"]
-        # Best guess how time works: endtime - starttime = run_time + setup_time
         try:
             start_time = datetime.strptime(run["starttime"], "%Y-%m-%dT%H:%M:%S%z")
             run_h, run_m, run_s = run["run_time"].split(":")
@@ -107,6 +107,10 @@ def get_runs(base_url: str, event_id: int) -> list[Run]:
             platform=run["console"].strip(),
             category=run["category"],
             runners=[runners[runner] for runner in run["runners"]],
+            incentives=sorted(
+                incentives.get(run["name"]) or [],
+                key=operator.attrgetter("incentive_id"),
+            ),
             start=start_time,
             estimate=int(estimate),
         ))

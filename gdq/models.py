@@ -1,5 +1,6 @@
 import argparse
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
@@ -41,6 +42,31 @@ class Event(ABC):
     @offset.setter
     def offset(self, offset: float) -> None:
         self._offset = self.currency(offset)
+
+
+@dataclass
+class Incentive(ABC):
+    incentive_id: int
+    description: str
+    short_desc: str
+    current: money.Money
+    state: str
+
+    @property
+    def closed(self) -> bool:
+        return self.state == "CLOSED"
+
+    @property
+    def currency(self) -> type[money.Money]:
+        return type(self.current)
+
+    @abstractmethod
+    def render(self, width: int, align: int, args: argparse.Namespace) -> list[str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def __len__(self) -> int:
+        raise NotImplementedError
 
 
 @dataclass
@@ -105,11 +131,13 @@ class Run:
     platform: str
     category: str
     runners: list[Union[Runner, str]]
+    incentives: list[Incentive]
 
     start: datetime
     estimate: int
 
     run_id: int
+
 
     @property
     def runner_str(self) -> str:
@@ -134,7 +162,7 @@ class Run:
 
     @property
     def is_live(self) -> bool:
-        return self.remaining > timedelta(0)
+        return self.remaining > timedelta()
 
     @property
     def str_estimate(self) -> str:
@@ -148,30 +176,48 @@ class Run:
             return f"{self.game.strip()} ({self.platform.strip()})"
         return self.game
 
+    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        # If the run is over, skip it
+        if not self.is_live:
+            return
 
-@dataclass
-class Incentive(ABC):
-    incentive_id: int
-    description: str
-    short_desc: str
-    current: money.Money
-    state: str
+        width -= 8
+        if not any(self.runners):
+            desc_width = max(len(self.game_desc), len(self.category))
+            if desc_width > width:
+                # If display too long, tself.ate run
+                self.game = self.game[:width - 1] + "…"
+                self.category = self.category[:width - 1] + "…"
 
-    @property
-    def closed(self) -> bool:
-        return self.state == "CLOSED"
+            yield "{0}┼{1}┤".format("─" * 7, "─" * (width - 1))
+            yield f"{self.delta}│{self.game_desc:<{width - 1}s}│"
+            yield f"{self.str_estimate: >7s}│{self.category:<{width - 1}}│"
 
-    @property
-    def currency(self) -> type[money.Money]:
-        return type(self.current)
+        else:
+            desc_width = max(width - 2 - len(self.runner_str), len(self.game_desc), len(self.category))
 
-    @abstractmethod
-    def render(self, width: int, align: int, args: argparse.Namespace) -> list[str]:
-        raise NotImplementedError
+            runner = "│" + self.runner_str + "│"
+            if desc_width + len(runner) > width:
+                # Tself.ate runner display if too long
+                runner_width = width - 3 - desc_width
+                runner = "│" + self.runner_str[:runner_width] + "…│"
 
-    @abstractmethod
-    def __len__(self) -> int:
-        raise NotImplementedError
+            if desc_width + len(runner) > width:
+                # If display still too long, tself.ate run
+                overrun = desc_width + len(runner) - width
+                desc_width -= overrun
+                self.game = self.game[: -(overrun + 1)] + "…"
+
+            border = "─" * (len(runner) - 2)
+            yield f"───────┼{'─' * desc_width}┬{border}┤"
+            yield f"{self.delta}│{self.game_desc:<{desc_width}s}{runner}"
+            yield f"{self.str_estimate: >7s}│{self.category:<{desc_width}}└{border}┤"
+
+        # Handle incentives
+        if self.incentives and not args.hide_incentives:
+            align_width = max(args.min_width, *(len(incentive) for incentive in self.incentives))
+            for incentive in self.incentives:
+                yield from incentive.render(width, align_width, args)
 
 
 @dataclass

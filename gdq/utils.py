@@ -14,17 +14,6 @@ def flatten(string: str) -> str:
     return string.translate(translation)
 
 
-def join_char(left: str, right: str) -> str:
-    choices = "║╟╢╫"
-    pick = 0
-    if left in "─┐┘┤":
-        pick += 0b10
-    if right == "─":
-        pick += 0b01
-
-    return choices[pick]
-
-
 def progress_bar(start: float, current: float, end: float, width: int) -> str:
     chars = " ▏▎▍▌▋▊▉█"
 

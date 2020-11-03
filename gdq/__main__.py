@@ -10,6 +10,7 @@ import toml
 import xdg
 
 from gdq import runners, utils
+from gdq.display.raw import Display
 from gdq.events import MarathonBase
 
 
@@ -22,7 +23,10 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
         # Update current time for display.
         utils.update_now()
 
-        if not marathon.display(event_args) or base_args.oneshot:
+        display = Display()
+        display.update_header(marathon.current_event, marathon.records, args=event_args)
+        display.update_body(marathon.schedules, args=event_args)
+        if base_args.oneshot:
             return False
 
     return True
