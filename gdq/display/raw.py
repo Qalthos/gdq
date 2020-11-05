@@ -53,7 +53,7 @@ class Display:
         schedule = schedules[0]
         for run in schedule:
             for line in run.render(width=self.term_w, args=args):
-                if current_line + 1 == self.term_h:
+                if current_line == self.term_h:
                     break
                 if current_line == self._header_size:
                     line = utils.flatten(line)
