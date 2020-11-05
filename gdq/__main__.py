@@ -24,8 +24,8 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
         utils.update_now()
 
         display = Display()
-        display.update_header(marathon.current_event, marathon.records, args=event_args)
-        display.update_body(marathon.schedules, args=event_args)
+        display.update_header(marathon.header(width=display.term_w, args=event_args))
+        display.update_body(marathon.render(width=display.term_w, args=event_args))
         if base_args.oneshot:
             return False
 

@@ -6,7 +6,6 @@ from typing import TypeVar
 
 X = TypeVar("X")
 now: datetime = datetime.now(timezone.utc)
-term_width, term_height = shutil.get_terminal_size()
 
 
 def flatten(string: str) -> str:
@@ -77,14 +76,6 @@ def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable
             flush=True
         )
         yield item
-
-
-def terminal_refresh() -> None:
-    """Refresh terminal geometry."""
-    global term_width, term_height
-    geom = shutil.get_terminal_size()
-    if geom != (term_width, term_height):
-        term_width, term_height = geom
 
 
 def update_now() -> datetime:

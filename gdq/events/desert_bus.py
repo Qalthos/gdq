@@ -1,5 +1,6 @@
 import argparse
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -70,33 +71,39 @@ class DesertBus:
     def desert_toonies(self) -> float:
         return self.total / RECORDS[1].total
 
-    def display(self, args: argparse.Namespace) -> bool:
+    def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if width:
+            # Reserved for future use
+            pass
+
         if args:
             # Reserved for future use
             pass
 
-        # Clear screen & reset cursor position
-        print("\x1b[2J\x1b[H", end="")
-
         if utils.now < self.start:
-            print(f"Starting in {self.start - utils.now}")
+            yield f"Starting in {self.start - utils.now}"
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
-            print(shift_banners(utils.now))
+            yield from shift_banners(utils.now)
         else:
-            print("It's over!")
+            yield "It's over!"
 
-        print(f"{self.total} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
-        print(f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total.")
+        yield f"{self.total} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}"
+        yield f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total."
+
+    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if width:
+            # Reserved for future use
+            pass
+
+        if args:
+            # Reserved for future use
+            pass
 
         if utils.now > self.start:
             if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
-                print(self.calculate_estimate())
-                self.print_records()
-                print(f"\x1b[{utils.term_height - 1}H{self.bus_progress()}")
-            else:
-                return False
-
-        return True
+                yield self.calculate_estimate()
+                yield from self.print_records()
+                yield f"\x1b[{utils.term_height - 1}H{self.bus_progress()}"
 
     def calculate_estimate(self) -> str:
         future_hours = 0
@@ -107,8 +114,8 @@ class DesertBus:
             future_total = self.total * future_multiplier
         return f"{future_total} estimated total ({future_hours} hours)"
 
-    def print_records(self) -> None:
-        print()
+    def print_records(self) -> Iterable[str]:
+        yield ""
 
         last_hour = self.hours
         next_level = Dollar()
@@ -119,19 +126,19 @@ class DesertBus:
                 while hours > last_hour:
                     last_hour += 1
                     next_hour = hours_to_dollars(last_hour) - self.total
-                    print(f"{next_hour} until hour {last_hour}")
+                    yield f"{next_hour} until hour {last_hour}"
 
                 next_level = record - self.total
                 if event.name:
-                    print(f"{next_level} until {event.name}")
+                    yield f"{next_level} until {event.name}"
                 else:
-                    print(f"{next_level} until Desert Bus {event.year}")
+                    yield f"{next_level} until Desert Bus {event.year}"
 
         if next_level == Dollar():
-            print("NEW RECORD!")
+            yield "NEW RECORD!"
 
         last_hour += 1
-        print(f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}")
+        yield f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}"
 
     def bus_progress(self, overall: bool = False) -> str:
         td_bussed = utils.now - self.start

@@ -1,12 +1,14 @@
 import argparse
 import operator
 from collections import namedtuple
-from typing import Union
+from collections.abc import Iterable
 
 from gdq import money, utils
 from gdq.events import TrackerBase
 from gdq.models import Event, MultiEvent, SingleEvent
 from gdq.parsers import gdq_api
+
+FakeRecord = namedtuple("FakeRecord", ["short_name", "total"])
 
 
 class GDQTracker(TrackerBase):
@@ -75,3 +77,33 @@ class GDQTracker(TrackerBase):
             self.schedules.append(
                 gdq_api.get_runs(self.url, event.event_id, self.currency)
             )
+
+    def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if args.extended_header and self.current_event.charity:
+            header = f"{self.current_event.name} supporting {self.current_event.charity}"
+            yield header.center(width)
+
+        last_record = FakeRecord(total=self.currency(), short_name="GO!")
+        for record in self.records:
+            if record.total > self.total:
+                break
+            last_record = record
+        else:
+            record = self.current_event
+
+        trim = len(last_record.short_name) + len(record.short_name) + 2
+        bar_width = width - trim
+        prog_bar = money.progress_bar_money(last_record.total, self.total, record.total, width=bar_width)
+        yield f"{last_record.short_name.upper()} {prog_bar} {record.short_name.upper()}"
+
+    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        first_line = True
+
+        # TODO: Do this properly with columns
+        schedule = self.schedules[0]
+        for run in schedule:
+            for line in run.render(width=width, args=args):
+                if first_line:
+                    line = utils.flatten(line)
+                    first_line = False
+                yield line

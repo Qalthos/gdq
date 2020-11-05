@@ -11,7 +11,10 @@ class MarathonBase(Protocol):
     def refresh_all(self) -> None:
         ...
 
-    def display(self, args: argparse.Namespace) -> bool:
+    def header(self, width: int, args: argparse.Namespace) -> bool:
+        ...
+
+    def render(self, width: int, args: argparse.Namespace) -> bool:
         ...
 
 
