@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Optional
 
-from gdq.events import MarathonBase
+from gdq.events import Marathon
 
 
 class RunnerBase(ABC):
@@ -15,7 +15,7 @@ class RunnerBase(ABC):
         self.set_options(event_args)
 
     @abstractmethod
-    def get_marathon(self) -> MarathonBase:
+    def get_marathon(self) -> Marathon:
         pass
 
     @abstractmethod

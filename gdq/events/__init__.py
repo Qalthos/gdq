@@ -1,30 +1,29 @@
 import argparse
-from abc import ABC, abstractmethod
-from itertools import zip_longest
+from abc import abstractmethod
+from collections.abc import Iterable
 from typing import Protocol
 
-from gdq import utils
 from gdq.models import Run
 
 
-class MarathonBase(Protocol):
-    def refresh_all(self) -> None:
-        ...
-
-    def header(self, width: int, args: argparse.Namespace) -> bool:
-        ...
-
-    def render(self, width: int, args: argparse.Namespace) -> bool:
-        ...
-
-    def footer(self, width: int, args: argparse.Namespace) -> bool:
-        ...
-
-
-class TrackerBase(ABC):
-    # Cached live data
-    schedules: list[list[Run]] = []
-
+class Marathon(Protocol):
     @abstractmethod
     def refresh_all(self) -> None:
-        raise NotImplementedError
+        ...
+
+    @abstractmethod
+    def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        ...
+
+    @abstractmethod
+    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        ...
+
+    @abstractmethod
+    def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        ...
+
+
+class TrackerBase(Marathon, Protocol):
+    # Cached live data
+    schedules: list[list[Run]] = []

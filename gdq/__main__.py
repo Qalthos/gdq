@@ -11,10 +11,10 @@ import xdg
 
 from gdq import runners, utils
 from gdq.display.raw import Display
-from gdq.events import MarathonBase
+from gdq.events import Marathon
 
 
-def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_args: argparse.Namespace) -> bool:
+def refresh_event(marathon: Marathon, base_args: argparse.Namespace, event_args: argparse.Namespace) -> bool:
     # Recaclulate terminal size
     marathon.refresh_all()
 
