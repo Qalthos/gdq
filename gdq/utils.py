@@ -53,6 +53,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
     resolution = 0.10
     ticks = int(interval / resolution)
 
+    term_width, term_height = shutil.get_terminal_size()
     # Don't bother updating the progress bar more often than necessary
     if ticks > term_width * 8:
         ticks = term_width * 8
@@ -60,7 +61,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
 
     for i in range(ticks):
         # Get new terminal width
-        terminal_refresh()
+        term_width, term_height = shutil.get_terminal_size()
         repaint_progress = progress_bar(0, i, ticks, width=term_width)
         print(f"\x1b[{term_height}H{repaint_progress}", end="", flush=True)
         yield i

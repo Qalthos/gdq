@@ -99,11 +99,17 @@ class DesertBus:
             # Reserved for future use
             pass
 
-        if utils.now > self.start:
-            if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
+        if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
+            if utils.now > self.start:
                 yield self.calculate_estimate()
-                yield from self.print_records()
-                yield f"\x1b[{utils.term_height - 1}H{self.bus_progress()}"
+            yield from self.print_records()
+
+    def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if args:
+            # Reserved for future use
+            pass
+
+        yield self.bus_progress(width)
 
     def calculate_estimate(self) -> str:
         future_hours = 0
@@ -140,13 +146,13 @@ class DesertBus:
         last_hour += 1
         yield f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}"
 
-    def bus_progress(self, overall: bool = False) -> str:
+    def bus_progress(self, width: int, overall: bool = False) -> str:
         td_bussed = utils.now - self.start
         td_total = timedelta(hours=self.hours)
 
         hours_done = f"[{timedelta_as_hours(td_bussed)}]"
         hours_left = f"[-{timedelta_as_hours(self.start + td_total - utils.now)}]"
-        progress_width = utils.term_width - len(hours_done) - len(hours_left) - 3
+        progress_width = width - len(hours_done) - len(hours_left) - 3
 
         # Scaled to last passed record
         last_record = timedelta()

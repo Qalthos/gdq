@@ -13,6 +13,7 @@ from gdq.models import Event, Run
 
 class Display:
     _header_size: int = 1
+    _footer_size: int = 0
     term_w: int
     term_h: int
 
@@ -36,10 +37,15 @@ class Display:
         current_line = self._header_size
 
         for line in body:
-            if current_line == self.term_h:
+            if current_line == self.term_h - self._footer_size:
                 break
             print(f"\x1b[{current_line}H{line}", end="")
             current_line += 1
         else:
             # Clear the rest of the screen
             print("\x1b[J", end="")
+
+    def update_footer(self, footer: Iterable[str]) -> None:
+        self._footer_size = len(list(footer))
+        for index, line in enumerate(footer):
+            print(f"\x1b[{self.term_h - self._footer_size + index}H{line}", end="")
