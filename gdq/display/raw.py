@@ -3,12 +3,8 @@
 | col1 | col2 | col3 |
 ========footer========
 """
-import argparse
 import shutil
 from collections.abc import Iterable
-
-from gdq import money, utils
-from gdq.models import Event, Run
 
 
 class Display:

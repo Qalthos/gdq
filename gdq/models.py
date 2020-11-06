@@ -138,7 +138,6 @@ class Run:
 
     run_id: int
 
-
     @property
     def runner_str(self) -> str:
         return ", ".join((str(runner) for runner in self.runners))

@@ -80,7 +80,7 @@ class DesertBus(Marathon):
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(width)
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
-            yield from shift_banners(utils.now)
+            yield from shift_banners(utils.now, width)
         else:
             yield "It's over!"
 
@@ -188,7 +188,7 @@ def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
     return Dollar((1 - (rate ** hours)) / (1 - rate))
 
 
-def shift_banners(timestamp: datetime) -> str:
+def shift_banners(timestamp: datetime, width: int) -> str:
     # Shift detection
     shifts = sorted(SHIFTS)
     for shift in shifts:
@@ -201,13 +201,13 @@ def shift_banners(timestamp: datetime) -> str:
     min_width = 10 + 12 + 11 + 4 + 3
 
     reflow = 0
-    if utils.term_width <= (11 * 4) + 3:
+    if width <= (11 * 4) + 3:
         shift_width = 0
-        if utils.term_width >= min_width:
-            reflow = min_width - utils.term_width
+        if width >= min_width:
+            reflow = min_width - width
     else:
-        shift_width = (utils.term_width - 3) // 4
-        reflow = utils.term_width - 3 - (shift_width * 4)
+        shift_width = (width - 3) // 4
+        reflow = width - 3 - (shift_width * 4)
 
     for index, shift_info in enumerate(SHIFTS):
         boldness = "2"

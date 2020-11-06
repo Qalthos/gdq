@@ -2,6 +2,7 @@ import argparse
 import operator
 from collections import namedtuple
 from collections.abc import Iterable
+from typing import Union
 
 from gdq import money, utils
 from gdq.events import TrackerBase
@@ -83,7 +84,7 @@ class GDQTracker(TrackerBase):
             header = f"{self.current_event.name} supporting {self.current_event.charity}"
             yield header.center(width)
 
-        last_record = FakeRecord(total=self.currency(), short_name="GO!")
+        last_record: Union[FakeRecord, Event] = FakeRecord(total=self.currency(), short_name="GO!")
         for record in self.records:
             if record.total > self.total:
                 break
