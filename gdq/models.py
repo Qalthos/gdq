@@ -180,11 +180,11 @@ class Run:
         if not self.is_live:
             return
 
-        width -= 8
+        width -= 7
         if not any(self.runners):
             desc_width = max(len(self.game_desc), len(self.category))
             if desc_width > width:
-                # If display too long, tself.ate run
+                # If display too long, truncate run
                 self.game = self.game[:width - 1] + "…"
                 self.category = self.category[:width - 1] + "…"
 
@@ -197,12 +197,12 @@ class Run:
 
             runner = "│" + self.runner_str + "│"
             if desc_width + len(runner) > width:
-                # Tself.ate runner display if too long
+                # Truncate runner display if too long
                 runner_width = width - 3 - desc_width
                 runner = "│" + self.runner_str[:runner_width] + "…│"
 
             if desc_width + len(runner) > width:
-                # If display still too long, tself.ate run
+                # If display still too long, truncate run
                 overrun = desc_width + len(runner) - width
                 desc_width -= overrun
                 self.game = self.game[: -(overrun + 1)] + "…"
