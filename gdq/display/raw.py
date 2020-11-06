@@ -39,7 +39,7 @@ class Display:
         for line in body:
             if current_line == self.term_h - self._footer_size:
                 break
-            print(f"\x1b[{current_line}H{line}", end="")
+            print(f"\x1b[{current_line}H{line}", end="\x1b[K")
             current_line += 1
         else:
             # Clear the rest of the screen

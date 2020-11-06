@@ -72,16 +72,12 @@ class DesertBus:
         return self.total / RECORDS[1].total
 
     def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        if width:
-            # Reserved for future use
-            pass
-
         if args:
             # Reserved for future use
             pass
 
         if utils.now < self.start:
-            yield f"Starting in {self.start - utils.now}"
+            yield f"Starting in {self.start - utils.now}".center(width)
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
             yield from shift_banners(utils.now)
         else:
@@ -107,9 +103,10 @@ class DesertBus:
     def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
         td_bussed = max(utils.now - self.start, timedelta())
         td_total = timedelta(hours=self.hours)
+        td_remaining = min(self.start + td_total - utils.now, td_total)
 
         hours_done = f"[{timedelta_as_hours(td_bussed)}]"
-        hours_left = f"[{timedelta_as_hours(self.start + td_total - utils.now)}]"
+        hours_left = f"[{timedelta_as_hours(td_remaining)}]"
         progress_width = width - len(hours_done) - len(hours_left) - 3
 
         # Scaled to last passed record
