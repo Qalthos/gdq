@@ -29,7 +29,7 @@ class Runner(RunnerBase):
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "-i", "--stream_index", type=int, default=1,
-            help="follow only a single stream",
+            help="Follow only a single stream",
         )
 
         self.args = parser.parse_args(event_args)

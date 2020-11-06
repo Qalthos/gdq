@@ -46,6 +46,8 @@ class Display:
             print("\x1b[J", end="")
 
     def update_footer(self, footer: Iterable[str]) -> None:
-        self._footer_size = len(list(footer))
+        footer = list(footer)
+
+        self._footer_size = len(footer)
         for index, line in enumerate(footer):
             print(f"\x1b[{self.term_h - self._footer_size + index}H{line}", end="")

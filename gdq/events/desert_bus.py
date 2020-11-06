@@ -105,11 +105,45 @@ class DesertBus:
             yield from self.print_records()
 
     def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        if args:
-            # Reserved for future use
-            pass
+        td_bussed = max(utils.now - self.start, timedelta())
+        td_total = timedelta(hours=self.hours)
 
-        yield self.bus_progress(width)
+        hours_done = f"[{timedelta_as_hours(td_bussed)}]"
+        hours_left = f"[{timedelta_as_hours(self.start + td_total - utils.now)}]"
+        progress_width = width - len(hours_done) - len(hours_left) - 3
+
+        # Scaled to last passed record
+        last_record = timedelta()
+        future_stops = []
+
+        for record in sorted(RECORDS):
+            td_record = timedelta(hours=dollars_to_hours(record.total))
+            if td_record <= td_bussed:
+                # We've passed this record, but make a note that we've come this far.
+                last_record = td_record
+            elif td_record < td_total:
+                # In the future, but still on the hook for it.
+                future_stops.append(td_record)
+            else:
+                # Don't worry about records we havent reached yet.
+                break
+
+        if args.overall:
+            last_record = timedelta()
+
+        bussed_width = math.floor(
+            progress_width * (td_bussed - last_record) / (td_total - last_record)
+        )
+        bus = f"{'─' * bussed_width}🚍{' ' * (progress_width - bussed_width - 1)}🏁"
+
+        for stop in future_stops:
+            stop_location = math.floor(
+                (last_record - stop) / (last_record - td_total) * progress_width
+            )
+            if bus[stop_location:stop_location + 2] == "  ":
+                bus = bus[:stop_location] + "🚏" + bus[stop_location + 2:]
+
+        yield f"{hours_done}{bus}{hours_left}\x1b[0m"
 
     def calculate_estimate(self) -> str:
         future_hours = 0
@@ -145,47 +179,6 @@ class DesertBus:
 
         last_hour += 1
         yield f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}"
-
-    def bus_progress(self, width: int, overall: bool = False) -> str:
-        td_bussed = utils.now - self.start
-        td_total = timedelta(hours=self.hours)
-
-        hours_done = f"[{timedelta_as_hours(td_bussed)}]"
-        hours_left = f"[-{timedelta_as_hours(self.start + td_total - utils.now)}]"
-        progress_width = width - len(hours_done) - len(hours_left) - 3
-
-        # Scaled to last passed record
-        last_record = timedelta()
-        future_stops = []
-
-        for record in sorted(RECORDS):
-            td_record = timedelta(hours=dollars_to_hours(record.total))
-            if td_record <= td_bussed:
-                # We've passed this record, but make a note that we've come this far.
-                last_record = td_record
-            elif td_record < td_total:
-                # In the future, but still on the hook for it.
-                future_stops.append(td_record)
-            else:
-                # Don't worry about records we havent reached yet.
-                break
-
-        if overall:
-            last_record = timedelta()
-
-        bussed_width = math.floor(
-            progress_width * (td_bussed - last_record) / (td_total - last_record)
-        )
-        bus = f"{'─' * bussed_width}🚍{' ' * (progress_width - bussed_width - 1)}🏁"
-
-        for stop in future_stops:
-            stop_location = math.floor(
-                (last_record - stop) / (last_record - td_total) * progress_width
-            )
-            if bus[stop_location:stop_location + 2] == "  ":
-                bus = bus[:stop_location] + "🚏" + bus[stop_location + 2:]
-
-        return f"{hours_done}{bus}{hours_left}\x1b[0m"
 
 
 def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:

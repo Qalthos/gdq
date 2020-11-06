@@ -17,6 +17,9 @@ class MarathonBase(Protocol):
     def render(self, width: int, args: argparse.Namespace) -> bool:
         ...
 
+    def footer(self, width: int, args: argparse.Namespace) -> bool:
+        ...
+
 
 class TrackerBase(ABC):
     # Cached live data

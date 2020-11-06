@@ -42,7 +42,7 @@ class Runner(RunnerBase):
         )
         parser.add_argument(
             "-i", "--stream_index", type=int, default=1,
-            help="follow only a single stream",
+            help="Follow only a single stream",
         )
         parser.add_argument(
             "-o", "--min-options", type=int, default=5,
