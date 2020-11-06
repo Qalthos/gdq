@@ -107,3 +107,15 @@ class GDQTracker(TrackerBase):
                     line = utils.flatten(line)
                     first_line = False
                 yield line
+
+    def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if width:
+            # Reserved for future use
+            pass
+
+        if args:
+            # Reserved for future use
+            pass
+
+        return
+        yield

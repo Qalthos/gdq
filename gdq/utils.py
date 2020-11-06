@@ -70,7 +70,7 @@ def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
 
 def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable[X]:
     for i, item in enumerate(iterable):
-        terminal_refresh()
+        term_width, term_height = shutil.get_terminal_size()
         print(
             f"\x1b[{term_height - offset}H{progress_bar(0, i + 1, len(iterable), width=term_width)}",
             end="",
