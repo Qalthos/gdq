@@ -2,6 +2,7 @@ import argparse
 import operator
 from collections import namedtuple
 from collections.abc import Iterable
+from datetime import timedelta
 from typing import Union
 
 from gdq import money, utils
@@ -110,13 +111,17 @@ class GDQTracker(TrackerBase):
                 yield line
 
     def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        if width:
-            # Reserved for future use
-            pass
-
         if args:
             # Reserved for future use
             pass
 
-        return
-        yield
+        width -= 4
+
+        elapsed = utils.now - self.current_event.start_time
+        end = self.schedules[0][-1].start + timedelta(seconds=self.schedules[0][-1].estimate)
+        total = end - self.current_event.start_time
+
+        percent = elapsed / total
+        done = "-" * int(width * percent)
+        remain = " " * (width - len(done))
+        yield f"[{done}🮲🮳{remain}]"

@@ -180,7 +180,7 @@ class Run:
         if not self.is_live:
             return
 
-        width -= 7
+        width -= 8
         if not any(self.runners):
             desc_width = max(len(self.game_desc), len(self.category))
             if desc_width > width:
