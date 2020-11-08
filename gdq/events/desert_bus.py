@@ -106,8 +106,8 @@ class DesertBus(Marathon):
         td_total = timedelta(hours=self.hours)
         td_remaining = min(self.start + td_total - utils.now, td_total)
 
-        hours_done = f"[{timedelta_as_hours(td_bussed)}]"
-        hours_left = f"[{timedelta_as_hours(td_remaining)}]"
+        hours_done = f"[{utils.timedelta_as_hours(td_bussed)}]"
+        hours_left = f"[{utils.timedelta_as_hours(td_remaining)}]"
         progress_width = width - len(hours_done) - len(hours_left) - 3
 
         # Scaled to last passed record
@@ -222,12 +222,3 @@ def shift_banners(timestamp: datetime, width: int) -> str:
         banners.append(f"{shift_info.color};{boldness}m{shift_info.name.center(shift_width+mod, '═')}\x1b[0m")
 
     return "|".join(banners)
-
-
-def timedelta_as_hours(delta: timedelta) -> str:
-    """Format a timedelta in HHH:MM format."""
-
-    minutes = delta.total_seconds() // 60
-    hours, minutes = divmod(minutes, 60)
-
-    return f"{hours:.0f}:{minutes:02.0f}"

@@ -1,7 +1,7 @@
 import shutil
 import time
 from collections.abc import Collection, Iterable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import TypeVar
 
 X = TypeVar("X")
@@ -77,6 +77,15 @@ def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable
             flush=True
         )
         yield item
+
+
+def timedelta_as_hours(delta: timedelta) -> str:
+    """Format a timedelta in HHH:MM format."""
+
+    minutes = delta.total_seconds() // 60
+    hours, minutes = divmod(minutes, 60)
+
+    return f"{hours:.0f}:{minutes:02.0f}"
 
 
 def update_now() -> datetime:

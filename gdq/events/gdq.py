@@ -115,13 +115,15 @@ class GDQTracker(TrackerBase):
             # Reserved for future use
             pass
 
-        width -= 4
-
         elapsed = utils.now - self.current_event.start_time
         end = self.schedules[0][-1].start + timedelta(seconds=self.schedules[0][-1].estimate)
         total = end - self.current_event.start_time
 
+        hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
+        hours_left = f"[{utils.timedelta_as_hours(total - elapsed)}]"
+
+        width -= 1 + len(hours_done) + len(hours_left)
         percent = elapsed / total
         done = "-" * int(width * percent)
         remain = " " * (width - len(done))
-        yield f"[{done}🮲🮳{remain}]"
+        yield f"{hours_done}{done}>{remain}{hours_left}"
