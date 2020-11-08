@@ -1,5 +1,6 @@
 import argparse
 import operator
+import math
 from collections import namedtuple
 from collections.abc import Iterable
 from datetime import timedelta
@@ -115,15 +116,19 @@ class GDQTracker(TrackerBase):
             # Reserved for future use
             pass
 
-        elapsed = utils.now - self.current_event.start_time
+        start = self.current_event.start_time
         end = self.schedules[0][-1].start + timedelta(seconds=self.schedules[0][-1].estimate)
-        total = end - self.current_event.start_time
+        elapsed = max(utils.now - start, timedelta())
+        total = end - start
+        remaining = min(start + total - utils.now, total)
 
         hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
-        hours_left = f"[{utils.timedelta_as_hours(total - elapsed)}]"
+        hours_left = f"[{utils.timedelta_as_hours(remaining)}]"
+        progress_width = width - len(hours_done) - len(hours_left) - 3
 
-        width -= 1 + len(hours_done) + len(hours_left)
-        percent = elapsed / total
-        done = "-" * int(width * percent)
-        remain = " " * (width - len(done))
-        yield f"{hours_done}{done}>{remain}{hours_left}"
+        completed_width = math.floor(
+            progress_width * elapsed / total
+        )
+        progress = f"{'─' * completed_width}🎮{' ' * (progress_width - completed_width - 1)}🏁"
+
+        yield f"{hours_done}{progress}{hours_left}"

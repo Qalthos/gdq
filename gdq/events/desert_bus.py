@@ -102,12 +102,13 @@ class DesertBus(Marathon):
             yield from self.print_records()
 
     def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        td_bussed = max(utils.now - self.start, timedelta())
-        td_total = timedelta(hours=self.hours)
-        td_remaining = min(self.start + td_total - utils.now, td_total)
+        start = self.start
+        elapsed = max(utils.now - start, timedelta())
+        total = timedelta(hours=self.hours)
+        remaining = min(start + total - utils.now, total)
 
-        hours_done = f"[{utils.timedelta_as_hours(td_bussed)}]"
-        hours_left = f"[{utils.timedelta_as_hours(td_remaining)}]"
+        hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
+        hours_left = f"[{utils.timedelta_as_hours(remaining)}]"
         progress_width = width - len(hours_done) - len(hours_left) - 3
 
         # Scaled to last passed record
@@ -116,10 +117,10 @@ class DesertBus(Marathon):
 
         for record in sorted(RECORDS):
             td_record = timedelta(hours=dollars_to_hours(record.total))
-            if td_record <= td_bussed:
+            if td_record <= elapsed:
                 # We've passed this record, but make a note that we've come this far.
                 last_record = td_record
-            elif td_record < td_total:
+            elif td_record < total:
                 # In the future, but still on the hook for it.
                 future_stops.append(td_record)
             else:
@@ -129,19 +130,19 @@ class DesertBus(Marathon):
         if args.overall:
             last_record = timedelta()
 
-        bussed_width = math.floor(
-            progress_width * (td_bussed - last_record) / (td_total - last_record)
+        completed_width = math.floor(
+            progress_width * (elapsed - last_record) / (total - last_record)
         )
-        bus = f"{'─' * bussed_width}🚍{' ' * (progress_width - bussed_width - 1)}🏁"
+        progress = f"{'─' * completed_width}🚍{' ' * (progress_width - completed_width - 1)}🏁"
 
         for stop in future_stops:
             stop_location = math.floor(
-                (last_record - stop) / (last_record - td_total) * progress_width
+                (last_record - stop) / (last_record - total) * progress_width
             )
-            if bus[stop_location:stop_location + 2] == "  ":
-                bus = bus[:stop_location] + "🚏" + bus[stop_location + 2:]
+            if progress[stop_location:stop_location + 2] == "  ":
+                progress = progress[:stop_location] + "🚏" + progress[stop_location + 2:]
 
-        yield f"{hours_done}{bus}{hours_left}\x1b[0m"
+        yield f"{hours_done}{progress}{hours_left}"
 
     def calculate_estimate(self) -> str:
         future_hours = 0
