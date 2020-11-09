@@ -18,7 +18,19 @@ class Record:
     year: int
     name: str = ""
 
+    @property
+    def hours(self) -> int:
+        return dollars_to_hours(self.total)
 
+    def distance(self, current: Dollar) -> str:
+        next_level = self.total - current
+        if next_level <= Dollar():
+            return ""
+
+        if self.name:
+            yield f"{next_level} until {self.name}"
+        else:
+            yield f"{next_level} until Desert Bus {self.year}"
 
 
 RECORDS = [
@@ -148,19 +160,20 @@ class DesertBus(Marathon):
 
         last_hour = self.hours
         next_level = Dollar()
+        fun_iter = fun_numbers(self.total)
+        next_fun = next(fun_iter)
         for event in sorted(RECORDS):
-            record = event.total
-            if record > self.total:
-                hours = dollars_to_hours(record)
-                while hours > last_hour:
+            if event.total > self.total:
+                while event.hours > last_hour:
                     last_hour += 1
+                    next_hour = hours_to_dollars(last_hour)
+                    if next_hour > next_fun:
+                        yield f"{next_fun - self.total} until {next_fun}"
+                        next_fun = next(fun_iter)
                     yield distance_to_hour(self.total, last_hour)
 
-                next_level = record - self.total
-                if event.name:
-                    yield f"{next_level} until {event.name}"
-                else:
-                    yield f"{next_level} until Desert Bus {event.year}"
+                event.distance(self.total)
+                next_level = event.total
 
         if next_level == Dollar():
             yield "NEW RECORD!"
@@ -219,3 +232,15 @@ def distance_to_hour(current: Dollar, hour: int) -> str:
     if hour % 24 == 0:
         return f"{next_hour} until hour {hour} ({hour // 24} days!)"
     return f"{next_hour} until hour {hour}"
+
+
+def fun_numbers(start: Dollar) -> Iterable[Dollar]:
+    bases = (1, 2, 5)
+    zeroes = 0
+    while True:
+        for base in bases:
+            current = Dollar(base * 10 ** zeroes)
+            if start < current:
+                yield current
+                start = current
+        zeroes += 1
