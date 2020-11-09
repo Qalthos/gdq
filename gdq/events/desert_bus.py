@@ -8,6 +8,7 @@ import requests
 
 from gdq import utils
 from gdq.events import Marathon
+from gdq.models.bus_shift import SHIFTS
 from gdq.money import Dollar
 
 
@@ -18,19 +19,8 @@ class Record:
     name: str = ""
 
 
-@dataclass(order=True, frozen=True)
-class Shift:
-    end_hour: int
-    color: str
-    name: str
 
 
-SHIFTS = [
-    Shift(color="\x1b[33", end_hour=20, name="Dawn Guard"),
-    Shift(color="\x1b[31", end_hour=2, name="Alpha Flight"),
-    Shift(color="\x1b[34", end_hour=8, name="Night Watch"),
-    Shift(color="\x1b[35", end_hour=14, name="Zeta"),
-]
 RECORDS = [
     Record(year=2007, total=Dollar(22_805.00), name="Desert Bus for Hope"),
     Record(year=2008, total=Dollar(70_423.79), name="Desert Bus for Hope 2: Bus Harder"),
