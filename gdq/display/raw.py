@@ -33,7 +33,7 @@ class Display:
         current_line = self._header_size
 
         for line in body:
-            if current_line == self.term_h - self._footer_size:
+            if current_line == self.term_h - self._footer_size - 1:
                 break
             print(f"\x1b[{current_line}H{line}", end="\x1b[K")
             current_line += 1

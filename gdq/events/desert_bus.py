@@ -164,8 +164,7 @@ class DesertBus(Marathon):
                 hours = dollars_to_hours(record)
                 while hours > last_hour:
                     last_hour += 1
-                    next_hour = hours_to_dollars(last_hour) - self.total
-                    yield f"{next_hour} until hour {last_hour}"
+                    yield distance_to_hour(self.total, last_hour)
 
                 next_level = record - self.total
                 if event.name:
@@ -177,7 +176,7 @@ class DesertBus(Marathon):
             yield "NEW RECORD!"
 
         last_hour += 1
-        yield f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}"
+        yield distance_to_hour(self.total, last_hour)
 
 
 def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:
@@ -223,3 +222,10 @@ def shift_banners(timestamp: datetime, width: int) -> str:
         banners.append(f"{shift_info.color};{boldness}m{shift_info.name.center(shift_width+mod, '═')}\x1b[0m")
 
     return "|".join(banners)
+
+
+def distance_to_hour(current: Dollar, hour: int) -> str:
+    next_hour = hours_to_dollars(hour) - current
+    if hour % 24 == 0:
+        return f"{next_hour} until hour {hour} ({hour // 24} days!)"
+    return f"{next_hour} until hour {hour}"
