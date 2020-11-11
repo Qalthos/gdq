@@ -153,11 +153,14 @@ class Run:
         return f"{delta.days}:{hours:02d}:{minutes:02d}"
 
     @property
+    def end(self) -> datetime:
+        return self.start + timedelta(seconds=self.estimate)
+
+    @property
     def remaining(self) -> timedelta:
-        remaining = timedelta(seconds=self.estimate)
         if self.start < utils.now:
-            remaining -= utils.now - self.start
-        return remaining
+            return self.end - utils.now
+        return timedelta(seconds=self.estimate)
 
     @property
     def is_live(self) -> bool:

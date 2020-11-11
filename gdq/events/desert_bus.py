@@ -67,6 +67,10 @@ class DesertBus(Marathon):
         return dollars_to_hours(self.total)
 
     @property
+    def end(self) -> datetime:
+        return self.start + timedelta(hours=self.hours)
+
+    @property
     def desert_bucks(self) -> float:
         return self.total / RECORDS[0].total
 

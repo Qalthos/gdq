@@ -1,9 +1,8 @@
 import argparse
 import operator
-import math
 from collections import namedtuple
 from collections.abc import Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Union
 
 from gdq import money, utils
@@ -39,6 +38,17 @@ class GDQTracker(TrackerBase):
         self.stream_index = stream_index
         self.offset = offset
         self.record_offsets = record_offsets
+
+    @property
+    def start(self) -> datetime:
+        return self.current_event.start_time
+
+    @property
+    def end(self) -> datetime:
+        if self.schedules:
+            return max(schedule[-1].start + timedelta(schedule[-1].estimate) for schedule in self.schedules)
+        else:
+            return self.start
 
     @property
     def total(self) -> money.Money:
@@ -98,37 +108,3 @@ class GDQTracker(TrackerBase):
         bar_width = width - trim
         prog_bar = money.progress_bar_money(last_record.total, self.total, record.total, width=bar_width)
         yield f"{last_record.short_name.upper()} {prog_bar} {record.short_name.upper()}"
-
-    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        first_line = True
-
-        # TODO: Do this properly with columns
-        schedule = self.schedules[0]
-        for run in schedule:
-            for line in run.render(width=width, args=args):
-                if first_line:
-                    line = utils.flatten(line)
-                    first_line = False
-                yield line
-
-    def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        if args:
-            # Reserved for future use
-            pass
-
-        start = self.current_event.start_time
-        end = self.schedules[0][-1].start + timedelta(seconds=self.schedules[0][-1].estimate)
-        elapsed = max(utils.now - start, timedelta())
-        total = end - start
-        remaining = min(start + total - utils.now, total)
-
-        hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
-        hours_left = f"[{utils.timedelta_as_hours(remaining)}]"
-        progress_width = width - len(hours_done) - len(hours_left) - 3
-
-        completed_width = math.floor(
-            progress_width * elapsed / total
-        )
-        progress = f"{'─' * completed_width}🎮{' ' * (progress_width - completed_width - 1)}🏁"
-
-        yield f"{hours_done}{progress}{hours_left}"
