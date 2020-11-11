@@ -50,11 +50,11 @@ RECORDS = [
 
 
 class DesertBus(Marathon):
-    start: datetime
+    _start: datetime
     total: Dollar
 
     def __init__(self, start: datetime):
-        self.start = start
+        self._start = start
 
     def refresh_all(self) -> None:
         # Money raised
@@ -64,6 +64,10 @@ class DesertBus(Marathon):
     @property
     def hours(self) -> int:
         return dollars_to_hours(self.total)
+
+    @property
+    def start(self) -> datetime:
+        return self._start
 
     @property
     def end(self) -> datetime:
