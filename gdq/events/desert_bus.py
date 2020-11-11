@@ -1,6 +1,6 @@
 import argparse
 import math
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
@@ -28,9 +28,8 @@ class Record:
             return ""
 
         if self.name:
-            yield f"{next_level} until {self.name}"
-        else:
-            yield f"{next_level} until Desert Bus {self.year}"
+            return f"{next_level} until {self.name}"
+        return f"{next_level} until Desert Bus {self.year}"
 
 
 RECORDS = [
@@ -238,7 +237,7 @@ def distance_to_hour(current: Dollar, hour: int) -> str:
     return f"{next_hour} until hour {hour}"
 
 
-def fun_numbers(start: Dollar) -> Iterable[Dollar]:
+def fun_numbers(start: Dollar) -> Iterator[Dollar]:
     bases = (1, 2, 5)
     zeroes = 0
     while True:
