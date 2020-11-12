@@ -179,7 +179,7 @@ class DesertBus(Marathon):
                         next_fun = next(fun_iter)
                     yield distance_to_hour(self.total, last_hour)
 
-                event.distance(self.total)
+                yield event.distance(self.total)
                 next_level = event.total
 
         if next_level == Dollar():
