@@ -29,7 +29,7 @@ def refresh_event(marathon: Marathon, base_args: argparse.Namespace, event_args:
         if base_args.oneshot:
             return False
 
-    return bool(utils.now > marathon.end)
+    return bool(utils.now <= marathon.end)
 
 
 def list_events(config: Mapping[str, Any]) -> None:

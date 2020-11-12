@@ -89,11 +89,19 @@ class DesertBus(Marathon):
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(width)
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
-            yield from shift_banners(utils.now, width)
+            yield shift_banners(utils.now, width)
         else:
             yield "It's over!"
 
-        yield f"{self.total} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}"
+        yield "|".join(even_banner(
+            [
+                str(self.total),
+                f"{self.hours} hours",
+                f"d฿{self.desert_bucks:,.2f}",
+                f"d฿²{self.desert_toonies:,.2f}",
+            ],
+            width,
+        ))
         yield f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total."
 
     def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
@@ -201,35 +209,16 @@ def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
 def shift_banners(timestamp: datetime, width: int) -> str:
     # Shift detection
     shifts = sorted(SHIFTS)
-    for shift in shifts:
+    banners = even_banner([shift.name for shift in sorted(SHIFTS)], width, fill_char='═')
+
+    for index, shift in enumerate(shifts):
+        boldness = 2
         if timestamp.hour < shift.end_hour:
-            break
+            boldness = 7
+        banners[index] = f"{shift.color};{boldness}m{banners[index]}\x1b[0m"
     else:
         shift = shifts[0]
-
-    banners = []
-    min_width = 10 + 12 + 11 + 4 + 3
-
-    reflow = 0
-    if width <= (11 * 4) + 3:
-        shift_width = 0
-        if width >= min_width:
-            reflow = min_width - width
-    else:
-        shift_width = (width - 3) // 4
-        reflow = width - 3 - (shift_width * 4)
-
-    for index, shift_info in enumerate(SHIFTS):
-        boldness = "2"
-        if shift_info == shift:
-            boldness = "7"
-
-        mod = 0
-        if reflow < 0 and index == 3:
-            mod = 4 - reflow
-        elif index < reflow:
-            mod = 1
-        banners.append(f"{shift_info.color};{boldness}m{shift_info.name.center(shift_width+mod, '═')}\x1b[0m")
+        banners[0] = f"{shift.color};7m{banners[0]}\x1b[0m"
 
     return "|".join(banners)
 
@@ -251,3 +240,30 @@ def fun_numbers(start: Dollar) -> Iterator[Dollar]:
                 yield current
                 start = current
         zeroes += 1
+
+
+def even_banner(items: list[str], width: int, fill_char: str = " ") -> list[str]:
+    width -= len(items) - 1
+    min_width = sum(len(s) for s in items)
+    # reflow is extra spaces that should be distributed amongst the
+    # groups in the banner.
+    reflow = 0
+    if width <= max(len(s) for s in items) * len(items):
+        shift_width = 0
+        if width > min_width:
+            # reflow is negative, width will be compressed if possible
+            reflow = min_width - width
+    else:
+        shift_width = width // len(items)
+        # reflow is positive, an extra space will be added
+        reflow = width - (shift_width * len(items))
+
+    for index, stat in enumerate(items):
+        mod = 0
+        if reflow < 0 and index == len(items) - 1:
+            mod = len(items) - reflow
+        elif index < reflow:
+            mod = 1
+        items[index] = stat.center(shift_width + mod, fill_char)
+
+    return items
