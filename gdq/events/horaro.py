@@ -31,4 +31,8 @@ class HoraroTracker(TrackerBase):
         return self.schedules[0][-1].end
 
     def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if args:
+            # reserved for future use
+            pass
+
         yield f"{self.current_event} by {self.group_name}".center(width)
