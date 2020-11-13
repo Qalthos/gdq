@@ -82,10 +82,6 @@ class DesertBus(Marathon):
         return self.total / RECORDS[1].total
 
     def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        if args:
-            # Reserved for future use
-            pass
-
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(width)
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
@@ -102,7 +98,8 @@ class DesertBus(Marathon):
             ],
             width,
         ))
-        yield f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total."
+        if args.extended_header:
+            yield f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total."
 
     def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
         if width:

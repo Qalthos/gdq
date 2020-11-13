@@ -18,5 +18,9 @@ class Runner(RunnerBase):
             "-o", "--overall", action="store_true",
             help="Show total bus progress instead of current hout to next",
         )
+        parser.add_argument(
+            "-x", "--extended-header", action="store_true",
+            help="Show expanded information in the header",
+        )
 
         self.args = parser.parse_args(event_args)
