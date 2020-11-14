@@ -205,17 +205,13 @@ def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
 
 def shift_banners(timestamp: datetime, width: int) -> str:
     # Shift detection
-    shifts = sorted(SHIFTS)
-    banners = even_banner([shift.name for shift in sorted(SHIFTS)], width, fill_char='═')
+    banners = even_banner([shift.name for shift in SHIFTS], width, fill_char='═')
 
-    for index, shift in enumerate(shifts):
+    for index, shift in enumerate(SHIFTS):
         boldness = 2
-        if timestamp.hour < shift.end_hour:
+        if shift.is_active(utils.now):
             boldness = 7
         banners[index] = f"{shift.color};{boldness}m{banners[index]}\x1b[0m"
-    else:
-        shift = shifts[0]
-        banners[0] = f"{shift.color};7m{banners[0]}\x1b[0m"
 
     return "|".join(banners)
 
