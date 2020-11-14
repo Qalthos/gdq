@@ -16,7 +16,15 @@ from gdq.money import Dollar
 class Record:
     total: Dollar
     year: int
-    name: str = ""
+    hope: bool = False
+    number: str = ""
+    subtitle: str = ""
+
+    def __str__(self) -> str:
+        name = f"Desert Bus{' For Hope' if self.hope else ''} {self.number or self.year}"
+        if self.subtitle:
+            name += f": {self.subtitle}"
+        return name
 
     @property
     def hours(self) -> int:
@@ -27,25 +35,23 @@ class Record:
         if next_level <= Dollar():
             return ""
 
-        if self.name:
-            return f"{next_level} until {self.name}"
-        return f"{next_level} until Desert Bus {self.year}"
+        return f"{next_level} until {self!s}"
 
 
 RECORDS = [
-    Record(year=2007, total=Dollar(22_805.00), name="Desert Bus for Hope"),
-    Record(year=2008, total=Dollar(70_423.79), name="Desert Bus for Hope 2: Bus Harder"),
-    Record(year=2009, total=Dollar(140_449.68), name="Desert Bus for Hope 3: It's Desert Bus 6 in Japan"),
-    Record(year=2010, total=Dollar(209_482.00), name="Desert Bus for Hope 4: A New Hope"),
-    Record(year=2011, total=Dollar(383_125.10), name="Desert Bus for Hope 5: De5ert Bus"),
-    Record(year=2012, total=Dollar(443_630.00), name="Desert Bus for Hope 6: Desert Bus 3 in America"),
-    Record(year=2013, total=Dollar(523_520.00), name="Desert Bus for Hope 007"),
-    Record(year=2014, total=Dollar(643_242.58), name="Desert Bus for Hope 8"),
-    Record(year=2015, total=Dollar(683_720.00), name="Desert Bus for Hope 9: The Joy of Bussing"),
-    Record(year=2016, total=Dollar(695_242.57), name="Desert Bus X"),
+    Record(year=2007, total=Dollar(22_805.00), hope=True),
+    Record(year=2008, total=Dollar(70_423.79), hope=True, number="2", subtitle="Bus Harder"),
+    Record(year=2009, total=Dollar(140_449.68), hope=True, number="3", subtitle="It's Desert Bus 6 in Japan"),
+    Record(year=2010, total=Dollar(209_482.00), hope=True, number="4", subtitle="A New Hope"),
+    Record(year=2011, total=Dollar(383_125.10), hope=True, number="5", subtitle="De5ert Bus"),
+    Record(year=2012, total=Dollar(443_630.00), hope=True, number="6", subtitle="Desert Bus 3 in America"),
+    Record(year=2013, total=Dollar(523_520.00), hope=True, number="007"),
+    Record(year=2014, total=Dollar(643_242.58), hope=True, number="8"),
+    Record(year=2015, total=Dollar(683_720.00), hope=True, number="9", subtitle="The Joy of Bussing"),
+    Record(year=2016, total=Dollar(695_242.57), number="X"),
     Record(year=2017, total=Dollar(655_402.56)),
     Record(year=2018, total=Dollar(730_099.90)),
-    Record(year=2019, total=Dollar(865_015.00)),
+    Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
 ]
 
 
@@ -209,7 +215,7 @@ def shift_banners(timestamp: datetime, width: int) -> str:
 
     for index, shift in enumerate(SHIFTS):
         boldness = 2
-        if shift.is_active(utils.now):
+        if shift.is_active(timestamp):
             boldness = 7
         banners[index] = f"{shift.color};{boldness}m{banners[index]}\x1b[0m"
 
