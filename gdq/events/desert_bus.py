@@ -105,7 +105,11 @@ class DesertBus(Marathon):
             width,
         ))
         if args.extended_header:
-            yield f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total."
+            totals = []
+            if utils.now > self.start:
+                totals.append(self.calculate_estimate())
+            totals.append(f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime")
+            yield "|".join(even_banner(totals, width))
 
     def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
         if width:
@@ -117,8 +121,6 @@ class DesertBus(Marathon):
             pass
 
         if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
-            if utils.now > self.start:
-                yield self.calculate_estimate()
             yield from self.print_records()
 
     def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
@@ -171,7 +173,7 @@ class DesertBus(Marathon):
             future_hours = dollars_to_hours(future_total)
             future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
             future_total = self.total * future_multiplier
-        return f"{future_total} estimated total ({future_hours} hours)"
+        return f"{future_total} estimated ({future_hours}h)"
 
     def print_records(self) -> Iterable[str]:
         yield ""
