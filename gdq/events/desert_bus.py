@@ -176,19 +176,13 @@ class DesertBus(Marathon):
     def print_records(self) -> Iterable[str]:
         yield ""
 
-        last_hour = self.hours
-        next_level = Dollar()
-        fun_iter = fun_numbers(self.total)
-        next_fun = next(fun_iter)
+        others = artificial_records(self.total)
+        next_other = next(others)
         for event in sorted(RECORDS):
             if event.total > self.total:
-                while event.hours > last_hour:
-                    last_hour += 1
-                    next_hour = hours_to_dollars(last_hour)
-                    if next_hour > next_fun:
-                        yield f"{next_fun - self.total} until {next_fun}"
-                        next_fun = next(fun_iter)
-                    yield distance_to_hour(self.total, last_hour)
+                while next_other[0] < event.total:
+                    yield f"{next_other[0] - self.total} until {next_other[1]}"
+                    next_other = next(others)
 
                 yield event.distance(self.total)
                 next_level = event.total
@@ -196,8 +190,7 @@ class DesertBus(Marathon):
         if next_level == Dollar():
             yield "NEW RECORD!"
 
-        last_hour += 1
-        yield distance_to_hour(self.total, last_hour)
+        yield f"{next_other[0] - self.total} until {next_other[1]}"
 
 
 def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:
@@ -222,23 +215,38 @@ def shift_banners(timestamp: datetime, width: int) -> str:
     return "|".join(banners)
 
 
-def distance_to_hour(current: Dollar, hour: int) -> str:
-    next_hour = hours_to_dollars(hour) - current
-    if hour % 24 == 0:
-        return f"{next_hour} until hour {hour} ({hour // 24} days!)"
-    return f"{next_hour} until hour {hour}"
+def artificial_records(start: Dollar) -> Iterator[tuple[Dollar, str]]:
+    def next_hours(start: Dollar) -> Iterator[tuple[Dollar, str]]:
+        hour = dollars_to_hours(start) + 1
+        while True:
+            if hour % 24 == 0:
+                yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)"
+            else:
+                yield hours_to_dollars(hour), f"hour {hour}"
+            hour += 1
+    hours = next_hours(start)
+    next_hour = next(hours)
 
+    def fun_numbers(start: Dollar) -> Iterator[tuple[Dollar, str]]:
+        bases = (1, 2, 5)
+        zeroes = 0
+        while True:
+            for base in bases:
+                current = Dollar(base * 10 ** zeroes)
+                if start < current:
+                    yield current, str(current)
+                    start = current
+            zeroes += 1
+    numbers = fun_numbers(start)
+    next_number = next(numbers)
 
-def fun_numbers(start: Dollar) -> Iterator[Dollar]:
-    bases = (1, 2, 5)
-    zeroes = 0
     while True:
-        for base in bases:
-            current = Dollar(base * 10 ** zeroes)
-            if start < current:
-                yield current
-                start = current
-        zeroes += 1
+        if next_hour < next_number:
+            yield next_hour
+            next_hour = next(hours)
+        else:
+            yield next_number
+            next_number = next(numbers)
 
 
 def even_banner(items: list[str], width: int, fill_char: str = " ") -> list[str]:
