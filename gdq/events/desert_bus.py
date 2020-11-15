@@ -271,7 +271,7 @@ def even_banner(items: list[str], width: int, fill_char: str = " ") -> list[str]
         mod = 0
         if reflow < 0 and index == len(items) - 1:
             mod = len(items) - reflow
-        elif index < reflow:
+        elif int(index * reflow / len(items)) > int((index - 1) * reflow / len(items)):
             mod = 1
         items[index] = stat.center(shift_width + mod, fill_char)
 
