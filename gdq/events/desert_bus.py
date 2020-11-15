@@ -58,14 +58,20 @@ RECORDS = [
 class DesertBus(Marathon):
     _start: datetime
     total: Dollar
+    offline: bool = False
 
     def __init__(self, start: datetime):
         self._start = start
 
     def refresh_all(self) -> None:
         # Money raised
-        state = requests.get("https://desertbus.org/wapi/init").json()
-        self.total = Dollar(state["total"])
+        try:
+            state = requests.get("https://desertbus.org/wapi/init").json()
+        except IOError:
+            self.offline = True
+        else:
+            self.total = Dollar(state["total"])
+            self.offline = False
 
     @property
     def hours(self) -> int:
