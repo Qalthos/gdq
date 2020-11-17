@@ -46,9 +46,9 @@ class GDQTracker(TrackerBase):
     @property
     def end(self) -> datetime:
         if self.schedules:
-            return max(schedule[-1].start + timedelta(schedule[-1].estimate) for schedule in self.schedules)
-        else:
-            return self.start
+            return max(schedule[-1].end for schedule in self.schedules)
+
+        return self.start
 
     @property
     def total(self) -> money.Money:
