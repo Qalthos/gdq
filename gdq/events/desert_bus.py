@@ -1,5 +1,6 @@
 import argparse
 import math
+import sys
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -53,6 +54,7 @@ RECORDS = [
     Record(year=2018, total=Dollar(730_099.90)),
     Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
 ]
+FakeRecord = tuple[Dollar, str]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
 
 
@@ -187,7 +189,7 @@ class DesertBus(Marathon):
     def print_records(self) -> Iterable[str]:
         yield ""
 
-        others = artificial_records(self.total)
+        others = self.artificial_records()
         next_other = next(others)
         for event in sorted(RECORDS):
             if event.total > self.total:
@@ -202,6 +204,48 @@ class DesertBus(Marathon):
             yield "NEW RECORD!"
 
         yield f"{next_other[0] - self.total} until {next_other[1]}"
+
+    def artificial_records(self) -> Iterator[FakeRecord]:
+        records: list[tuple[FakeRecord, Iterator[FakeRecord]]] = [
+            (
+                (self.estimate, "current estimate"),
+                iter(lambda: (Dollar(sys.maxsize), ""), 0)
+            )
+        ]
+
+        def next_hours() -> Iterator[FakeRecord]:
+            hour = dollars_to_hours(self.total) + 1
+            while True:
+                if hour % 24 == 0:
+                    yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)"
+                else:
+                    yield hours_to_dollars(hour), f"hour {hour}"
+                hour += 1
+        hours = next_hours()
+        records.append((next(hours), hours))
+
+        def fun_numbers(lifetime: bool = False) -> Iterator[FakeRecord]:
+            zeroes = 0
+            while True:
+                for fives in range(1, 21):
+                    current = Dollar(fives * 5 * 10 ** zeroes)
+                    if lifetime:
+                        if self.total + LIFETIME < current:
+                            yield current - LIFETIME, f"{current} lifetime"
+                    else:
+                        if self.total < current:
+                            yield current, str(current)
+                zeroes += 1
+        numbers = fun_numbers()
+        records.append((next(numbers), numbers))
+        lifetimes = fun_numbers(lifetime=True)
+        records.append((next(lifetimes), lifetimes))
+
+        while True:
+            records.sort()
+            value, generator = records.pop(0)
+            records.append((next(generator), generator))
+            yield value
 
 
 def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:
@@ -224,44 +268,6 @@ def shift_banners(timestamp: datetime, width: int) -> str:
         banners[index] = f"{shift.color};{boldness}m{banners[index]}\x1b[0m"
 
     return "|".join(banners)
-
-
-def artificial_records(start: Dollar) -> Iterator[tuple[Dollar, str]]:
-    records = []
-
-    def next_hours() -> Iterator[tuple[Dollar, str]]:
-        hour = dollars_to_hours(start) + 1
-        while True:
-            if hour % 24 == 0:
-                yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)"
-            else:
-                yield hours_to_dollars(hour), f"hour {hour}"
-            hour += 1
-    hours = next_hours()
-    records.append(tuple([next(hours), hours]))
-
-    def fun_numbers(lifetime: bool = False) -> Iterator[tuple[Dollar, str]]:
-        zeroes = 0
-        while True:
-            for fives in range(1, 21):
-                current = Dollar(fives * 5 * 10 ** zeroes)
-                if lifetime:
-                    if start + offset < current:
-                        yield current, f"{current} lifetime"
-                else:
-                    if start < current:
-                        yield current, str(current)
-            zeroes += 1
-    numbers = fun_numbers()
-    records.append(tuple([next(numbers), numbers]))
-    lifetimes = fun_numbers(lifetime=True)
-    records.append(tuple([next(lifetimes), lifetimes]))
-
-    while True:
-        records.sort()
-        value, generator = records.pop(0)
-        records.append(tuple([next(generator), generator]))
-        yield value
 
 
 def even_banner(items: list[str], width: int, fill_char: str = " ") -> list[str]:
