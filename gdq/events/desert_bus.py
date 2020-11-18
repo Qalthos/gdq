@@ -227,7 +227,7 @@ def shift_banners(timestamp: datetime, width: int) -> str:
 def artificial_records(start: Dollar) -> Iterator[tuple[Dollar, str]]:
     records = []
 
-    def next_hours(start: Dollar) -> Iterator[tuple[Dollar, str]]:
+    def next_hours() -> Iterator[tuple[Dollar, str]]:
         hour = dollars_to_hours(start) + 1
         while True:
             if hour % 24 == 0:
@@ -235,22 +235,24 @@ def artificial_records(start: Dollar) -> Iterator[tuple[Dollar, str]]:
             else:
                 yield hours_to_dollars(hour), f"hour {hour}"
             hour += 1
-    hours = next_hours(start)
+    hours = next_hours()
     records.append(tuple([next(hours), hours]))
 
-    def fun_numbers(start: Dollar, offset: Dollar = None) -> Iterator[tuple[Dollar, str]]:
-        if offset is None:
-            offset = Dollar()
+    def fun_numbers(lifetime: bool = False) -> Iterator[tuple[Dollar, str]]:
         zeroes = 0
         while True:
             for fives in range(1, 21):
                 current = Dollar(fives * 5 * 10 ** zeroes)
-                if start + offset < current:
-                    yield current, str(current)
+                if lifetime:
+                    if start + offset < current:
+                        yield current, f"{current} lifetime"
+                else:
+                    if start < current:
+                        yield current, str(current)
             zeroes += 1
-    numbers = fun_numbers(start)
+    numbers = fun_numbers()
     records.append(tuple([next(numbers), numbers]))
-    lifetimes = fun_numbers(start, LIFETIME)
+    lifetimes = fun_numbers(lifetime=True)
     records.append(tuple([next(lifetimes), lifetimes]))
 
     while True:
