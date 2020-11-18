@@ -79,6 +79,16 @@ class DesertBus(Marathon):
         return dollars_to_hours(self.total)
 
     @property
+    def estimate(self) -> Dollar:
+        future_hours = 0
+        future_total = self.total
+        while future_hours != dollars_to_hours(future_total):
+            future_hours = dollars_to_hours(future_total)
+            future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
+            future_total = self.total * future_multiplier
+        return future_total
+
+    @property
     def start(self) -> datetime:
         return self._start
 
@@ -114,7 +124,8 @@ class DesertBus(Marathon):
         if args.extended_header:
             totals = []
             if utils.now > self.start:
-                totals.append(self.calculate_estimate())
+                estimate = self.estimate
+                totals.append(f"{estimate} estimated ({dollars_to_hours(estimate)}h)")
             totals.append(f"{self.total + LIFETIME} lifetime")
             yield "|".join(even_banner(totals, width))
 
@@ -172,15 +183,6 @@ class DesertBus(Marathon):
                 progress = progress[:stop_location] + "🚏" + progress[stop_location + 2:]
 
         yield f"{hours_done}{progress}{hours_left}"
-
-    def calculate_estimate(self) -> str:
-        future_hours = 0
-        future_total = self.total
-        while future_hours != dollars_to_hours(future_total):
-            future_hours = dollars_to_hours(future_total)
-            future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
-            future_total = self.total * future_multiplier
-        return f"{future_total} estimated ({future_hours}h)"
 
     def print_records(self) -> Iterable[str]:
         yield ""
