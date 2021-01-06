@@ -1,5 +1,5 @@
+import argparse
 from datetime import datetime, timedelta
-from typing import Optional
 
 from gdq.events.desert_bus import DesertBus
 from gdq.runners.base import RunnerBase
@@ -12,8 +12,15 @@ class Runner(RunnerBase):
 
         return DesertBus(self.event_config["start"])
 
-    def get_times(self) -> tuple[datetime, Optional[datetime]]:
-        event = self.get_marathon()
-        event.refresh_all()
+    def set_options(self, event_args: list[str]) -> None:
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "-o", "--overall", action="store_true",
+            help="Show total bus progress instead of current hout to next",
+        )
+        parser.add_argument(
+            "-x", "--extended-header", action="store_true",
+            help="Show expanded information in the header",
+        )
 
-        return (event.start, event.start + timedelta(hours=event.hours))
+        self.args = parser.parse_args(event_args)

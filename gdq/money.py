@@ -8,7 +8,7 @@ from gdq import utils
 M = TypeVar("M", bound="Money")
 
 
-def progress_bar_money(start: M, current: M, end: M, width: int = utils.term_width) -> str:
+def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
     width -= 8
 
     if start:

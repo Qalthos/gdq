@@ -1,9 +1,9 @@
 import argparse
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
-from gdq.events import MarathonBase
+from gdq.events import Marathon
 
 
 class RunnerBase(ABC):
@@ -15,12 +15,14 @@ class RunnerBase(ABC):
         self.set_options(event_args)
 
     @abstractmethod
-    def get_marathon(self) -> MarathonBase:
+    def get_marathon(self) -> Marathon:
         pass
 
-    @abstractmethod
-    def get_times(self) -> tuple[datetime, Optional[datetime]]:
-        pass
+    def get_times(self) -> tuple[datetime, datetime]:
+        event = self.get_marathon()
+        event.refresh_all()
+
+        return (event.start, event.end)
 
     def set_options(self, event_args: list[str]) -> None:
         parser = argparse.ArgumentParser()

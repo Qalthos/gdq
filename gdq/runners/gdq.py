@@ -1,6 +1,5 @@
 import argparse
 from datetime import datetime
-from typing import Optional
 
 from gdq.events.gdq import GDQTracker
 from gdq.runners.base import RunnerBase
@@ -22,18 +21,6 @@ class Runner(RunnerBase):
             record_offsets=record_offsets,
         )
 
-    def get_times(self) -> tuple[datetime, Optional[datetime]]:
-        event = self.get_marathon()
-        event.refresh_all()
-
-        start = event.current_event.start_time
-        try:
-            end = event.schedules[0][-1].start
-        except IndexError:
-            # Schedule hasn't been uploaded yet?
-            end = start
-        return (start, end)
-
     def set_options(self, event_args: list[str]) -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument(
@@ -42,7 +29,7 @@ class Runner(RunnerBase):
         )
         parser.add_argument(
             "-i", "--stream_index", type=int, default=1,
-            help="follow only a single stream",
+            help="Follow only a single stream",
         )
         parser.add_argument(
             "-o", "--min-options", type=int, default=5,

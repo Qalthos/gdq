@@ -1,11 +1,15 @@
 import argparse
 import math
+import sys
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 import requests
 
 from gdq import utils
+from gdq.events import Marathon
+from gdq.models.bus_shift import SHIFTS
 from gdq.money import Dollar
 
 
@@ -13,54 +17,87 @@ from gdq.money import Dollar
 class Record:
     total: Dollar
     year: int
-    name: str = ""
+    hope: bool = False
+    number: str = ""
+    subtitle: str = ""
 
-
-@dataclass(order=True, frozen=True)
-class Shift:
-    end_hour: int
-    color: str
-    name: str
-
-
-SHIFTS = [
-    Shift(color="\x1b[33", end_hour=20, name="Dawn Guard"),
-    Shift(color="\x1b[31", end_hour=2, name="Alpha Flight"),
-    Shift(color="\x1b[34", end_hour=8, name="Night Watch"),
-    Shift(color="\x1b[35", end_hour=14, name="Zeta"),
-]
-RECORDS = [
-    Record(year=2007, total=Dollar(22_805.00), name="Desert Bus for Hope"),
-    Record(year=2008, total=Dollar(70_423.79), name="Desert Bus for Hope 2: Bus Harder"),
-    Record(year=2009, total=Dollar(140_449.68), name="Desert Bus for Hope 3: It's Desert Bus 6 in Japan"),
-    Record(year=2010, total=Dollar(208_250.00), name="Desert Bus for Hope 4: A New Hope"),
-    Record(year=2011, total=Dollar(383_125.10), name="Desert Bus for Hope 5: De5ert Bus"),
-    Record(year=2012, total=Dollar(443_630.00), name="Desert Bus for Hope 6: Desert Bus 3 in America"),
-    Record(year=2013, total=Dollar(523_520.00), name="Desert Bus for Hope 007"),
-    Record(year=2014, total=Dollar(643_242.58), name="Desert Bus for Hope 8"),
-    Record(year=2015, total=Dollar(683_720.00), name="Desert Bus for Hope 9: The Joy of Bussing"),
-    Record(year=2016, total=Dollar(695_242.57), name="Desert Bus X"),
-    Record(year=2017, total=Dollar(650_215.00)),
-    Record(year=2018, total=Dollar(730_099.90)),
-    Record(year=2019, total=Dollar(865_015.00)),
-]
-
-
-class DesertBus:
-    start: datetime
-    total: Dollar
-
-    def __init__(self, start: datetime):
-        self.start = start
-
-    def refresh_all(self) -> None:
-        # Money raised
-        state = requests.get("https://desertbus.org/wapi/init").json()
-        self.total = Dollar(state["total"])
+    def __str__(self) -> str:
+        name = f"Desert Bus{' For Hope' if self.hope else ''} {self.number or self.year}"
+        if self.subtitle:
+            name += f": {self.subtitle}"
+        return name
 
     @property
     def hours(self) -> int:
         return dollars_to_hours(self.total)
+
+    def distance(self, current: Dollar) -> str:
+        next_level = self.total - current
+        if next_level <= Dollar():
+            return ""
+
+        return f"{next_level} until {self!s}"
+
+
+RECORDS = [
+    Record(year=2007, total=Dollar(22_805.00), hope=True),
+    Record(year=2008, total=Dollar(70_423.79), hope=True, number="2", subtitle="Bus Harder"),
+    Record(year=2009, total=Dollar(140_449.68), hope=True, number="3", subtitle="It's Desert Bus 6 in Japan"),
+    Record(year=2010, total=Dollar(209_482.00), hope=True, number="4", subtitle="A New Hope"),
+    Record(year=2011, total=Dollar(383_125.10), hope=True, number="5", subtitle="De5ert Bus"),
+    Record(year=2012, total=Dollar(443_630.00), hope=True, number="6", subtitle="Desert Bus 3 in America"),
+    Record(year=2013, total=Dollar(523_520.00), hope=True, number="007"),
+    Record(year=2014, total=Dollar(643_242.58), hope=True, number="8"),
+    Record(year=2015, total=Dollar(683_720.00), hope=True, number="9", subtitle="The Joy of Bussing"),
+    Record(year=2016, total=Dollar(695_242.57), number="X"),
+    Record(year=2017, total=Dollar(655_402.56)),
+    Record(year=2018, total=Dollar(730_099.90), subtitle="The Bus Place"),
+    Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
+    Record(year=2020, total=Dollar(986_806.86)),
+]
+FakeRecord = tuple[Dollar, str]
+LIFETIME = sum([record.total for record in RECORDS], Dollar())
+
+
+class DesertBus(Marathon):
+    _start: datetime
+    total: Dollar
+    offline: bool = False
+
+    def __init__(self, start: datetime):
+        self._start = start
+
+    def refresh_all(self) -> None:
+        # Money raised
+        try:
+            state = requests.get("https://desertbus.org/wapi/init").json()
+        except IOError:
+            self.offline = True
+        else:
+            self.total = Dollar(state["total"])
+            self.offline = False
+
+    @property
+    def hours(self) -> int:
+        return dollars_to_hours(self.total)
+
+    @property
+    def estimate(self) -> Dollar:
+        future_hours = 0
+        future_total = self.total
+        while future_hours != dollars_to_hours(future_total):
+            future_hours = dollars_to_hours(future_total)
+            future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
+            future_total = self.total * future_multiplier
+        return future_total
+
+    @property
+    def start(self) -> datetime:
+        return self._start
+
+    @property
+    def end(self) -> datetime:
+        return self.start + timedelta(hours=self.hours)
 
     @property
     def desert_bucks(self) -> float:
@@ -70,76 +107,52 @@ class DesertBus:
     def desert_toonies(self) -> float:
         return self.total / RECORDS[1].total
 
-    def display(self, args: argparse.Namespace) -> bool:
+    def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if utils.now < self.start:
+            yield f"Starting in {self.start - utils.now}".center(width)
+        elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
+            yield self.shift_banners(utils.now, width)
+        else:
+            yield "It's over!"
+
+        yield "|".join(even_banner(
+            [
+                str(self.total),
+                f"{self.hours} hours",
+                f"d฿{self.desert_bucks:,.2f}",
+                f"d฿²{self.desert_toonies:,.2f}",
+            ],
+            width,
+        ))
+        if args.extended_header:
+            totals = []
+            if utils.now > self.start:
+                estimate = self.estimate
+                totals.append(f"{estimate} estimated ({dollars_to_hours(estimate)}h)")
+            totals.append(f"{self.total + LIFETIME} lifetime")
+            yield "|".join(even_banner(totals, width))
+
+    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        if width:
+            # Reserved for future use
+            pass
+
         if args:
             # Reserved for future use
             pass
 
-        # Clear screen & reset cursor position
-        print("\x1b[2J\x1b[H", end="")
+        if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
+            yield from self.print_records()
 
-        if utils.now < self.start:
-            print(f"Starting in {self.start - utils.now}")
-        elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
-            print(shift_banners(utils.now))
-        else:
-            print("It's over!")
+    def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
+        start = self.start
+        elapsed = max(utils.now - start, timedelta())
+        total = timedelta(hours=self.hours)
+        remaining = min(start + total - utils.now, total)
 
-        print(f"{self.total} | {self.hours} hours | d฿{self.desert_bucks:,.2f} | d฿²{self.desert_toonies:,.2f}")
-        print(f"{self.total + sum([record.total for record in RECORDS], Dollar())} lifetime total.")
-
-        if utils.now > self.start:
-            if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
-                print(self.calculate_estimate())
-                self.print_records()
-                print(f"\x1b[{utils.term_height - 1}H{self.bus_progress()}")
-            else:
-                return False
-
-        return True
-
-    def calculate_estimate(self) -> str:
-        future_hours = 0
-        future_total = self.total
-        while future_hours != dollars_to_hours(future_total):
-            future_hours = dollars_to_hours(future_total)
-            future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
-            future_total = self.total * future_multiplier
-        return f"{future_total} estimated total ({future_hours} hours)"
-
-    def print_records(self) -> None:
-        print()
-
-        last_hour = self.hours
-        next_level = Dollar()
-        for event in sorted(RECORDS):
-            record = event.total
-            if record > self.total:
-                hours = dollars_to_hours(record)
-                while hours > last_hour:
-                    last_hour += 1
-                    next_hour = hours_to_dollars(last_hour) - self.total
-                    print(f"{next_hour} until hour {last_hour}")
-
-                next_level = record - self.total
-                if event.name:
-                    print(f"{next_level} until {event.name}")
-                else:
-                    print(f"{next_level} until Desert Bus {event.year}")
-
-        if next_level == Dollar():
-            print("NEW RECORD!")
-
-        last_hour += 1
-        print(f"{hours_to_dollars(last_hour) - self.total} until hour {last_hour}")
-
-    def bus_progress(self, overall: bool = False) -> str:
-        td_bussed = utils.now - self.start
-        td_total = timedelta(hours=self.hours)
-
-        hours_done = f"[{timedelta_as_hours(td_bussed)}]"
-        hours_left = f"[-{timedelta_as_hours(self.start + td_total - utils.now)}]"
-        progress_width = utils.term_width - len(hours_done) - len(hours_left) - 3
+        hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
+        hours_left = f"[{utils.timedelta_as_hours(remaining)}]"
+        progress_width = width - len(hours_done) - len(hours_left) - 3
 
         # Scaled to last passed record
         last_record = timedelta()
@@ -147,32 +160,111 @@ class DesertBus:
 
         for record in sorted(RECORDS):
             td_record = timedelta(hours=dollars_to_hours(record.total))
-            if td_record <= td_bussed:
+            if td_record <= elapsed:
                 # We've passed this record, but make a note that we've come this far.
                 last_record = td_record
-            elif td_record < td_total:
+            elif td_record < total:
                 # In the future, but still on the hook for it.
                 future_stops.append(td_record)
             else:
                 # Don't worry about records we havent reached yet.
                 break
 
-        if overall:
+        if args.overall:
             last_record = timedelta()
 
-        bussed_width = math.floor(
-            progress_width * (td_bussed - last_record) / (td_total - last_record)
+        completed_width = math.floor(
+            progress_width * (elapsed - last_record) / (total - last_record)
         )
-        bus = f"{'─' * bussed_width}🚍{' ' * (progress_width - bussed_width - 1)}🏁"
+        progress = f"{'─' * completed_width}🚍{' ' * (progress_width - completed_width - 1)}🏁"
 
         for stop in future_stops:
             stop_location = math.floor(
-                (last_record - stop) / (last_record - td_total) * progress_width
+                (last_record - stop) / (last_record - total) * progress_width
             )
-            if bus[stop_location:stop_location + 2] == "  ":
-                bus = bus[:stop_location] + "🚏" + bus[stop_location + 2:]
+            if progress[stop_location:stop_location + 2] == "  ":
+                progress = progress[:stop_location] + "🚏" + progress[stop_location + 2:]
 
-        return f"{hours_done}{bus}{hours_left}\x1b[0m"
+        yield f"{hours_done}{progress}{hours_left}"
+
+    def shift_banners(self, timestamp: datetime, width: int) -> str:
+        # Shift detection
+        if timestamp > self.end - timedelta(hours=4):
+            return "|".join(even_banner(list("OMEGA"), width))
+
+        banners = even_banner([shift.name for shift in SHIFTS], width, fill_char='═')
+
+        for index, shift in enumerate(SHIFTS):
+            boldness = 2
+            if shift.is_active(timestamp):
+                boldness = 7
+            banners[index] = f"{shift.color};{boldness}m{banners[index]}\x1b[0m"
+
+        return "|".join(banners)
+
+    def print_records(self) -> Iterable[str]:
+        yield ""
+
+        others = self.artificial_records()
+        next_other = next(others)
+        next_level = Dollar()
+        for event in sorted(RECORDS):
+            if event.total > self.total:
+                while next_other[0] < event.total:
+                    yield f"{next_other[0] - self.total} until {next_other[1]}"
+                    next_other = next(others)
+
+                yield event.distance(self.total)
+                next_level = event.total
+
+        if next_level == Dollar():
+            yield "NEW RECORD!"
+
+        while True:
+            yield f"{next_other[0] - self.total} until {next_other[1]}"
+            next_other = next(others)
+
+    def artificial_records(self) -> Iterator[FakeRecord]:
+        records: list[tuple[FakeRecord, Iterator[FakeRecord]]] = [
+            (
+                (self.estimate, "current estimate"),
+                iter(lambda: (Dollar(sys.maxsize), ""), 0)
+            )
+        ]
+
+        def next_hours() -> Iterator[FakeRecord]:
+            hour = dollars_to_hours(self.total) + 1
+            while True:
+                if hour % 24 == 0:
+                    yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)"
+                else:
+                    yield hours_to_dollars(hour), f"hour {hour}"
+                hour += 1
+        hours = next_hours()
+        records.append((next(hours), hours))
+
+        def fun_numbers(lifetime: bool = False) -> Iterator[FakeRecord]:
+            zeroes = 0
+            while True:
+                for fives in range(1, 20):
+                    current = Dollar(fives * 5 * 10 ** zeroes)
+                    if lifetime:
+                        if self.total + LIFETIME < current:
+                            yield current - LIFETIME, f"{current} lifetime"
+                    else:
+                        if self.total < current:
+                            yield current, str(current)
+                zeroes += 1
+        numbers = fun_numbers()
+        records.append((next(numbers), numbers))
+        lifetimes = fun_numbers(lifetime=True)
+        records.append((next(lifetimes), lifetimes))
+
+        while True:
+            records.sort()
+            value, generator = records.pop(0)
+            records.append((next(generator), generator))
+            yield value
 
 
 def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:
@@ -184,46 +276,28 @@ def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
     return Dollar((1 - (rate ** hours)) / (1 - rate))
 
 
-def shift_banners(timestamp: datetime) -> str:
-    # Shift detection
-    shifts = sorted(SHIFTS)
-    for shift in shifts:
-        if timestamp.hour < shift.end_hour:
-            break
-    else:
-        shift = shifts[0]
-
-    banners = []
-    min_width = 10 + 12 + 11 + 4 + 3
-
+def even_banner(items: list[str], width: int, fill_char: str = " ") -> list[str]:
+    width -= len(items) - 1
+    min_width = sum(len(s) for s in items)
+    # reflow is extra spaces that should be distributed amongst the
+    # groups in the banner.
     reflow = 0
-    if utils.term_width <= (11 * 4) + 3:
+    if width <= max(len(s) for s in items) * len(items):
         shift_width = 0
-        if utils.term_width >= min_width:
-            reflow = min_width - utils.term_width
+        if width > min_width:
+            # reflow is negative, width will be compressed if possible
+            reflow = min_width - width
     else:
-        shift_width = (utils.term_width - 3) // 4
-        reflow = utils.term_width - 3 - (shift_width * 4)
+        shift_width = width // len(items)
+        # reflow is positive, an extra space will be added
+        reflow = width - (shift_width * len(items))
 
-    for index, shift_info in enumerate(SHIFTS):
-        boldness = "2"
-        if shift_info == shift:
-            boldness = "7"
-
+    for index, stat in enumerate(items):
         mod = 0
-        if reflow < 0 and index == 3:
-            mod = 4 - reflow
-        elif index < reflow:
+        if reflow < 0 and index == len(items) - 1:
+            mod = len(items) - reflow
+        elif int(index * reflow / len(items)) > int((index - 1) * reflow / len(items)):
             mod = 1
-        banners.append(f"{shift_info.color};{boldness}m{shift_info.name.center(shift_width+mod, '═')}\x1b[0m")
+        items[index] = stat.center(shift_width + mod, fill_char)
 
-    return "|".join(banners)
-
-
-def timedelta_as_hours(delta: timedelta) -> str:
-    """Format a timedelta in HHH:MM format."""
-
-    minutes = delta.total_seconds() // 60
-    hours, minutes = divmod(minutes, 60)
-
-    return f"{hours:.0f}:{minutes:02.0f}"
+    return items
