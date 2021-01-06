@@ -51,8 +51,9 @@ RECORDS = [
     Record(year=2015, total=Dollar(683_720.00), hope=True, number="9", subtitle="The Joy of Bussing"),
     Record(year=2016, total=Dollar(695_242.57), number="X"),
     Record(year=2017, total=Dollar(655_402.56)),
-    Record(year=2018, total=Dollar(730_099.90)),
+    Record(year=2018, total=Dollar(730_099.90), subtitle="The Bus Place"),
     Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
+    Record(year=2020, total=Dollar(986_806.86)),
 ]
 FakeRecord = tuple[Dollar, str]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
@@ -110,7 +111,7 @@ class DesertBus(Marathon):
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(width)
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
-            yield shift_banners(utils.now, width)
+            yield self.shift_banners(utils.now, width)
         else:
             yield "It's over!"
 
@@ -186,11 +187,27 @@ class DesertBus(Marathon):
 
         yield f"{hours_done}{progress}{hours_left}"
 
+    def shift_banners(self, timestamp: datetime, width: int) -> str:
+        # Shift detection
+        if timestamp > self.end - timedelta(hours=4):
+            return "|".join(even_banner(list("OMEGA"), width))
+
+        banners = even_banner([shift.name for shift in SHIFTS], width, fill_char='═')
+
+        for index, shift in enumerate(SHIFTS):
+            boldness = 2
+            if shift.is_active(timestamp):
+                boldness = 7
+            banners[index] = f"{shift.color};{boldness}m{banners[index]}\x1b[0m"
+
+        return "|".join(banners)
+
     def print_records(self) -> Iterable[str]:
         yield ""
 
         others = self.artificial_records()
         next_other = next(others)
+        next_level = Dollar()
         for event in sorted(RECORDS):
             if event.total > self.total:
                 while next_other[0] < event.total:
@@ -203,7 +220,9 @@ class DesertBus(Marathon):
         if next_level == Dollar():
             yield "NEW RECORD!"
 
-        yield f"{next_other[0] - self.total} until {next_other[1]}"
+        while True:
+            yield f"{next_other[0] - self.total} until {next_other[1]}"
+            next_other = next(others)
 
     def artificial_records(self) -> Iterator[FakeRecord]:
         records: list[tuple[FakeRecord, Iterator[FakeRecord]]] = [
@@ -227,7 +246,7 @@ class DesertBus(Marathon):
         def fun_numbers(lifetime: bool = False) -> Iterator[FakeRecord]:
             zeroes = 0
             while True:
-                for fives in range(1, 21):
+                for fives in range(1, 20):
                     current = Dollar(fives * 5 * 10 ** zeroes)
                     if lifetime:
                         if self.total + LIFETIME < current:
@@ -255,19 +274,6 @@ def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:
 
 def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
     return Dollar((1 - (rate ** hours)) / (1 - rate))
-
-
-def shift_banners(timestamp: datetime, width: int) -> str:
-    # Shift detection
-    banners = even_banner([shift.name for shift in SHIFTS], width, fill_char='═')
-
-    for index, shift in enumerate(SHIFTS):
-        boldness = 2
-        if shift.is_active(timestamp):
-            boldness = 7
-        banners[index] = f"{shift.color};{boldness}m{banners[index]}\x1b[0m"
-
-    return "|".join(banners)
 
 
 def even_banner(items: list[str], width: int, fill_char: str = " ") -> list[str]:
