@@ -4,7 +4,6 @@ import re
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timezone
-from typing import Dict, List, Type
 
 import requests
 
@@ -18,7 +17,7 @@ def _get_resource(base_url: str, resource_type: str, **kwargs: str) -> requests.
     return requests.get(resource_url, params={"type": resource_type, **kwargs})
 
 
-def get_events(base_url: str, event_id: int = 0) -> List[Event]:
+def get_events(base_url: str, event_id: int = 0) -> list[Event]:
     kwargs = {}
     if event_id:
         kwargs["id"] = str(event_id)
@@ -30,7 +29,7 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
 
     match_multi = re.compile(r"(.*)s\d+$", re.MULTILINE)
     multi_events = {}
-    event_objs: List[Event] = []
+    event_objs: list[Event] = []
 
     for event in events:
         event_id = event["pk"]
@@ -85,7 +84,7 @@ def get_events(base_url: str, event_id: int = 0) -> List[Event]:
     return sorted(event_objs, key=operator.attrgetter("start_time"))
 
 
-def get_runs(base_url: str, event_id: int) -> List[Run]:
+def get_runs(base_url: str, event_id: int) -> list[Run]:
     runs = _get_resource(base_url, "run", event=str(event_id)).json()
     run_list = []
 
@@ -115,7 +114,7 @@ def get_runs(base_url: str, event_id: int) -> List[Run]:
     return run_list
 
 
-def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
+def get_runners_for_event(base_url: str, event_id: int) -> dict[int, Runner]:
     runners = _get_resource(base_url, resource_type="runner", event=str(event_id)).json()
     runner_dict = {}
 
@@ -129,10 +128,10 @@ def get_runners_for_event(base_url: str, event_id: int) -> Dict[int, Runner]:
 
 def get_incentives_for_event(
         base_url: str, event_id: int,
-        currency: Type[money.Money]) -> Dict[str, List[Incentive]]:
+        currency: type[money.Money]) -> dict[str, list[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=str(event_id)).json()
-    incentive_dict: Dict[str, List[Incentive]] = dict()
+    incentive_dict: dict[str, list[Incentive]] = dict()
     choices = defaultdict(list)
 
     for incentive in incentives:

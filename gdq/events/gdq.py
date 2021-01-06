@@ -1,7 +1,8 @@
 import argparse
 import operator
 from collections import namedtuple
-from typing import Dict, Iterable, List, Type, Union
+from collections.abc import Iterable
+from typing import Union
 
 from gdq import money, utils
 from gdq.events import TrackerBase
@@ -16,20 +17,20 @@ class GDQTracker(TrackerBase):
     url: str
 
     # Historical donation records
-    records: List[Event]
-    record_offsets: Dict[str, float]
+    records: list[Event]
+    record_offsets: dict[str, float]
 
     # Cached live data
     current_event: Event
-    runners: Dict[int, Runner] = {}
-    incentives: Dict[str, List[Incentive]] = {}
+    runners: dict[int, Runner] = {}
+    incentives: dict[str, list[Incentive]] = {}
 
     # Set to account for discrepencies between computed and reported totals.
     offset: float
 
     def __init__(
             self, url: str, stream_index: int = -1,
-            offset: float = 0, record_offsets: Dict[str, float] = {}):
+            offset: float = 0, record_offsets: dict[str, float] = {}):
         # We need to have a trailing '/' for urljoin to work properly
         if url[-1] != "/":
             url += "/"
@@ -44,11 +45,11 @@ class GDQTracker(TrackerBase):
         return self.current_event.total - self.currency(self.offset)
 
     @property
-    def currency(self) -> Type[money.Money]:
+    def currency(self) -> type[money.Money]:
         return type(self.current_event.total)
 
     @property
-    def current_events(self) -> List[SingleEvent]:
+    def current_events(self) -> list[SingleEvent]:
         if isinstance(self.current_event, SingleEvent):
             return [self.current_event]
         if isinstance(self.current_event, MultiEvent):
@@ -128,12 +129,12 @@ class GDQTracker(TrackerBase):
     def display_split(self, args: argparse.Namespace, row_index: int) -> bool:
         column_width = utils.term_width // 2
         height = (utils.term_height - row_index - 1) // len(self.schedules)
-        rendered_schedules: List[List[str]] = [[]]
+        rendered_schedules: list[list[str]] = [[]]
 
         args.hide_basic = False
         args.hide_incentives = True
         for schedule in self.schedules:
-            schedule_lines: List[str] = []
+            schedule_lines: list[str] = []
             for run in schedule:
                 schedule_lines.extend(self.format_run(run, args, column_width))
                 if len(schedule_lines) >= height:

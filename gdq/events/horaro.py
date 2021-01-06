@@ -1,5 +1,3 @@
-from typing import Dict
-
 from gdq.events import TrackerBase
 from gdq.parsers import horaro
 
@@ -8,9 +6,9 @@ class HoraroTracker(TrackerBase):
     # horaro.org keys
     group_name = ""
     current_event: str
-    key_map: Dict[str, str]
+    key_map: dict[str, str]
 
-    def __init__(self, group: str, event: str, key_map: Dict[str, str]):
+    def __init__(self, group: str, event: str, key_map: dict[str, str]):
         self.group_name = group
         self.current_event = event
         self.key_map = key_map

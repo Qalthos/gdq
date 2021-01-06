@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import argparse
 import sys
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Optional
 
 import toml
 import xdg
-from dateutil import tz
 
 from gdq import runners, utils
 from gdq.events import MarathonBase
@@ -29,7 +29,7 @@ def refresh_event(marathon: MarathonBase, base_args: argparse.Namespace, event_a
 
 
 def list_events(config: Mapping[str, Any]) -> None:
-    event_times: Dict[str, Tuple[datetime, Optional[datetime]]] = {}
+    event_times: dict[str, tuple[datetime, Optional[datetime]]] = {}
     for name, marathon_config in utils.show_iterable_progress(config.items(), offset=1):
         runner = runners.get_runner(marathon_config)
         try:
@@ -39,12 +39,12 @@ def list_events(config: Mapping[str, Any]) -> None:
 
     for name, (start, end) in sorted(event_times.items(), key=lambda x: x[1]):
         if end is None:
-            end = start + timedelta(days=7)
+            end = start.astimezone() + timedelta(days=7)
 
         if utils.now < start:
             print(f"{name} will start in {start - utils.now}")
         elif end < utils.now:
-            print(f"{name} finished on {end.astimezone(tz.gettz())}")
+            print(f"{name} finished on {end}")
         else:
             print(f"{name} is ongoing")
 

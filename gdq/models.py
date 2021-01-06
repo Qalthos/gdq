@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import List, Type, Union
+from typing import Union
 
 from gdq import money, utils
 
@@ -31,7 +31,7 @@ class Event(ABC):
         raise NotImplementedError
 
     @property
-    def currency(self) -> Type[money.Money]:
+    def currency(self) -> type[money.Money]:
         return type(self.total)
 
     @property
@@ -66,7 +66,7 @@ class SingleEvent(Event):
 
 @dataclass
 class MultiEvent(Event):
-    subevents: List[SingleEvent]
+    subevents: list[SingleEvent]
 
     @property
     def start_time(self) -> datetime:
@@ -104,7 +104,7 @@ class Run:
     game: str
     platform: str
     category: str
-    runners: List[Union[Runner, str]]
+    runners: list[Union[Runner, str]]
 
     start: datetime
     estimate: int
@@ -162,11 +162,11 @@ class Incentive(ABC):
         return self.state == "CLOSED"
 
     @property
-    def currency(self) -> Type[money.Money]:
+    def currency(self) -> type[money.Money]:
         return type(self.current)
 
     @abstractmethod
-    def render(self, width: int, align: int, args: argparse.Namespace) -> List[str]:
+    def render(self, width: int, align: int, args: argparse.Namespace) -> list[str]:
         raise NotImplementedError
 
     @abstractmethod
@@ -176,7 +176,7 @@ class Incentive(ABC):
 
 @dataclass
 class ChoiceIncentive(Incentive):
-    options: List["Choice"]
+    options: list["Choice"]
 
     @property
     def max_option(self) -> money.Money:
@@ -189,7 +189,7 @@ class ChoiceIncentive(Incentive):
             return max(*(len(option.name) for option in self.options))
         return 0
 
-    def render(self, width: int, align: int, args: argparse.Namespace) -> List[str]:
+    def render(self, width: int, align: int, args: argparse.Namespace) -> list[str]:
         incentive = []
 
         # Skip incentive if applicable
@@ -230,7 +230,7 @@ class ChoiceIncentive(Incentive):
                     leg = "└ "
 
                 incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total.short: >6s}│")
-                if option.description:
+                if option.description and option.description != option.name:
                     lines = wrap(option.description, width - 1)
                     incentive.append(f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│")
                     for line in lines[1:]:
@@ -256,7 +256,7 @@ class DonationIncentive(Incentive):
     def __len__(self) -> int:
         return len(self.short_desc)
 
-    def render(self, width: int, align: int, args: argparse.Namespace) -> List[str]:
+    def render(self, width: int, align: int, args: argparse.Namespace) -> list[str]:
         incentive = []
 
         # Skip incentive if applicable

@@ -1,8 +1,9 @@
 import argparse
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from datetime import timedelta
 from itertools import zip_longest
-from typing import Iterable, List, Protocol
+from typing import Protocol
 
 from gdq import utils
 from gdq.models import Run
@@ -18,7 +19,7 @@ class MarathonBase(Protocol):
 
 class TrackerBase(ABC):
     # Cached live data
-    schedules: List[List[Run]] = []
+    schedules: list[list[Run]] = []
 
     @abstractmethod
     def refresh_all(self) -> None:
@@ -46,7 +47,7 @@ class TrackerBase(ABC):
         column_width = utils.term_width // len(schedules)
 
         for schedule in schedules:
-            schedule_lines: List[str] = []
+            schedule_lines: list[str] = []
             for run in schedule:
                 schedule_lines.extend(self.format_run(run, args, column_width))
                 if len(schedule_lines) >= utils.term_height:
@@ -60,7 +61,7 @@ class TrackerBase(ABC):
         padding = " " * column_width
         return self._display_schedules(rendered_schedules, padding, row_index)
 
-    def _display_schedules(self, schedules: List[List[str]], padding: str, row_index: int) -> bool:
+    def _display_schedules(self, schedules: list[list[str]], padding: str, row_index: int) -> bool:
         first_row = True
         for full_row in zip_longest(*schedules):
             full_row = [column or padding for column in full_row]

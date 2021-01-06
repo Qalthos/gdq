@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import Optional
 
 from gdq.events.horaro import HoraroTracker
 from gdq.runners.base import RunnerBase
@@ -17,7 +17,7 @@ class Runner(RunnerBase):
         except KeyError as exc:
             raise KeyError(f"`{exc!s}` key missing from configuration")
 
-    def get_times(self) -> Tuple[datetime, Optional[datetime]]:
+    def get_times(self) -> tuple[datetime, Optional[datetime]]:
         event = self.get_marathon()
         event.refresh_all()
 
@@ -25,7 +25,7 @@ class Runner(RunnerBase):
         end = event.schedules[0][-1].start
         return (start, end)
 
-    def set_options(self, event_args: List[str]) -> None:
+    def set_options(self, event_args: list[str]) -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument(
             "-i", "--stream_index", type=int, default=1,

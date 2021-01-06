@@ -1,7 +1,8 @@
 import shutil
 import time
+from collections.abc import Collection, Iterable
 from datetime import datetime, timezone
-from typing import Collection, Iterable, TypeVar
+from typing import TypeVar
 
 X = TypeVar("X")
 now: datetime = datetime.now(timezone.utc)
