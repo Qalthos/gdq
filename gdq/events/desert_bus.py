@@ -53,7 +53,7 @@ RECORDS = [
     Record(year=2017, total=Dollar(655_402.56)),
     Record(year=2018, total=Dollar(730_099.90), subtitle="The Bus Place"),
     Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
-    Record(year=2020, total=Dollar(986_806.86)),
+    Record(year=2020, total=Dollar(1_052_902.40)),
 ]
 FakeRecord = tuple[Dollar, str]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
@@ -87,7 +87,10 @@ class DesertBus(Marathon):
         future_total = self.total
         while future_hours != dollars_to_hours(future_total):
             future_hours = dollars_to_hours(future_total)
-            future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
+            if utils.now > self.start:
+                future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
+            else:
+                future_multiplier = 1
             future_total = self.total * future_multiplier
         return future_total
 
@@ -173,9 +176,12 @@ class DesertBus(Marathon):
         if args.overall:
             last_record = timedelta()
 
-        completed_width = math.floor(
-            progress_width * (elapsed - last_record) / (total - last_record)
-        )
+        try:
+            completed_width = math.floor(
+                progress_width * (elapsed - last_record) / (total - last_record)
+            )
+        except ZeroDivisionError:
+            completed_width = 0
         progress = f"{'─' * completed_width}🚍{' ' * (progress_width - completed_width - 1)}🏁"
 
         for stop in future_stops:
