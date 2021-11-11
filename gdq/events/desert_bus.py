@@ -59,6 +59,20 @@ FakeRecord = tuple[Dollar, str]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
 
 
+class DesertBuck(Dollar):
+    _symbol = "d฿"
+
+    def __init__(self, value: Dollar):
+        super().__init__(value / RECORDS[0].total)
+
+
+class DesertToonie(Dollar):
+    _symbol = "d฿²"
+
+    def __init__(self, value: Dollar):
+        super().__init__(value / RECORDS[1].total)
+
+
 class DesertBus(Marathon):
     _start: datetime
     total: Dollar
@@ -102,14 +116,6 @@ class DesertBus(Marathon):
     def end(self) -> datetime:
         return self.start + timedelta(hours=self.hours)
 
-    @property
-    def desert_bucks(self) -> float:
-        return self.total / RECORDS[0].total
-
-    @property
-    def desert_toonies(self) -> float:
-        return self.total / RECORDS[1].total
-
     def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(width)
@@ -122,8 +128,8 @@ class DesertBus(Marathon):
             [
                 str(self.total),
                 f"{self.hours} hours",
-                f"d฿{self.desert_bucks:,.2f}",
-                f"d฿²{self.desert_toonies:,.2f}",
+                str(DesertBuck(self.total)),
+                str(DesertToonie(self.total)),
             ],
             width,
         ))
@@ -213,6 +219,9 @@ class DesertBus(Marathon):
 
         others = self.artificial_records()
         next_other = next(others)
+        while next_other[0] <= self.total:
+            next_other = next(others)
+
         next_level = Dollar()
         for event in sorted(RECORDS):
             if event.total > self.total:
@@ -252,7 +261,7 @@ class DesertBus(Marathon):
         def fun_numbers(lifetime: bool = False) -> Iterator[FakeRecord]:
             zeroes = 0
             while True:
-                for fives in range(1, 20):
+                for fives in range(2, 20):
                     current = Dollar(fives * 5 * 10 ** zeroes)
                     if lifetime:
                         if self.total + LIFETIME < current:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, TypeVar
 
 from gdq import utils
@@ -49,6 +49,7 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
 
 class Money(ABC):
     _value: int
+    _symbol: str
     _exponent: int = 0
 
     def __init__(self, value: float = 0):
@@ -64,9 +65,8 @@ class Money(ABC):
         return len(str(self))
 
     @property
-    @abstractmethod
     def symbol(self) -> str:
-        ...
+        return self._symbol
 
     # Operator methods
     def __neg__(self: M) -> M:
@@ -108,6 +108,14 @@ class Money(ABC):
         self._validate(other)
         return self._value < other._value
 
+    def __le__(self: M, other: M) -> bool:
+        self._validate(other)
+        return self._value <= other._value
+
+    def __gt__(self: M, other: M) -> bool:
+        self._validate(other)
+        return self._value > other._value
+
     def __ge__(self: M, other: M) -> bool:
         self._validate(other)
         return self._value >= other._value
@@ -130,12 +138,12 @@ class Money(ABC):
 
 
 class Dollar(Money):
-    symbol = "$"
+    _symbol = "$"
     _exponent = 2
 
 
 class Euro(Money):
-    symbol = "€"
+    _symbol = "€"
     _exponent = 2
 
 
