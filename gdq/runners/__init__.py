@@ -2,7 +2,7 @@ import argparse
 import sys
 from typing import Optional
 
-from gdq.runners import bus, gdq, horaro
+from gdq.runners import bsg, bus, gdq, horaro
 from gdq.runners.base import RunnerBase
 
 
@@ -35,6 +35,8 @@ def get_runner(config: dict[str, str], event_args: Optional[list[str]] = None) -
     if handler is None:
         print("Marathon type not set in config")
         sys.exit(1)
+    if handler == "bsg":
+        return bsg.Runner(config, event_args)
     if handler == "bus":
         return bus.Runner(config, event_args)
     if handler == "gdq":

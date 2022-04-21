@@ -112,7 +112,7 @@ def get_runs(base_url: str, event_id: int, currency: type[money.Money]) -> list[
                 key=operator.attrgetter("incentive_id"),
             ),
             start=start_time,
-            estimate=int(estimate),
+            estimate=estimate,
         ))
 
     return run_list
