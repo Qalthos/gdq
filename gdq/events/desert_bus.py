@@ -54,8 +54,9 @@ RECORDS = [
     Record(year=2018, total=Dollar(730_099.90), subtitle="The Bus Place"),
     Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
     Record(year=2020, total=Dollar(1_052_902.40)),
+    Record(year=2021, total=Dollar(1_223_108.83)),
 ]
-FakeRecord = tuple[Dollar, str]
+FakeRecord = tuple[Dollar, str, bool]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
 
 
@@ -227,6 +228,8 @@ class DesertBus(Marathon):
             if event.total > self.total:
                 while next_other[0] < event.total:
                     yield f"{next_other[0] - self.total} until {next_other[1]}"
+                    if not next_other[2]:
+                        return
                     next_other = next(others)
 
                 yield event.distance(self.total)
@@ -242,8 +245,8 @@ class DesertBus(Marathon):
     def artificial_records(self) -> Iterator[FakeRecord]:
         records: list[tuple[FakeRecord, Iterator[FakeRecord]]] = [
             (
-                (self.estimate, "current estimate"),
-                iter(lambda: (Dollar(sys.maxsize), ""), 0)
+                (self.estimate, f"current estimate ({self.estimate})", False),
+                iter(lambda: (Dollar(sys.maxsize), "", True), 0)
             )
         ]
 
@@ -251,9 +254,9 @@ class DesertBus(Marathon):
             hour = dollars_to_hours(self.total) + 1
             while True:
                 if hour % 24 == 0:
-                    yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)"
+                    yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)", True
                 else:
-                    yield hours_to_dollars(hour), f"hour {hour}"
+                    yield hours_to_dollars(hour), f"hour {hour}", True
                 hour += 1
         hours = next_hours()
         records.append((next(hours), hours))
@@ -265,10 +268,10 @@ class DesertBus(Marathon):
                     current = Dollar(fives * 5 * 10 ** zeroes)
                     if lifetime:
                         if self.total + LIFETIME < current:
-                            yield current - LIFETIME, f"{current} lifetime"
+                            yield current - LIFETIME, f"{current} lifetime", True
                     else:
                         if self.total < current:
-                            yield current, str(current)
+                            yield current, str(current), True
                 zeroes += 1
         numbers = fun_numbers()
         records.append((next(numbers), numbers))
