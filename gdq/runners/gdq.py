@@ -1,5 +1,4 @@
 import argparse
-from datetime import datetime
 
 from gdq.events.gdq import GDQTracker
 from gdq.runners.base import RunnerBase
@@ -16,7 +15,7 @@ class Runner(RunnerBase):
 
         return GDQTracker(
             url=self.event_config["url"],
-            stream_index=-self.args.stream_index,
+            stream_name=self.args.stream_name,
             offset=self.args.delta_total,
             record_offsets=record_offsets,
         )
@@ -28,8 +27,8 @@ class Runner(RunnerBase):
             help="Offset to subtract from event total to reconcile discrepencies",
         )
         parser.add_argument(
-            "-i", "--stream_index", type=int, default=1,
-            help="Follow only a single stream",
+            "-i", "--stream_name", type=str, default="",
+            help="Follow a specific named stream",
         )
         parser.add_argument(
             "-o", "--min-options", type=int, default=5,
