@@ -17,10 +17,10 @@ def _get_resource(base_url: str, resource_type: str, **kwargs: str) -> requests.
     return requests.get(resource_url, params={"type": resource_type, **kwargs})
 
 
-def get_events(base_url: str, event_id: int = 0) -> list[Event]:
+def get_events(base_url: str, event_name: str = "") -> list[Event]:
     kwargs = {}
-    if event_id:
-        kwargs["id"] = str(event_id)
+    if event_name:
+        kwargs["short"] = str(event_name)
 
     try:
         events = _get_resource(base_url, "event", **kwargs).json()

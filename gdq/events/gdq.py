@@ -2,7 +2,7 @@ import argparse
 import operator
 from collections import namedtuple
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Union
 
 from gdq import money, utils
@@ -28,14 +28,14 @@ class GDQTracker(TrackerBase):
     offset: float
 
     def __init__(
-            self, url: str, stream_index: int = -1,
+            self, url: str, stream_name: str = "",
             offset: float = 0, record_offsets: dict[str, float] = {}):
         # We need to have a trailing '/' for urljoin to work properly
         if url[-1] != "/":
             url += "/"
 
         self.url = url
-        self.stream_index = stream_index
+        self.stream_name = stream_name
         self.offset = offset
         self.record_offsets = record_offsets
 
@@ -72,7 +72,7 @@ class GDQTracker(TrackerBase):
             reader()
 
     def read_events(self) -> None:
-        events = gdq_api.get_events(self.url)
+        events = gdq_api.get_events(self.url, event_name=self.stream_name)
         if not events:
             raise IndexError(f"Couldn't find any events at {self.url}")
 
@@ -80,7 +80,7 @@ class GDQTracker(TrackerBase):
             if event.short_name in self.record_offsets:
                 event.offset = self.record_offsets[event.short_name]
 
-        self.current_event = events.pop(self.stream_index)
+        self.current_event = events.pop(0)
 
         self.records = sorted(events, key=operator.attrgetter("total"))
 

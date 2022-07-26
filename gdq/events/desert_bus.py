@@ -54,9 +54,24 @@ RECORDS = [
     Record(year=2018, total=Dollar(730_099.90), subtitle="The Bus Place"),
     Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
     Record(year=2020, total=Dollar(1_052_902.40)),
+    Record(year=2021, total=Dollar(1_223_108.83)),
 ]
-FakeRecord = tuple[Dollar, str]
+FakeRecord = tuple[Dollar, str, bool]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
+
+
+class DesertBuck(Dollar):
+    _symbol = "d฿"
+
+    def __init__(self, value: Dollar):
+        super().__init__(value / RECORDS[0].total)
+
+
+class DesertToonie(Dollar):
+    _symbol = "d฿²"
+
+    def __init__(self, value: Dollar):
+        super().__init__(value / RECORDS[1].total)
 
 
 class DesertBus(Marathon):
@@ -102,14 +117,6 @@ class DesertBus(Marathon):
     def end(self) -> datetime:
         return self.start + timedelta(hours=self.hours)
 
-    @property
-    def desert_bucks(self) -> float:
-        return self.total / RECORDS[0].total
-
-    @property
-    def desert_toonies(self) -> float:
-        return self.total / RECORDS[1].total
-
     def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(width)
@@ -122,8 +129,8 @@ class DesertBus(Marathon):
             [
                 str(self.total),
                 f"{self.hours} hours",
-                f"d฿{self.desert_bucks:,.2f}",
-                f"d฿²{self.desert_toonies:,.2f}",
+                str(DesertBuck(self.total)),
+                str(DesertToonie(self.total)),
             ],
             width,
         ))
@@ -213,11 +220,16 @@ class DesertBus(Marathon):
 
         others = self.artificial_records()
         next_other = next(others)
+        while next_other[0] <= self.total:
+            next_other = next(others)
+
         next_level = Dollar()
         for event in sorted(RECORDS):
             if event.total > self.total:
                 while next_other[0] < event.total:
                     yield f"{next_other[0] - self.total} until {next_other[1]}"
+                    if not next_other[2]:
+                        return
                     next_other = next(others)
 
                 yield event.distance(self.total)
@@ -233,8 +245,8 @@ class DesertBus(Marathon):
     def artificial_records(self) -> Iterator[FakeRecord]:
         records: list[tuple[FakeRecord, Iterator[FakeRecord]]] = [
             (
-                (self.estimate, "current estimate"),
-                iter(lambda: (Dollar(sys.maxsize), ""), 0)
+                (self.estimate, f"current estimate ({self.estimate})", False),
+                iter(lambda: (Dollar(sys.maxsize), "", True), 0)
             )
         ]
 
@@ -242,9 +254,9 @@ class DesertBus(Marathon):
             hour = dollars_to_hours(self.total) + 1
             while True:
                 if hour % 24 == 0:
-                    yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)"
+                    yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)", True
                 else:
-                    yield hours_to_dollars(hour), f"hour {hour}"
+                    yield hours_to_dollars(hour), f"hour {hour}", True
                 hour += 1
         hours = next_hours()
         records.append((next(hours), hours))
@@ -252,14 +264,14 @@ class DesertBus(Marathon):
         def fun_numbers(lifetime: bool = False) -> Iterator[FakeRecord]:
             zeroes = 0
             while True:
-                for fives in range(1, 20):
+                for fives in range(2, 20):
                     current = Dollar(fives * 5 * 10 ** zeroes)
                     if lifetime:
                         if self.total + LIFETIME < current:
-                            yield current - LIFETIME, f"{current} lifetime"
+                            yield current - LIFETIME, f"{current} lifetime", True
                     else:
                         if self.total < current:
-                            yield current, str(current)
+                            yield current, str(current), True
                 zeroes += 1
         numbers = fun_numbers()
         records.append((next(numbers), numbers))
