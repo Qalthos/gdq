@@ -17,7 +17,6 @@ def update_bus(bus: DesertBus, display: Display, message) -> None:
         utils.update_now()
         display.refresh_terminal()
 
-        print(message.message)
         bus.total = Dollar(message.message)
         bus.width = display.term_w
         display.update_header(bus.header())
@@ -34,7 +33,7 @@ class SubscribeHandler(SubscribeCallback):
 
     def message(self, pubnub, message) -> None:
         print(message.__dict__)
-        update_bus(self.bus, message)
+        update_bus(self.bus, self.display, message)
 
         if bool(utils.now <= self.bus.end):
             pubnub.stop()
