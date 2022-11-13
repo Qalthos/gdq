@@ -14,15 +14,15 @@ from bus.desert_bus import DesertBus
 
 
 def update_bus(bus: DesertBus, display: Display, message) -> None:
-        utils.update_now()
-        display.refresh_terminal()
+    utils.update_now()
+    display.refresh_terminal()
 
-        bus.total = Dollar(message.message)
-        bus.width = display.term_w
-        display.update_header(bus.header())
-        display.update_body(bus.render())
-        display.update_footer(bus.footer())
-        print(flush=True)
+    bus.total = Dollar(message.message)
+    bus.width = display.term_w
+    display.update_header(bus.header())
+    display.update_body(bus.render())
+    display.update_footer(bus.footer())
+    print(flush=True, end="")
 
 
 class SubscribeHandler(SubscribeCallback):
@@ -32,10 +32,10 @@ class SubscribeHandler(SubscribeCallback):
         self.display = display
 
     def message(self, pubnub, message) -> None:
-        print(message.__dict__)
+        # print(message.__dict__)
         update_bus(self.bus, self.display, message)
 
-        if bool(utils.now <= self.bus.end):
+        if bool(utils.now >= self.bus.end):
             pubnub.stop()
             sys.exit(0)
 
