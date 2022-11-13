@@ -1,39 +1,46 @@
 #!/usr/bin/env python3
 import sys
+import threading
+import time
 from pathlib import Path
 
-from pubnub.pubnub import PubNub, PNConfiguration, SubscribeCallback
-from pubnub.enums import PNReconnectionPolicy
 import tomllib
 import xdg
+from pubnub.enums import PNReconnectionPolicy
+from pubnub.pubnub import PNConfiguration, PubNub, SubscribeCallback
 
+from bus.desert_bus import DesertBus
 from gdq import utils
 from gdq.display.raw import Display
 from gdq.money import Dollar
-from bus.desert_bus import DesertBus
 
 
-def update_bus(bus: DesertBus, display: Display, message) -> None:
-    utils.update_now()
-    display.refresh_terminal()
+def update_display(bus: DesertBus) -> None:
+    display = Display()
+    while True:
+        utils.update_now()
+        display.refresh_terminal()
 
+        bus.width = display.term_w
+        display.update_header(bus.header())
+        display.update_body(bus.render())
+        display.update_footer(bus.footer())
+        print(flush=True, end="")
+        time.sleep(0.1)
+
+
+def update_bus(bus: DesertBus, message) -> None:
     bus.total = Dollar(message.message)
-    bus.width = display.term_w
-    display.update_header(bus.header())
-    display.update_body(bus.render())
-    display.update_footer(bus.footer())
-    print(flush=True, end="")
 
 
 class SubscribeHandler(SubscribeCallback):
-    def __init__(self, bus: DesertBus, display: Display, *args, **kwargs):
+    def __init__(self, bus: DesertBus, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bus = bus
-        self.display = display
 
     def message(self, pubnub, message) -> None:
         # print(message.__dict__)
-        update_bus(self.bus, self.display, message)
+        update_bus(self.bus, message)
 
         if bool(utils.now >= self.bus.end):
             pubnub.stop()
@@ -51,7 +58,7 @@ def main() -> None:
         sys.exit(1)
 
     bus = DesertBus(start=event_config["start"])
-    display = Display()
+    bus.total = Dollar(0)
 
     config = PNConfiguration()
     config.reconnect_policy = PNReconnectionPolicy.EXPONENTIAL
@@ -63,12 +70,20 @@ def main() -> None:
             return
         if "db_total" in envelope.channels:
             message = envelope.channels["db_total"][0]
-            update_bus(bus, display, message)
+            update_bus(bus, message)
 
     pubnub = PubNub(config)
-    pubnub.add_listener(SubscribeHandler(bus, display))
+    pubnub.add_listener(SubscribeHandler(bus))
     pubnub.subscribe().channels("db_total").execute()
-    pubnub.fetch_messages().channels("db_total").maximum_per_channel(1).pn_async(fetch_callback)
+    pubnub.fetch_messages().channels("db_total").maximum_per_channel(1).pn_async(
+        fetch_callback
+    )
+
+    display_thread = threading.Thread(
+        target=update_display,
+        args=(bus,),
+    )
+    display_thread.start()
 
 
 if __name__ == "__main__":
