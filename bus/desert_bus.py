@@ -1,5 +1,6 @@
 import math
 import sys
+import textwrap
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -7,9 +8,6 @@ from datetime import datetime, timedelta
 from gdq import utils
 from gdq.models.bus_shift import SHIFTS
 from gdq.money import Dollar
-
-DB_SUB_KEY = "sub-cbd7f5f5-1d3f-11e2-ac11-877a976e347c"
-DB_UUID = "b71bca24-0ad6-463b-9c47-953bfb0c120a"
 
 
 @dataclass(order=True, frozen=True)
@@ -21,7 +19,9 @@ class Record:
     subtitle: str = ""
 
     def __str__(self) -> str:
-        name = f"Desert Bus{' For Hope' if self.hope else ''} {self.number or self.year}"
+        name = (
+            f"Desert Bus{' For Hope' if self.hope else ''} {self.number or self.year}"
+        )
         if self.subtitle:
             name += f": {self.subtitle}"
         return name
@@ -39,15 +39,47 @@ class Record:
 
 
 RECORDS = [
-    Record(year=2007, total=Dollar(22_805.00), hope=True),
-    Record(year=2008, total=Dollar(70_423.79), hope=True, number="2", subtitle="Bus Harder"),
-    Record(year=2009, total=Dollar(140_449.68), hope=True, number="3", subtitle="It's Desert Bus 6 in Japan"),
-    Record(year=2010, total=Dollar(209_482.00), hope=True, number="4", subtitle="A New Hope"),
-    Record(year=2011, total=Dollar(383_125.10), hope=True, number="5", subtitle="De5ert Bus"),
-    Record(year=2012, total=Dollar(443_630.00), hope=True, number="6", subtitle="Desert Bus 3 in America"),
+    Record(year=2007, total=Dollar(22_805.00), hope=True, number="1"),
+    Record(
+        year=2008, total=Dollar(70_423.79), hope=True, number="2", subtitle="Bus Harder"
+    ),
+    Record(
+        year=2009,
+        total=Dollar(140_449.68),
+        hope=True,
+        number="3",
+        subtitle="It's Desert Bus 6 in Japan",
+    ),
+    Record(
+        year=2010,
+        total=Dollar(209_482.00),
+        hope=True,
+        number="4",
+        subtitle="A New Hope",
+    ),
+    Record(
+        year=2011,
+        total=Dollar(383_125.10),
+        hope=True,
+        number="5",
+        subtitle="De5ert Bus",
+    ),
+    Record(
+        year=2012,
+        total=Dollar(443_630.00),
+        hope=True,
+        number="6",
+        subtitle="Desert Bus 3 in America",
+    ),
     Record(year=2013, total=Dollar(523_520.00), hope=True, number="007"),
     Record(year=2014, total=Dollar(643_242.58), hope=True, number="8"),
-    Record(year=2015, total=Dollar(683_720.00), hope=True, number="9", subtitle="The Joy of Bussing"),
+    Record(
+        year=2015,
+        total=Dollar(683_720.00),
+        hope=True,
+        number="9",
+        subtitle="The Joy of Bussing",
+    ),
     Record(year=2016, total=Dollar(695_242.57), number="X"),
     Record(year=2017, total=Dollar(655_402.56)),
     Record(year=2018, total=Dollar(730_099.90), subtitle="The Bus Place"),
@@ -93,7 +125,9 @@ class DesertBus:
         while future_hours != dollars_to_hours(future_total):
             future_hours = dollars_to_hours(future_total)
             if utils.now > self.start:
-                future_multiplier = timedelta(hours=future_hours) / (utils.now - self.start)
+                future_multiplier = timedelta(hours=future_hours) / (
+                    utils.now - self.start
+                )
             else:
                 future_multiplier = 1
             future_total = self.total * future_multiplier
@@ -115,15 +149,17 @@ class DesertBus:
         else:
             yield "It's over!"
 
-        yield "|".join(even_banner(
-            [
-                str(self.total),
-                f"{self.hours} hours",
-                str(DesertBuck(self.total)),
-                str(DesertToonie(self.total)),
-            ],
-            self.width
-        ))
+        yield "|".join(
+            even_banner(
+                [
+                    str(self.total),
+                    f"{self.hours} hours",
+                    str(DesertBuck(self.total)),
+                    str(DesertToonie(self.total)),
+                ],
+                self.width,
+            )
+        )
         if extended:
             totals = []
             if utils.now > self.start:
@@ -171,14 +207,18 @@ class DesertBus:
             )
         except ZeroDivisionError:
             completed_width = 0
-        progress = f"{'─' * completed_width}🚍{' ' * (progress_width - completed_width - 1)}🏁"
+        progress = (
+            f"{'─' * completed_width}🚍{' ' * (progress_width - completed_width - 1)}🏁"
+        )
 
         for stop in future_stops:
             stop_location = math.floor(
                 (last_record - stop) / (last_record - total) * progress_width
             )
-            if progress[stop_location:stop_location + 2] == "  ":
-                progress = progress[:stop_location] + "🚏" + progress[stop_location + 2:]
+            if progress[stop_location : stop_location + 2] == "  ":
+                progress = (
+                    progress[:stop_location] + "🚏" + progress[stop_location + 2 :]
+                )
 
         yield f"{hours_done}{progress}{hours_left}"
 
@@ -187,7 +227,9 @@ class DesertBus:
         if timestamp > self.end - timedelta(hours=4):
             return "|".join(even_banner(list("OMEGA"), self.width))
 
-        banners = even_banner([shift.name for shift in SHIFTS], self.width, fill_char='═')
+        banners = even_banner(
+            [shift.name for shift in SHIFTS], self.width, fill_char="═"
+        )
 
         for index, shift in enumerate(SHIFTS):
             boldness = 2
@@ -198,8 +240,6 @@ class DesertBus:
         return "|".join(banners)
 
     def print_records(self) -> Iterable[str]:
-        yield ""
-
         others = self.artificial_records()
         next_other = next(others)
         while next_other[0] <= self.total:
@@ -209,26 +249,31 @@ class DesertBus:
         for event in sorted(RECORDS):
             if event.total > self.total:
                 while next_other[0] < event.total:
-                    yield f"{next_other[0] - self.total} until {next_other[1]}"
+                    yield from textwrap.wrap(
+                        f"{next_other[0] - self.total} until {next_other[1]}",
+                        width=self.width,
+                    )
                     if not next_other[2]:
                         return
                     next_other = next(others)
 
-                yield event.distance(self.total)
+                yield from textwrap.wrap(event.distance(self.total), width=self.width)
                 next_level = event.total
 
         if next_level == Dollar():
             yield "NEW RECORD!"
 
         while True:
-            yield f"{next_other[0] - self.total} until {next_other[1]}"
+            yield textwrap.wrap(
+                f"{next_other[0] - self.total} until {next_other[1]}", width=self.width
+            )
             next_other = next(others)
 
     def artificial_records(self) -> Iterator[FakeRecord]:
         records: list[tuple[FakeRecord, Iterator[FakeRecord]]] = [
             (
                 (self.estimate, f"current estimate ({self.estimate})", False),
-                iter(lambda: (Dollar(sys.maxsize), "", True), 0)
+                iter(lambda: (Dollar(sys.maxsize), "", True), 0),
             )
         ]
 
@@ -236,10 +281,13 @@ class DesertBus:
             hour = dollars_to_hours(self.total) + 1
             while True:
                 if hour % 24 == 0:
-                    yield hours_to_dollars(hour), f"hour {hour} ({hour // 24} days!)", True
+                    yield hours_to_dollars(
+                        hour
+                    ), f"hour {hour} ({hour // 24} days!)", True
                 else:
                     yield hours_to_dollars(hour), f"hour {hour}", True
                 hour += 1
+
         hours = next_hours()
         records.append((next(hours), hours))
 
@@ -247,7 +295,7 @@ class DesertBus:
             zeroes = 0
             while True:
                 for fives in range(2, 20):
-                    current = Dollar(fives * 5 * 10 ** zeroes)
+                    current = Dollar(fives * 5 * 10**zeroes)
                     if lifetime:
                         if self.total + LIFETIME < current:
                             yield current - LIFETIME, f"{current} lifetime", True
@@ -255,6 +303,7 @@ class DesertBus:
                         if self.total < current:
                             yield current, str(current), True
                 zeroes += 1
+
         numbers = fun_numbers()
         records.append((next(numbers), numbers))
         lifetimes = fun_numbers(lifetime=True)
@@ -273,7 +322,7 @@ def dollars_to_hours(dollars: Dollar, rate: float = 1.07) -> int:
 
 
 def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
-    return Dollar((1 - (rate ** hours)) / (1 - rate))
+    return Dollar((1 - (rate**hours)) / (1 - rate))
 
 
 def even_banner(items: list[str], width: int = 80, fill_char: str = " ") -> list[str]:

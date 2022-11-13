@@ -33,7 +33,7 @@ class Display:
         current_line = self._header_size
 
         for line in body:
-            if current_line == self.term_h - self._footer_size - 1:
+            if current_line == self.term_h - self._footer_size:
                 break
             print(f"\x1b[{current_line}H{line}", end="\x1b[K")
             current_line += 1
@@ -44,6 +44,6 @@ class Display:
     def update_footer(self, footer: Iterable[str]) -> None:
         footer = list(footer)
 
-        self._footer_size = len(footer)
+        self._footer_size = len(footer) - 1
         for index, line in enumerate(footer):
             print(f"\x1b[{self.term_h - self._footer_size + index}H{line}", end="")
