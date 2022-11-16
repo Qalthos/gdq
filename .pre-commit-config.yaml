@@ -10,25 +10,12 @@ repos:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
 
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
-
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v3.0.0-alpha.4"
-    hooks:
-      - id: prettier
-        additional_dependencies:
-          - prettier
-          - prettier-plugin-toml
-
-  - repo: https://github.com/asottile/dead
-    rev: v1.3.0
-    hooks:
-      - id: dead
-
   - repo: https://github.com/psf/black
     rev: 22.10.0
     hooks:
       - id: black
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.116
+    hooks:
+      - id: ruff

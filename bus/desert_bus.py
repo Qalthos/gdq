@@ -253,8 +253,6 @@ class DesertBus:
                         f"{next_other[0] - self.total} until {next_other[1]}",
                         width=self.width,
                     )
-                    if not next_other[2]:
-                        return
                     next_other = next(others)
 
                 yield from textwrap.wrap(event.distance(self.total), width=self.width)
@@ -264,7 +262,7 @@ class DesertBus:
             yield "NEW RECORD!"
 
         while True:
-            yield textwrap.wrap(
+            yield from textwrap.wrap(
                 f"{next_other[0] - self.total} until {next_other[1]}", width=self.width
             )
             next_other = next(others)
