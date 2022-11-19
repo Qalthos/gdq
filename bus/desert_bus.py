@@ -107,12 +107,14 @@ class DesertToonie(Dollar):
 
 class DesertBus:
     _start: datetime
+    _omega: datetime | None
     total: Dollar
     offline: bool = False
     width: int = 0
 
-    def __init__(self, start: datetime):
+    def __init__(self, start: datetime, omega: datetime | None, **kwargs):
         self._start = start
+        self._omega = omega
 
     @property
     def hours(self) -> int:
@@ -136,6 +138,12 @@ class DesertBus:
     @property
     def start(self) -> datetime:
         return self._start
+
+    @property
+    def omega(self) -> datetime:
+        if self._omega is not None:
+            return self._omega
+        return self.end - timedelta(hours=4)
 
     @property
     def end(self) -> datetime:
@@ -224,7 +232,7 @@ class DesertBus:
 
     def shift_banners(self, timestamp: datetime) -> str:
         # Shift detection
-        if timestamp > self.end - timedelta(hours=4):
+        if timestamp > self.omega:
             return "|".join(even_banner(list("OMEGA"), self.width))
 
         banners = even_banner(

@@ -57,7 +57,7 @@ def main() -> None:
         print("No marathon named bus found")
         sys.exit(1)
 
-    bus = DesertBus(start=event_config["start"])
+    bus = DesertBus(**event_config)
     bus.total = Dollar(0)
 
     config = PNConfiguration()
