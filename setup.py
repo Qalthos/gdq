@@ -1,17 +1,18 @@
 from setuptools import find_packages, setup
 
 setup(
-    name="db-cli",
-    version="1.0",
-    packages=find_packages(exclude=['tests']),
+    name="gdq-cli",
+    version="2.0",
+    packages=find_packages(exclude=["tests"]),
     install_requires=[
         "pubnub",
-        "textual",
+        "requests",
         "xdg",
     ],
     entry_points={
-        'console_scripts': [
-            'bus=bus.__main__:main',
+        "console_scripts": [
+            "bus=bus.__main__:main",
+            "gdq=gdq.__main__:main",
         ],
     },
 )
