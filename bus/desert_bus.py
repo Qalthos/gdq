@@ -80,12 +80,13 @@ RECORDS = [
         number="9",
         subtitle="The Joy of Bussing",
     ),
-    Record(year=2016, total=Dollar(695_242.57), number="X"),
+    Record(year=2016, total=Dollar(695_242.57), number="X", subtitle="To Be Continued"),
     Record(year=2017, total=Dollar(655_402.56)),
     Record(year=2018, total=Dollar(730_099.90), subtitle="The Bus Place"),
     Record(year=2019, total=Dollar(865_015.00), subtitle="Untitled Bus Fundraiser"),
-    Record(year=2020, total=Dollar(1_052_902.40)),
+    Record(year=2020, total=Dollar(1_052_902.40), subtitle="Belopa"),
     Record(year=2021, total=Dollar(1_223_108.83)),
+    Record(year=2021, total=Dollar(1_134_380.73), subtitle="Target Kids"),
 ]
 FakeRecord = tuple[Dollar, str, bool]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
@@ -237,7 +238,13 @@ class DesertBus:
     def shift_banners(self, timestamp: datetime) -> str:
         # Shift detection
         if timestamp > self.omega:
-            return "|".join(even_banner(list("OMEGA"), self.width))
+            omega = even_banner(list("ΩMEGA"), self.width)
+            for index, shift in enumerate(SHIFTS):
+                if index >= 2:
+                    index += 1
+                omega[index] = f"{shift.color};7m{omega[index]}\x1b[0m"
+            omega[2] = f"\x1b[37;7m{omega[2]}\x1b[0m"
+            return "|".join(omega)
 
         banners = even_banner(
             [shift.name for shift in SHIFTS], self.width, fill_char="═"
