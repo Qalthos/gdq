@@ -23,17 +23,17 @@ class Display:
         self.refresh_terminal()
         print("\x1b[H", end="")
 
-        self._header_size = 1
+        self._header_size = 0
         for line in header:
             print(line)
             self._header_size += 1
 
     def update_body(self, body: Iterable[str]) -> None:
         self.refresh_terminal()
-        current_line = self._header_size
+        current_line = self._header_size + 1
 
         for line in body:
-            if current_line == self.term_h - self._footer_size:
+            if current_line == self.term_h - self._footer_size + 1:
                 break
             print(f"\x1b[{current_line}H{line}", end="\x1b[K")
             current_line += 1
