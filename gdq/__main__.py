@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
-import toml
+import tomllib
 import xdg
 
 from gdq import runners, utils
@@ -14,7 +14,9 @@ from gdq.display.raw import Display
 from gdq.events import Marathon
 
 
-def refresh_event(marathon: Marathon, base_args: argparse.Namespace, event_args: argparse.Namespace) -> bool:
+def refresh_event(
+    marathon: Marathon, base_args: argparse.Namespace, event_args: argparse.Namespace
+) -> bool:
     # Recaclulate terminal size
     marathon.refresh_all()
 
@@ -54,8 +56,8 @@ def list_events(config: Mapping[str, Any]) -> None:
 
 
 def main() -> None:
-    with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml") as toml_file:
-        config = toml.load(toml_file)
+    with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml", "rb") as toml_file:
+        config = tomllib.load(toml_file)
 
     base_parser = runners.get_base_parser()
     base_args, extra_args = base_parser.parse_known_args()
