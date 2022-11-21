@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from datetime import timedelta
 import sys
 import threading
 import time
@@ -26,6 +27,8 @@ def update_display(bus: DesertBus) -> None:
         display.update_body(bus.render())
         display.update_footer(bus.footer())
         print(flush=True, end="")
+        if utils.now > bus.end + timedelta(hours=2):
+            return
         time.sleep(0.1)
 
 
@@ -84,6 +87,12 @@ def main() -> None:
         args=(bus,),
     )
     display_thread.start()
+    try:
+        display_thread.join()
+    except Exception as e:
+        print(e)
+    finally:
+        pubnub.unsubscribe_all()
 
 
 if __name__ == "__main__":

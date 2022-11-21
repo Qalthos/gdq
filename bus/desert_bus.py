@@ -112,9 +112,9 @@ class DesertBus:
     offline: bool = False
     width: int = 0
 
-    def __init__(self, start: datetime, omega: datetime | None, **kwargs):
+    def __init__(self, start: datetime, **kwargs):
         self._start = start
-        self._omega = omega
+        self._omega = kwargs.get("omega")
 
     @property
     def hours(self) -> int:
@@ -155,7 +155,7 @@ class DesertBus:
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
             yield self.shift_banners(utils.now)
         else:
-            yield "It's over!"
+            yield "It's over!".center(self.width)
 
         yield "|".join(
             even_banner(
@@ -177,14 +177,18 @@ class DesertBus:
             yield "|".join(even_banner(totals, self.width))
 
     def render(self) -> Iterable[str]:
-        if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
+        if utils.now < self.end + timedelta(hours=1):
             yield from self.print_records()
 
     def footer(self, overall: bool = False) -> Iterable[str]:
+        if self.end < utils.now:
+            yield "OVERTIME".center(self.width)
+            return
+
         start = self.start
         elapsed = max(utils.now - start, timedelta())
         total = timedelta(hours=self.hours)
-        remaining = min(start + total - utils.now, total)
+        remaining = min(self.end - utils.now, total)
 
         hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
         hours_left = f"[{utils.timedelta_as_hours(remaining)}]"

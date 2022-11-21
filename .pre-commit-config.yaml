@@ -19,3 +19,5 @@ repos:
     rev: v0.0.116
     hooks:
       - id: ruff
+        args:
+          - "--fix"
