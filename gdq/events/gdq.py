@@ -2,7 +2,7 @@ import argparse
 import operator
 from collections import namedtuple
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Union
 
 from gdq import money, utils
@@ -79,8 +79,10 @@ class GDQTracker(TrackerBase):
         for event in events:
             if event.short_name in self.record_offsets:
                 event.offset = self.record_offsets[event.short_name]
-
-        self.current_event = events.pop(0)
+            if event.start_time > datetime.utcnow().replace(tzinfo=timezone.utc) - timedelta(days=10):
+                self.current_event = event
+                events.remove(event)
+                break
 
         self.records = sorted(events, key=operator.attrgetter("total"))
 
