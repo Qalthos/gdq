@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 import sys
-from pathlib import Path
-
-from pubnub.pubnub import PubNub, PNConfiguration, SubscribeCallback
-from pubnub.enums import PNReconnectionPolicy
-import requests
-from threading import Thread
 import time
 import tomllib
-import xdg
+from pathlib import Path
+from threading import Thread
 
+import requests
+import xdg
+from pubnub.enums import PNReconnectionPolicy
+from pubnub.pubnub import PNConfiguration, PubNub, SubscribeCallback
+
+from bus.desert_bus import DesertBus
 from gdq import utils
 from gdq.display.raw import Display
 from gdq.money import Dollar
-from bus.desert_bus import DesertBus
 
 
 class DisplayThread(Thread):
@@ -52,7 +52,7 @@ class SubscribeHandler(SubscribeCallback):
 
 def main() -> None:
     config_path = Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml"
-    with open(config_path, "rb") as toml_file:
+    with config_path.open("rb") as toml_file:
         config = tomllib.load(toml_file)
 
     event_config = config.get("bus")
@@ -61,7 +61,7 @@ def main() -> None:
         sys.exit(1)
 
     bus = DesertBus(start=event_config["start"])
-    state = requests.get("https://desertbus.org/wapi/init").json()
+    state = requests.get("https://desertbus.org/wapi/init", timeout=10).json()
     bus.total = Dollar(state["total"])
 
     display = DisplayThread(bus)

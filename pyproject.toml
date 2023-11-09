@@ -17,7 +17,7 @@ fix = true
 line-length = 120
 builtins = ["__"]
 select = ["ALL"]
-ignore = []
+ignore = ["ANN", "D", "T201"]
 target-version = "py311"
 
 [tool.setuptools.packages.find]
