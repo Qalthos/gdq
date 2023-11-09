@@ -1,5 +1,4 @@
 import argparse
-from datetime import datetime
 
 from gdq.events.horaro import HoraroTracker
 from gdq.runners.base import RunnerBase

@@ -1,5 +1,4 @@
 import argparse
-from datetime import datetime, timedelta
 
 from gdq.events.desert_bus import DesertBus
 from gdq.runners.base import RunnerBase
