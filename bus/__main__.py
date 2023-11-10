@@ -4,11 +4,13 @@ import time
 import tomllib
 from pathlib import Path
 from threading import Thread
+from typing import Any, Self
 
 import requests
 import xdg
 from pubnub.enums import PNReconnectionPolicy
 from pubnub.pubnub import PNConfiguration, PubNub, SubscribeCallback
+from pubnub.workers import PNMessageResult, PNStatus
 
 from bus.desert_bus import DesertBus
 from gdq import utils
@@ -20,12 +22,12 @@ class DisplayThread(Thread):
     bus: DesertBus
     display: Display
 
-    def __init__(self, bus: DesertBus) -> None:
+    def __init__(self: Self, bus: DesertBus) -> None:
         super().__init__()
         self.bus = bus
         self.display = Display()
 
-    def run(self) -> None:
+    def run(self: Self) -> None:
         while True:
             utils.update_now()
             self.display.refresh_terminal()
@@ -38,11 +40,19 @@ class DisplayThread(Thread):
 
 
 class SubscribeHandler(SubscribeCallback):
-    def __init__(self, bus: DesertBus, *args, **kwargs):
+    def __init__(
+        self: Self,
+        bus: DesertBus,
+        *args: list[Any],
+        **kwargs: dict[Any, Any],
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.bus = bus
 
-    def message(self, pubnub, message) -> None:
+    def status(self: Self, pubnub: PubNub, status: PNStatus) -> None:
+        return super().status(pubnub, status)
+
+    def message(self: Self, pubnub: PubNub, message: PNMessageResult) -> None:
         self.bus.total = Dollar(message.message)
 
         if bool(utils.now <= self.bus.end):

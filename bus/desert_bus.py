@@ -3,13 +3,11 @@ import sys
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import Self
 
 from gdq import utils
 from gdq.models.bus_shift import SHIFTS
 from gdq.money import Dollar
-
-DB_SUB_KEY = "sub-cbd7f5f5-1d3f-11e2-ac11-877a976e347c"
-DB_UUID = "b71bca24-0ad6-463b-9c47-953bfb0c120a"
 
 
 @dataclass(order=True, frozen=True)
@@ -20,7 +18,7 @@ class Record:
     number: str = ""
     subtitle: str = ""
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         name = (
             f"Desert Bus{' For Hope' if self.hope else ''} {self.number or self.year}"
         )
@@ -29,10 +27,10 @@ class Record:
         return name
 
     @property
-    def hours(self) -> int:
+    def hours(self: Self) -> int:
         return dollars_to_hours(self.total)
 
-    def distance(self, current: Dollar) -> str:
+    def distance(self: Self, current: Dollar) -> str:
         next_level = self.total - current
         if next_level <= Dollar():
             return ""
@@ -101,14 +99,14 @@ LIFETIME = sum([record.total for record in RECORDS], Dollar())
 class DesertBuck(Dollar):
     _symbol = "d฿"
 
-    def __init__(self, value: Dollar):
+    def __init__(self: Self, value: Dollar) -> None:
         super().__init__(value / RECORDS[0].total)
 
 
 class DesertToonie(Dollar):
     _symbol = "d฿²"
 
-    def __init__(self, value: Dollar):
+    def __init__(self: Self, value: Dollar) -> None:
         super().__init__(value / RECORDS[1].total)
 
 
@@ -118,15 +116,15 @@ class DesertBus:
     offline: bool = False
     width: int = 0
 
-    def __init__(self, start: datetime):
+    def __init__(self: Self, start: datetime) -> None:
         self._start = start
 
     @property
-    def hours(self) -> int:
+    def hours(self: Self) -> int:
         return dollars_to_hours(self.total)
 
     @property
-    def estimate(self) -> Dollar:
+    def estimate(self: Self) -> Dollar:
         future_hours = 0
         future_total = self.total
         while future_hours != dollars_to_hours(future_total):
@@ -141,14 +139,14 @@ class DesertBus:
         return future_total
 
     @property
-    def start(self) -> datetime:
+    def start(self: Self) -> datetime:
         return self._start
 
     @property
-    def end(self) -> datetime:
+    def end(self: Self) -> datetime:
         return self.start + timedelta(hours=self.hours)
 
-    def header(self, *, extended: bool = False) -> Iterable[str]:
+    def header(self: Self, *, extended: bool = False) -> Iterable[str]:
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(self.width)
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
@@ -175,11 +173,11 @@ class DesertBus:
             totals.append(f"{self.total + LIFETIME} lifetime")
             yield "|".join(even_banner(totals, self.width))
 
-    def render(self) -> Iterable[str]:
+    def render(self: Self) -> Iterable[str]:
         if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
 
-    def footer(self, *, overall: bool = False) -> Iterable[str]:
+    def footer(self: Self, *, overall: bool = False) -> Iterable[str]:
         start = self.start
         elapsed = max(utils.now - start, timedelta())
         total = timedelta(hours=self.hours)
@@ -229,7 +227,7 @@ class DesertBus:
 
         yield f"{hours_done}{progress}{hours_left}"
 
-    def shift_banners(self, timestamp: datetime) -> str:
+    def shift_banners(self: Self, timestamp: datetime) -> str:
         # Shift detection
         if timestamp > self.end - timedelta(hours=4):
             return "|".join(even_banner(list("OMEGA"), self.width))
@@ -248,7 +246,7 @@ class DesertBus:
 
         return "|".join(banners)
 
-    def print_records(self) -> Iterable[str]:
+    def print_records(self: Self) -> Iterable[str]:
         yield ""
 
         others = self.artificial_records()
@@ -275,7 +273,7 @@ class DesertBus:
             yield f"{next_other[0] - self.total} until {next_other[1]}"
             next_other = next(others)
 
-    def artificial_records(self) -> Iterator[FakeRecord]:
+    def artificial_records(self: Self) -> Iterator[FakeRecord]:
         records: list[tuple[FakeRecord, Iterator[FakeRecord]]] = [
             (
                 (self.estimate, f"current estimate ({self.estimate})", False),
@@ -296,7 +294,7 @@ class DesertBus:
             records.append((next(generator), generator))
             yield value
 
-    def next_hours(self) -> Iterator[FakeRecord]:
+    def next_hours(self: Self) -> Iterator[FakeRecord]:
         hour = dollars_to_hours(self.total) + 1
         while True:
             if hour % 24 == 0:
@@ -307,7 +305,7 @@ class DesertBus:
                 yield hours_to_dollars(hour), f"hour {hour}", True
             hour += 1
 
-    def fun_numbers(self, *, lifetime: bool = False) -> Iterator[FakeRecord]:
+    def fun_numbers(self: Self, *, lifetime: bool = False) -> Iterator[FakeRecord]:
         zeroes = 0
         while True:
             for fives in range(2, 20):
