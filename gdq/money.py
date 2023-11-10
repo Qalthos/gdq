@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, TypeVar
+from typing import Self, TypeVar
 
 from gdq import utils
 
@@ -15,14 +15,20 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
         width -= 6
 
     if current >= end:
-        prog_bar = utils.progress_bar(start.to_float(), current.to_float(), end.to_float(), width)
+        prog_bar = utils.progress_bar(
+            start.to_float(),
+            current.to_float(),
+            end.to_float(),
+            width,
+        )
     else:
         chars = " ▏▎▍▌▋▊▉█"
 
-        if (end - start).to_float() > 0:
-            percent = ((current - start) / (end - start) * 100)
-        else:
-            percent = 0
+        percent = (
+            (current - start) / (end - start) * 100
+            if (end - start).to_float() > 0
+            else 0
+        )
 
         blocks, fraction = 0, 0
         if percent:
@@ -33,14 +39,16 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
         if blocks >= width:
             blocks = width - 1
             fraction = -1
-        remainder = (width - blocks - 1)
+        remainder = width - blocks - 1
 
         if remainder > blocks:
             suffix = " " * (remainder - len(current))
             prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
         else:
             prefix = chars[-1] * (blocks - len(current))
-            prog_bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+            prog_bar = (
+                f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+            )
 
     if start:
         return f"{start.short: <6s}▕{prog_bar}▏{end.short: >6s}"
@@ -48,93 +56,78 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
 
 
 class Money(ABC):
-    _value: int
+    value: int
     _symbol: str
     _exponent: int = 0
 
-    def __init__(self, value: float = 0):
-        self._value = round(value * (10 ** self._exponent))
+    def __init__(self: Self, value: float = 0) -> None:
+        self.value = round(value * (10**self._exponent))
 
-    def __repr__(self) -> str:
+    def __repr__(self: Self) -> str:
         return f"{type(self).__name__}({self.to_float()})"
 
-    def __bool__(self) -> bool:
-        return bool(self._value)
+    def __bool__(self: Self) -> bool:
+        return bool(self.value)
 
-    def __len__(self) -> int:
+    def __len__(self: Self) -> int:
         return len(str(self))
 
     @property
-    def symbol(self) -> str:
+    def symbol(self: Self) -> str:
         return self._symbol
 
     # Operator methods
-    def __neg__(self: M) -> M:
+    def __neg__(self: Self) -> Self:
         result = type(self)()
-        result._value = -self._value
+        result.value = -self.value
         return result
 
-    def __add__(self: M, other: M) -> M:
-        self._validate(other)
-
+    def __add__(self: Self, other: Self) -> Self:
         result = type(self)()
-        result._value = self._value + other._value
+        result.value = self.value + other.value
         return result
 
-    def __sub__(self: M, other: M) -> M:
-        self._validate(other)
-
+    def __sub__(self: Self, other: Self) -> Self:
         result = type(self)()
-        result._value = self._value - other._value
+        result.value = self.value - other.value
         return result
 
-    def __mul__(self: M, other: float) -> M:
+    def __mul__(self: Self, other: float) -> Self:
         result = type(self)()
-        result._value = round(self._value * other)
+        result.value = round(self.value * other)
         return result
 
-    def __truediv__(self: M, other: M) -> float:
-        self._validate(other)
-
-        return self._value / other._value
+    def __truediv__(self: Self, other: Self) -> float:
+        return self.value / other.value
 
     # Ordering methods
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, type(self)):
-            raise TypeError(f"unsupported operand type(s) for ==: '{type(self).__name__}' and '{type(other).__name__}'")
-        return bool(self._value == other._value)
+    def __eq__(self: Self, other: object) -> bool:
+        if not isinstance(other, Money):
+            return NotImplemented
+        return bool(self.value == other.value)
 
-    def __lt__(self: M, other: M) -> bool:
-        self._validate(other)
-        return self._value < other._value
+    def __lt__(self: Self, other: Self) -> bool:
+        return self.value < other.value
 
-    def __le__(self: M, other: M) -> bool:
-        self._validate(other)
-        return self._value <= other._value
+    def __le__(self: Self, other: Self) -> bool:
+        return self.value <= other.value
 
-    def __gt__(self: M, other: M) -> bool:
-        self._validate(other)
-        return self._value > other._value
+    def __gt__(self: Self, other: Self) -> bool:
+        return self.value > other.value
 
-    def __ge__(self: M, other: M) -> bool:
-        self._validate(other)
-        return self._value >= other._value
+    def __ge__(self: Self, other: Self) -> bool:
+        return self.value >= other.value
 
     # Casting methods
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         return f"{self.symbol}{self.to_float():,.0{self._exponent}f}"
 
-    def to_float(self) -> float:
-        return float(self._value / (10 ** self._exponent))
+    def to_float(self: Self) -> float:
+        return float(self.value / (10**self._exponent))
 
     @property
-    def short(self) -> str:
+    def short(self: Self) -> str:
         return f"{self.symbol}{utils.short_number(self.to_float())}"
-
-    # Type validation check
-    def _validate(self, other: Any) -> None:
-        if not isinstance(other, type(self)):
-            raise TypeError(f"unsupported operand type(s): '{type(self).__name__}' and '{type(other).__name__}'")
 
 
 class Dollar(Money):
