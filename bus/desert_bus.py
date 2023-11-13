@@ -8,9 +8,6 @@ from gdq import utils
 from gdq.models.bus_shift import SHIFTS
 from gdq.money import Dollar
 
-DB_SUB_KEY = "sub-cbd7f5f5-1d3f-11e2-ac11-877a976e347c"
-DB_UUID = "b71bca24-0ad6-463b-9c47-953bfb0c120a"
-
 
 @dataclass(order=True, frozen=True)
 class Record:
@@ -249,8 +246,6 @@ class DesertBus:
         return "|".join(banners)
 
     def print_records(self) -> Iterable[str]:
-        yield ""
-
         others = self.artificial_records()
         next_other = next(others)
         while next_other[0] <= self.total:

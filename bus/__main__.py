@@ -33,8 +33,8 @@ class DisplayThread(Thread):
             self.display.update_header(self.bus.header())
             self.display.update_body(self.bus.render())
             self.display.update_footer(self.bus.footer())
-            print(flush=True)
-            time.sleep(1)
+            print(flush=True, end="")
+            time.sleep(0.2)
 
 
 class SubscribeHandler(SubscribeCallback):
@@ -45,7 +45,7 @@ class SubscribeHandler(SubscribeCallback):
     def message(self, pubnub, message) -> None:
         self.bus.total = Dollar(message.message)
 
-        if bool(utils.now <= self.bus.end):
+        if bool(utils.now >= self.bus.end):
             pubnub.stop()
             sys.exit(0)
 
