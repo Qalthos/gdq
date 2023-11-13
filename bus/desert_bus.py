@@ -246,8 +246,6 @@ class DesertBus:
         return "|".join(banners)
 
     def print_records(self) -> Iterable[str]:
-        yield ""
-
         others = self.artificial_records()
         next_other = next(others)
         while next_other[0] <= self.total:
