@@ -21,3 +21,11 @@ SHIFTS = [
     Shift(color="\x1b[34", start_hour=18, name="Night Watch"),
     Shift(color="\x1b[35", start_hour=0, name="Zeta"),
 ]
+
+OMEGA = [
+    Shift(color="\x1b[33", start_hour=-1, name="O"),
+    Shift(color="\x1b[31", start_hour=-1, name="M"),
+    Shift(color="\x1b[39", start_hour=-1, name="E"),
+    Shift(color="\x1b[34", start_hour=-1, name="G"),
+    Shift(color="\x1b[35", start_hour=-1, name="A"),
+]

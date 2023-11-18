@@ -4,8 +4,8 @@ from collections.abc import Iterable, Iterator
 from datetime import datetime, timedelta
 
 from bus.records import LIFETIME, RECORDS, dollars_to_hours, hours_to_dollars
+from bus.shifts import OMEGA, SHIFTS
 from gdq import utils
-from gdq.models.bus_shift import SHIFTS
 from gdq.money import Dollar
 
 FakeRecord = tuple[Dollar, str, bool]
@@ -143,17 +143,18 @@ class DesertBus:
         yield f"{hours_done}{progress}{hours_left}"
 
     def shift_banners(self, timestamp: datetime) -> str:
-        # Shift detection
-        if timestamp > self.end - timedelta(hours=4):
-            return "|".join(even_banner(list("OMEGA"), self.width))
+        shifts = SHIFTS
+        # OMEGA detected
+        if timestamp > self.end - timedelta(hours=3):
+            shifts = OMEGA
 
         banners = even_banner(
-            [shift.name for shift in SHIFTS],
+            [shift.name for shift in shifts],
             self.width,
             fill_char="═",
         )
 
-        for index, shift in enumerate(SHIFTS):
+        for index, shift in enumerate(shifts):
             boldness = 2
             if shift.is_active(timestamp):
                 boldness = 7
