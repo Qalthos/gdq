@@ -24,4 +24,7 @@ target-version = "py311"
 "tests/*" = ["S101", "PLR2004"]
 
 [tool.setuptools.packages.find]
-exclude = ["tests"]
+where = ["src"]
+
+[tool.setuptools.package-data]
+bus = ["*.json"]
