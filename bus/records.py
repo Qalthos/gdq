@@ -1,7 +1,7 @@
 import json
 import math
 from dataclasses import dataclass
-from pathlib import Path
+from importlib import resources
 from typing import Self
 
 from gdq.money import Dollar
@@ -46,8 +46,7 @@ def hours_to_dollars(hours: int, rate: float = 1.07) -> Dollar:
     return Dollar((1 - (rate**hours)) / (1 - rate))
 
 
-with Path("bus/records.json").open() as jsonfile:
-    records = json.load(jsonfile)
-    RECORDS: list[Record] = [Record.from_json(record) for record in records]
-
+records_file = resources.files("bus") / "records.json"
+records = json.loads(records_file.read_text())
+RECORDS: list[Record] = [Record.from_json(record) for record in records]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
