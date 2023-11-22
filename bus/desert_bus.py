@@ -1,10 +1,10 @@
 import math
 import sys
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from datetime import datetime, timedelta
 
 from bus.records import LIFETIME, RECORDS, dollars_to_hours, hours_to_dollars
-from bus.shifts import OMEGA, SHIFTS
+from bus.shifts import OMEGA, SHIFTS, Shift
 from gdq import utils
 from gdq.money import Dollar
 
@@ -42,14 +42,14 @@ class DesertBus:
     def estimate(self) -> Dollar:
         future_hours = 0
         future_total = self.total
+        current_hours = min(utils.now - self.start, timedelta(hours=self.hours))
         while future_hours != dollars_to_hours(future_total):
             future_hours = dollars_to_hours(future_total)
-            if utils.now > self.start:
-                future_multiplier = timedelta(hours=future_hours) / (
-                    utils.now - self.start
-                )
-            else:
-                future_multiplier = 1
+            future_multiplier = (
+                timedelta(hours=future_hours) / (current_hours)
+                if utils.now > self.start
+                else 1
+            )
             future_total = self.total * future_multiplier
         return future_total
 
@@ -93,14 +93,13 @@ class DesertBus:
             yield from self.print_records()
 
     def footer(self, *, overall: bool = False) -> Iterable[str]:
-        start = self.start
-        elapsed = max(utils.now - start, timedelta())
         total = timedelta(hours=self.hours)
-        remaining = min(start + total - utils.now, total)
+        elapsed = max(min(utils.now - self.start, total), timedelta())
+        remaining = total - elapsed
 
         hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
         hours_left = f"[{utils.timedelta_as_hours(remaining)}]"
-        progress_width = self.width - len(hours_done) - len(hours_left) - 3
+        progress_width = self.width - len(hours_done) - len(hours_left) - 4
 
         # Scaled to last passed record
         last_record = timedelta()
@@ -143,7 +142,7 @@ class DesertBus:
         yield f"{hours_done}{progress}{hours_left}"
 
     def shift_banners(self, timestamp: datetime) -> str:
-        shifts = SHIFTS
+        shifts: Sequence[Shift] = SHIFTS
         # OMEGA detected
         if timestamp > self.end - timedelta(hours=3):
             shifts = OMEGA
