@@ -3,10 +3,11 @@ import sys
 from collections.abc import Iterable, Iterator, Sequence
 from datetime import datetime, timedelta
 
-from bus.records import LIFETIME, RECORDS, dollars_to_hours, hours_to_dollars
-from bus.shifts import OMEGA, SHIFTS, Shift
 from gdq import utils
 from gdq.money import Dollar
+
+from bus.records import LIFETIME, RECORDS, dollars_to_hours, hours_to_dollars
+from bus.shifts import OMEGA, SHIFTS, Shift
 
 FakeRecord = tuple[Dollar, str, bool]
 
@@ -61,13 +62,13 @@ class DesertBus:
     def end(self) -> datetime:
         return self.start + timedelta(hours=self.hours)
 
-    def header(self, *, extended: bool = False) -> Iterable[str]:
+    def header(self, *, extended: bool = True) -> Iterable[str]:
         if utils.now < self.start:
             yield f"Starting in {self.start - utils.now}".center(self.width)
         elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
             yield self.shift_banners(utils.now)
         else:
-            yield "It's over!"
+            yield "It's over!".center(self.width)
 
         yield "|".join(
             even_banner(
@@ -92,7 +93,7 @@ class DesertBus:
         if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
 
-    def footer(self, *, overall: bool = False) -> Iterable[str]:
+    def footer(self, *, overall: bool = True) -> Iterable[str]:
         total = timedelta(hours=self.hours)
         elapsed = max(min(utils.now - self.start, total), timedelta())
         remaining = total - elapsed
@@ -194,11 +195,11 @@ class DesertBus:
             ),
         ]
 
-        hours = self.next_hours()
+        hours = next_hours(self.total)
         records.append((next(hours), hours))
-        numbers = self.fun_numbers()
+        numbers = fun_numbers(self.total)
         records.append((next(numbers), numbers))
-        lifetimes = self.fun_numbers(lifetime=True)
+        lifetimes = fun_numbers(self.total, lifetime=True)
         records.append((next(lifetimes), lifetimes))
 
         while True:
@@ -207,28 +208,30 @@ class DesertBus:
             records.append((next(generator), generator))
             yield value
 
-    def next_hours(self) -> Iterator[FakeRecord]:
-        hour = dollars_to_hours(self.total) + 1
-        while True:
-            if hour % 24 == 0:
-                yield hours_to_dollars(
-                    hour,
-                ), f"hour {hour} ({hour // 24} days!)", True
-            else:
-                yield hours_to_dollars(hour), f"hour {hour}", True
-            hour += 1
 
-    def fun_numbers(self, *, lifetime: bool = False) -> Iterator[FakeRecord]:
-        zeroes = 0
-        while True:
-            for fives in range(2, 20):
-                current = Dollar(fives * 5 * 10**zeroes)
-                if lifetime:
-                    if self.total + LIFETIME < current:
-                        yield current - LIFETIME, f"{current} lifetime", True
-                elif self.total < current:
-                    yield current, str(current), True
-            zeroes += 1
+def next_hours(total) -> Iterator[FakeRecord]:
+    hour = dollars_to_hours(total) + 1
+    while True:
+        if hour % 24 == 0:
+            yield hours_to_dollars(
+                hour,
+            ), f"hour {hour} ({hour // 24} days!)", True
+        else:
+            yield hours_to_dollars(hour), f"hour {hour}", True
+        hour += 1
+
+
+def fun_numbers(total, *, lifetime: bool = False) -> Iterator[FakeRecord]:
+    zeroes = 0
+    while True:
+        for fives in range(2, 20):
+            current = Dollar(fives * 5 * 10**zeroes)
+            if lifetime:
+                if total + LIFETIME < current:
+                    yield current - LIFETIME, f"{current} lifetime", True
+            elif total < current:
+                yield current, str(current), True
+        zeroes += 1
 
 
 def even_banner(items: list[str], width: int = 80, fill_char: str = " ") -> list[str]:
