@@ -47,3 +47,5 @@ repos:
       - id: mypy
         additional_dependencies:
           - types-requests
+          - xdg
+        args: [--strict]

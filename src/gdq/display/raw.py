@@ -13,7 +13,7 @@ class Display:
     term_w: int
     term_h: int
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.refresh_terminal()
 
     def refresh_terminal(self) -> None:

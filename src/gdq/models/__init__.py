@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
-from typing import Union
 
 from gdq import money, utils
 
@@ -39,8 +38,7 @@ class Event(ABC):
     def offset(self) -> money.Money:
         return self._offset
 
-    @offset.setter
-    def offset(self, offset: float) -> None:
+    def update_offset(self, offset: float) -> None:
         self._offset = self.currency(offset)
 
 
@@ -130,7 +128,7 @@ class Run:
     game: str
     platform: str
     category: str
-    runners: list[Union[Runner, str]]
+    runners: list[Runner | str]
     incentives: list[Incentive]
 
     start: datetime
@@ -140,14 +138,14 @@ class Run:
 
     @property
     def runner_str(self) -> str:
-        return ", ".join((str(runner) for runner in self.runners))
+        return ", ".join(str(runner) for runner in self.runners)
 
     @property
     def delta(self) -> str:
         if self.start < utils.now:
             return "  NOW  "
         delta = self.start - utils.now
-        if delta.days >= 10:
+        if delta.days >= 1:
             return f"{delta.days} DAYS"
         hours, minutes = divmod(delta.seconds // 60, 60)
         return f"{delta.days}:{hours:02d}:{minutes:02d}"
@@ -188,15 +186,19 @@ class Run:
             desc_width = max(len(self.game_desc), len(self.category))
             if desc_width > width:
                 # If display too long, truncate run
-                self.game = self.game[:width - 1] + "…"
-                self.category = self.category[:width - 1] + "…"
+                self.game = self.game[: width - 1] + "…"
+                self.category = self.category[: width - 1] + "…"
 
-            yield "{0}┼{1}┤".format("─" * 7, "─" * (width - 1))
+            yield "{}┼{}┤".format("─" * 7, "─" * (width - 1))
             yield f"{self.delta}│{self.game_desc:<{width - 1}s}│"
             yield f"{self.str_estimate: >7s}│{self.category:<{width - 1}}│"
 
         else:
-            desc_width = max(width - 2 - len(self.runner_str), len(self.game_desc), len(self.category))
+            desc_width = max(
+                width - 2 - len(self.runner_str),
+                len(self.game_desc),
+                len(self.category),
+            )
 
             runner = "│" + self.runner_str + "│"
             if desc_width + len(runner) > width:
@@ -217,7 +219,10 @@ class Run:
 
         # Handle incentives
         if self.incentives and not args.hide_incentives:
-            align_width = max(args.min_width, *(len(incentive) for incentive in self.incentives))
+            align_width = max(
+                args.min_width,
+                *(len(incentive) for incentive in self.incentives),
+            )
             for incentive in self.incentives:
                 yield from incentive.render(width, align_width, args)
 
@@ -228,7 +233,7 @@ class ChoiceIncentive(Incentive):
 
     @property
     def max_option(self) -> money.Money:
-        return max((option.total for option in self.options))
+        return max(option.total for option in self.options)
 
     def __len__(self) -> int:
         if self.options:
@@ -249,11 +254,17 @@ class ChoiceIncentive(Incentive):
             rest_size = width - desc_size
             lines = wrap(self.description, rest_size - 1)
             if lines:
-                incentive.append(f"       ├┬{self.short_desc:<{desc_size}s}  {lines[0]: <{rest_size}s}│")
-                for line in lines[1:]:
-                    incentive.append(f"       ││{'':<{desc_size}s}  {line: <{rest_size}s}│")
+                incentive.append(
+                    f"       ├┬{self.short_desc:<{desc_size}s}  {lines[0]: <{rest_size}s}│",
+                )
+                incentive.extend(
+                    f"       ││{'':<{desc_size}s}  {line: <{rest_size}s}│"
+                    for line in lines[1:]
+                )
             else:
-                incentive.append(f"       ├┬{self.short_desc:<{desc_size}s}  {'': <{rest_size}s}│")
+                incentive.append(
+                    f"       ├┬{self.short_desc:<{desc_size}s}  {'': <{rest_size}s}│",
+                )
 
             sorted_options = sorted(self.options, key=attrgetter("total"), reverse=True)
             for index, option in enumerate(sorted_options):
@@ -262,27 +273,47 @@ class ChoiceIncentive(Incentive):
                 except ZeroDivisionError:
                     percent = 0
 
-                if percent < args.min_percent and index >= args.min_options and index != len(self.options) - 1:
+                if (
+                    percent < args.min_percent
+                    and index >= args.min_options
+                    and index != len(self.options) - 1
+                ):
                     remaining = sorted_options[index:]
                     option_totals = [option.total for option in remaining]
                     total = sum(option_totals, self.currency())
                     description = f"And {len(remaining)} more"
-                    prog_bar = utils.progress_bar(0, total.to_float(), self.max_option.to_float(), width - align - 7)
-                    incentive.append(f"       │╵ {description:<{align}s}▕{prog_bar}▏{total.short: >6s}│")
+                    prog_bar = utils.progress_bar(
+                        0,
+                        total.to_float(),
+                        self.max_option.to_float(),
+                        width - align - 7,
+                    )
+                    incentive.append(
+                        f"       │╵ {description:<{align}s}▕{prog_bar}▏{total.short: >6s}│",
+                    )
                     break
 
-                prog_bar = utils.progress_bar(0, option.total.to_float(), self.max_option.to_float(), width - align - 7)
+                prog_bar = utils.progress_bar(
+                    0,
+                    option.total.to_float(),
+                    self.max_option.to_float(),
+                    width - align - 7,
+                )
 
                 leg = "├│"
                 if index == len(self.options) - 1:
                     leg = "└ "
 
-                incentive.append(f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total.short: >6s}│")
+                incentive.append(
+                    f"       │{leg[0]}▶{option.name:<{align}s}▕{prog_bar}▏{option.total.short: >6s}│",
+                )
                 if option.description and option.description != option.name:
                     lines = wrap(option.description, width - 1)
                     incentive.append(f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│")
-                    for line in lines[1:]:
-                        incentive.append(f"       │{leg[1]}   {line.ljust(width - 1)}│")
+                    incentive.extend(
+                        f"       │{leg[1]}   {line.ljust(width - 1)}│"
+                        for line in lines[1:]
+                    )
 
                 if self.closed:
                     break
@@ -313,14 +344,23 @@ class DonationIncentive(Incentive):
             width -= 3
 
             lines = wrap(self.description, width)
-            incentive_bar = money.progress_bar_money(self.currency(), self.current, self.total, width - align)
+            incentive_bar = money.progress_bar_money(
+                self.currency(),
+                self.current,
+                self.total,
+                width - align,
+            )
             if lines:
                 incentive.append(f"       ├┬{lines[0].ljust(width + 1)}│")
-                for line in lines[1:]:
-                    incentive.append(f"       ││{line.ljust(width + 1)}│")
-
-                incentive.append(f"       │└▶{self.short_desc:<{align}s}{incentive_bar}│")
+                incentive.extend(
+                    f"       ││{line.ljust(width + 1)}│" for line in lines[1:]
+                )
+                incentive.append(
+                    f"       │└▶{self.short_desc:<{align}s}{incentive_bar}│",
+                )
             else:
-                incentive.append(f"       ├─▶{self.short_desc:<{align}s}{incentive_bar}│")
+                incentive.append(
+                    f"       ├─▶{self.short_desc:<{align}s}{incentive_bar}│",
+                )
 
         return incentive
