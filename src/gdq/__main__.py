@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import argparse
 import sys
+import tomllib
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-import toml
 import xdg
 
 from gdq import runners, utils
@@ -14,7 +14,11 @@ from gdq.display.raw import Display
 from gdq.events import Marathon
 
 
-def refresh_event(marathon: Marathon, base_args: argparse.Namespace, event_args: argparse.Namespace) -> bool:
+def refresh_event(
+    marathon: Marathon,
+    base_args: argparse.Namespace,
+    event_args: argparse.Namespace,
+) -> bool:
     # Recaclulate terminal size
     marathon.refresh_all()
 
@@ -33,17 +37,17 @@ def refresh_event(marathon: Marathon, base_args: argparse.Namespace, event_args:
 
 
 def list_events(config: Mapping[str, Any]) -> None:
-    event_times: dict[str, tuple[datetime, Optional[datetime]]] = {}
+    event_times: dict[str, tuple[datetime, datetime | None]] = {}
     for name, marathon_config in utils.show_iterable_progress(config.items(), offset=1):
         runner = runners.get_runner(marathon_config)
         try:
             event_times[name] = runner.get_times()
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001
             print(f"{name}: {exc!s}")
 
     for name, (start, end) in sorted(event_times.items(), key=lambda x: x[1]):
         if end is None:
-            end = start.astimezone() + timedelta(days=7)
+            end = start.astimezone() + timedelta(days=7)  # noqa: PLW2901
 
         if utils.now < start:
             print(f"{name} will start in {start - utils.now}")
@@ -54,8 +58,9 @@ def list_events(config: Mapping[str, Any]) -> None:
 
 
 def main() -> None:
-    with open(Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml") as toml_file:
-        config = toml.load(toml_file)
+    config_path = Path(xdg.XDG_CONFIG_HOME) / "gdq" / "config.toml"
+    with config_path.open("rb") as toml_file:
+        config = tomllib.load(toml_file)
 
     base_parser = runners.get_base_parser()
     base_args, extra_args = base_parser.parse_known_args()

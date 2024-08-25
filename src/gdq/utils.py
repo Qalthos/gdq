@@ -1,11 +1,11 @@
 import shutil
 import time
 from collections.abc import Collection, Iterable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TypeVar
 
 X = TypeVar("X")
-now: datetime = datetime.now(timezone.utc)
+now: datetime = datetime.now(UTC)
 
 
 def flatten(string: str) -> str:
@@ -17,7 +17,7 @@ def progress_bar(start: float, current: float, end: float, width: int) -> str:
     chars = " ▏▎▍▌▋▊▉█"
 
     try:
-        percent = ((current - start) / (end - start) * 100)
+        percent = (current - start) / (end - start) * 100
     except ZeroDivisionError:
         percent = 0
 
@@ -30,21 +30,21 @@ def progress_bar(start: float, current: float, end: float, width: int) -> str:
     if blocks >= width:
         blocks = width - 1
         fraction = -1
-    remainder = (width - blocks - 1)
+    remainder = width - blocks - 1
     return f"{chars[-1] * blocks}{chars[fraction]}{' ' * remainder}"
 
 
 def short_number(number: float) -> str:
-    if number >= 1_000_000:
+    if number >= 1_000_000:  # noqa: PLR2004
         number = number // 10_000 / 100
         return f"{number:.2f}M"
-    if number >= 100_000:
+    if number >= 100_000:  # noqa: PLR2004
         number = number // 1_000
         return f"{number:.0f}k"
-    if number >= 10_000:
+    if number >= 10_000:  # noqa: PLR2004
         number = number // 100 / 10
         return f"{number:.1f}k"
-    if number < 100:
+    if number < 100:  # noqa: PLR2004
         return f"{number:.2f}"
     return f"{number:,.0f}"
 
@@ -74,7 +74,7 @@ def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable
         print(
             f"\x1b[{term_height - offset}H{progress_bar(0, i + 1, len(iterable), width=term_width)}",
             end="",
-            flush=True
+            flush=True,
         )
         yield item
 
@@ -90,5 +90,5 @@ def timedelta_as_hours(delta: timedelta) -> str:
 
 def update_now() -> datetime:
     global now
-    now = datetime.now(timezone.utc).replace(microsecond=0)
+    now = datetime.now(UTC).replace(microsecond=0)
     return now

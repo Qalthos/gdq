@@ -1,19 +1,28 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import sys
 import time
 import tomllib
+from datetime import UTC, datetime
+from json.decoder import JSONDecodeError
 from pathlib import Path
 from threading import Thread
+from typing import TYPE_CHECKING
 
 import requests
 import xdg
+from pubnub.callbacks import SubscribeCallback
 from pubnub.enums import PNReconnectionPolicy
-from pubnub.pubnub import PNConfiguration, PubNub, SubscribeCallback
+from pubnub.pubnub import PNConfiguration, PubNub
 
 from bus.desert_bus import DesertBus
 from gdq import utils
 from gdq.display.raw import Display
 from gdq.money import Dollar
+
+if TYPE_CHECKING:
+    from pubnub.models.consumer.pubsub import PNMessageResult
 
 
 class DisplayThread(Thread):
@@ -38,14 +47,15 @@ class DisplayThread(Thread):
 
 
 class SubscribeHandler(SubscribeCallback):
-    def __init__(self, bus: DesertBus, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, bus: DesertBus) -> None:
+        super().__init__()
         self.bus = bus
 
-    def message(self, pubnub, message) -> None:
+    def message(self, pubnub: PubNub, message: PNMessageResult) -> None:
         self.bus.total = Dollar(message.message)
 
-        if bool(utils.now >= self.bus.end):
+        now = datetime.now(UTC)
+        if bool(now >= self.bus.end):
             pubnub.stop()
             sys.exit(0)
 
@@ -61,8 +71,12 @@ def main() -> None:
         sys.exit(1)
 
     bus = DesertBus(start=event_config["start"])
-    state = requests.get("https://desertbus.org/wapi/init", timeout=10).json()
-    bus.total = Dollar(state["total"])
+    try:
+        state = requests.get("https://desertbus.org/wapi/init", timeout=10).json()
+        bus.total = Dollar(state["total"])
+    except JSONDecodeError:
+        # pubnub will handle updates, inital value can be ignored
+        bus.total = Dollar(0)
 
     display = DisplayThread(bus)
     display.start()
