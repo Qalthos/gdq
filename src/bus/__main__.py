@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import sys
 import time
 import tomllib
+from datetime import UTC, datetime
 from json.decoder import JSONDecodeError
 from pathlib import Path
 from threading import Thread
+from typing import TYPE_CHECKING
 
 import requests
 import xdg
 from pubnub.callbacks import SubscribeCallback
 from pubnub.enums import PNReconnectionPolicy
-from pubnub.models.consumer.pubsub import PNMessageResult
 from pubnub.pubnub import PNConfiguration, PubNub
 
 from bus.desert_bus import DesertBus
 from gdq import utils
 from gdq.display.raw import Display
 from gdq.money import Dollar
+
+if TYPE_CHECKING:
+    from pubnub.models.consumer.pubsub import PNMessageResult
 
 
 class DisplayThread(Thread):
@@ -48,7 +54,8 @@ class SubscribeHandler(SubscribeCallback):
     def message(self, pubnub: PubNub, message: PNMessageResult) -> None:
         self.bus.total = Dollar(message.message)
 
-        if bool(utils.now >= self.bus.end):
+        now = datetime.now(UTC)
+        if bool(now >= self.bus.end):
             pubnub.stop()
             sys.exit(0)
 

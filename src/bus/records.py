@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import math
 from dataclasses import dataclass
@@ -62,3 +64,9 @@ records_file = resources.files("bus") / "records.json"
 records = json.loads(records_file.read_text())
 RECORDS: list[Record] = [Record.from_json(record) for record in records]
 LIFETIME = sum([record.total for record in RECORDS], Dollar())
+
+
+if __name__ == "__main__":
+    for record in RECORDS:
+        print(f"{record}: {record.total}")
+    print(LIFETIME)

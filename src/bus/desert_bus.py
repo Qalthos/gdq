@@ -1,12 +1,17 @@
+from __future__ import annotations
+
 import math
 import sys
-from collections.abc import Iterable, Iterator, Sequence
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from bus.records import LIFETIME, RECORDS, dollars_to_hours, hours_to_dollars
 from bus.shifts import OMEGA, SHIFTS, Shift
 from gdq import utils
 from gdq.money import Dollar
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator, Sequence
 
 FakeRecord = tuple[Dollar, str, bool]
 
@@ -40,14 +45,15 @@ class DesertBus:
 
     @property
     def estimate(self) -> Dollar:
+        now = datetime.now(UTC)
         future_hours = 0
         future_total = self.total
-        current_hours = min(utils.now - self.start, timedelta(hours=self.hours))
+        current_hours = min(now - self.start, timedelta(hours=self.hours))
         while future_hours != dollars_to_hours(future_total):
             future_hours = dollars_to_hours(future_total)
             future_multiplier = (
                 timedelta(hours=future_hours) / (current_hours)
-                if utils.now > self.start
+                if now > self.start
                 else 1
             )
             future_total = self.total * future_multiplier
@@ -62,10 +68,11 @@ class DesertBus:
         return self.start + timedelta(hours=self.hours)
 
     def header(self, *, extended: bool = True) -> Iterable[str]:
-        if utils.now < self.start:
-            yield f"Starting in {self.start - utils.now}".center(self.width)
-        elif utils.now < (self.start + timedelta(hours=self.hours + 1)):
-            yield self.shift_banners(utils.now)
+        now = datetime.now(UTC)
+        if now < self.start:
+            yield f"Starting in {self.start - now}".center(self.width)
+        elif now < (self.start + timedelta(hours=self.hours + 1)):
+            yield self.shift_banners(now)
         else:
             yield "It's over!".center(self.width)
 
@@ -82,19 +89,21 @@ class DesertBus:
         )
         if extended:
             totals = []
-            if utils.now > self.start:
+            if now > self.start:
                 estimate = self.estimate
                 totals.append(f"{estimate} estimated ({dollars_to_hours(estimate)}h)")
             totals.append(f"{self.total + LIFETIME} lifetime")
             yield "|".join(even_banner(totals, self.width))
 
     def render(self) -> Iterable[str]:
-        if utils.now < self.start + (timedelta(hours=(self.hours + 1))):
+        now = datetime.now(UTC)
+        if now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
 
     def footer(self, *, overall: bool = True) -> Iterable[str]:
+        now = datetime.now(UTC)
         total = timedelta(hours=self.hours)
-        elapsed = max(min(utils.now - self.start, total), timedelta())
+        elapsed = max(min(now - self.start, total), timedelta())
         remaining = total - elapsed
 
         hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
