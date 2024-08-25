@@ -2,9 +2,16 @@ import json
 import math
 from dataclasses import dataclass
 from importlib import resources
-from typing import Self
+from typing import NotRequired, Self, TypedDict
 
 from gdq.money import Dollar
+
+
+class RecordJSON(TypedDict):
+    total: float
+    year: int
+    number: NotRequired[int | str]
+    subtitle: NotRequired[str]
 
 
 @dataclass(order=True, frozen=True)
@@ -21,9 +28,14 @@ class Record:
         return name
 
     @classmethod
-    def from_json(cls, data: dict) -> Self:
-        total = Dollar(data.pop("total"))
-        return cls(total, **data)
+    def from_json(cls, data: RecordJSON) -> Self:
+        total = Dollar(data["total"])
+        return cls(
+            total=total,
+            year=data["year"],
+            number=data.get("number", ""),
+            subtitle=data.get("subtitle", ""),
+        )
 
     @property
     def hours(self) -> int:

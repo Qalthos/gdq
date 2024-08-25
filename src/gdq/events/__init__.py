@@ -11,30 +11,24 @@ from gdq.models import Run
 
 class Marathon(Protocol):
     @abstractmethod
-    def refresh_all(self) -> None:
-        ...
+    def refresh_all(self) -> None: ...
 
     @property
     @abstractmethod
-    def start(self) -> datetime:
-        ...
+    def start(self) -> datetime: ...
 
     @property
     @abstractmethod
-    def end(self) -> datetime:
-        ...
+    def end(self) -> datetime: ...
 
     @abstractmethod
-    def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        ...
+    def header(self, width: int, args: argparse.Namespace) -> Iterable[str]: ...
 
     @abstractmethod
-    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        ...
+    def render(self, width: int, args: argparse.Namespace) -> Iterable[str]: ...
 
     @abstractmethod
-    def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]:
-        ...
+    def footer(self, width: int, args: argparse.Namespace) -> Iterable[str]: ...
 
 
 class TrackerBase(Marathon, Protocol):
@@ -70,8 +64,10 @@ class TrackerBase(Marathon, Protocol):
         progress_width = width - len(hours_done) - len(hours_left) - 3
 
         completed_width = math.floor(
-            progress_width * elapsed / total
+            progress_width * elapsed / total,
         )
-        progress = f"{'─' * completed_width}🎮{' ' * (progress_width - completed_width - 1)}🏁"
+        progress = (
+            f"{'─' * completed_width}🎮{' ' * (progress_width - completed_width - 1)}🏁"
+        )
 
         yield f"{hours_done}{progress}{hours_left}"

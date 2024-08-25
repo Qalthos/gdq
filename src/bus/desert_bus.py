@@ -3,11 +3,10 @@ import sys
 from collections.abc import Iterable, Iterator, Sequence
 from datetime import datetime, timedelta
 
-from gdq import utils
-from gdq.money import Dollar
-
 from bus.records import LIFETIME, RECORDS, dollars_to_hours, hours_to_dollars
 from bus.shifts import OMEGA, SHIFTS, Shift
+from gdq import utils
+from gdq.money import Dollar
 
 FakeRecord = tuple[Dollar, str, bool]
 
@@ -209,7 +208,7 @@ class DesertBus:
             yield value
 
 
-def next_hours(total) -> Iterator[FakeRecord]:
+def next_hours(total: Dollar) -> Iterator[FakeRecord]:
     hour = dollars_to_hours(total) + 1
     while True:
         if hour % 24 == 0:
@@ -221,7 +220,7 @@ def next_hours(total) -> Iterator[FakeRecord]:
         hour += 1
 
 
-def fun_numbers(total, *, lifetime: bool = False) -> Iterator[FakeRecord]:
+def fun_numbers(total: Dollar, *, lifetime: bool = False) -> Iterator[FakeRecord]:
     zeroes = 0
     while True:
         for fives in range(2, 20):

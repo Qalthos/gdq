@@ -15,12 +15,17 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
         width -= 6
 
     if current >= end:
-        prog_bar = utils.progress_bar(start.to_float(), current.to_float(), end.to_float(), width)
+        prog_bar = utils.progress_bar(
+            start.to_float(),
+            current.to_float(),
+            end.to_float(),
+            width,
+        )
     else:
         chars = " ▏▎▍▌▋▊▉█"
 
         if (end - start).to_float() > 0:
-            percent = ((current - start) / (end - start) * 100)
+            percent = (current - start) / (end - start) * 100
         else:
             percent = 0
 
@@ -33,14 +38,16 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
         if blocks >= width:
             blocks = width - 1
             fraction = -1
-        remainder = (width - blocks - 1)
+        remainder = width - blocks - 1
 
         if remainder > blocks:
             suffix = " " * (remainder - len(current))
             prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
         else:
             prefix = chars[-1] * (blocks - len(current))
-            prog_bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+            prog_bar = (
+                f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
+            )
 
     if start:
         return f"{start.short: <6s}▕{prog_bar}▏{end.short: >6s}"
@@ -53,7 +60,7 @@ class Money(ABC):
     _exponent: int = 0
 
     def __init__(self, value: float = 0):
-        self._value = round(value * (10 ** self._exponent))
+        self._value = round(value * (10**self._exponent))
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.to_float()})"
@@ -101,7 +108,9 @@ class Money(ABC):
     # Ordering methods
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
-            raise TypeError(f"unsupported operand type(s) for ==: '{type(self).__name__}' and '{type(other).__name__}'")
+            raise TypeError(
+                f"unsupported operand type(s) for ==: '{type(self).__name__}' and '{type(other).__name__}'",
+            )
         return bool(self._value == other._value)
 
     def __lt__(self: M, other: M) -> bool:
@@ -125,7 +134,7 @@ class Money(ABC):
         return f"{self.symbol}{self.to_float():,.0{self._exponent}f}"
 
     def to_float(self) -> float:
-        return float(self._value / (10 ** self._exponent))
+        return float(self._value / (10**self._exponent))
 
     @property
     def short(self) -> str:
@@ -134,7 +143,9 @@ class Money(ABC):
     # Type validation check
     def _validate(self, other: Any) -> None:
         if not isinstance(other, type(self)):
-            raise TypeError(f"unsupported operand type(s): '{type(self).__name__}' and '{type(other).__name__}'")
+            raise TypeError(
+                f"unsupported operand type(s): '{type(self).__name__}' and '{type(other).__name__}'",
+            )
 
 
 class Dollar(Money):
