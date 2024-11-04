@@ -4,16 +4,14 @@ from __future__ import annotations
 import sys
 import time
 import tomllib
+import uuid
 from datetime import UTC, datetime
-from json.decoder import JSONDecodeError
 from pathlib import Path
 from threading import Thread
 from typing import TYPE_CHECKING
 
-import requests
 import xdg
 from pubnub.callbacks import SubscribeCallback
-from pubnub.enums import PNReconnectionPolicy
 from pubnub.pubnub import PNConfiguration, PubNub
 
 from bus.desert_bus import DesertBus
@@ -22,6 +20,8 @@ from gdq.display.raw import Display
 from gdq.money import Dollar
 
 if TYPE_CHECKING:
+    from pubnub.models.consumer.common import PNStatus
+    from pubnub.models.consumer.history import PNFetchMessagesResult
     from pubnub.models.consumer.pubsub import PNMessageResult
 
 
@@ -46,7 +46,7 @@ class DisplayThread(Thread):
             time.sleep(0.2)
 
 
-class SubscribeHandler(SubscribeCallback):
+class SubscribeHandler(SubscribeCallback):  # type: ignore[misc]
     def __init__(self, bus: DesertBus) -> None:
         super().__init__()
         self.bus = bus
@@ -71,24 +71,30 @@ def main() -> None:
         sys.exit(1)
 
     bus = DesertBus(start=event_config["start"])
-    try:
-        state = requests.get("https://desertbus.org/wapi/init", timeout=10).json()
-        bus.total = Dollar(state["total"])
-    except JSONDecodeError:
-        # pubnub will handle updates, inital value can be ignored
-        bus.total = Dollar(0)
-
-    display = DisplayThread(bus)
-    display.start()
 
     pn_config = PNConfiguration()
-    pn_config.reconnect_policy = PNReconnectionPolicy.EXPONENTIAL
     pn_config.subscribe_key = event_config["key"]
-    pn_config.uuid = event_config["uuid"]
+    pn_config.user_id = str(uuid.uuid4())
+
+    channels = "total%3AJNQGRZPRCSSJ,total%3ARZZQRDQNLNLW"
+
+    def fetch_callback(envelope: PNFetchMessagesResult, status: PNStatus) -> None:
+        if status.is_error():
+            print("Request returned an error!")
+            return
+        for channel_name, items in envelope.channels.items():
+            if channel_name.startswith("total"):
+                bus.total = Dollar(items[0].message)
 
     pubnub = PubNub(pn_config)
     pubnub.add_listener(SubscribeHandler(bus))
-    pubnub.subscribe().channels("db_total").execute()
+    pubnub.subscribe().channels(channels).execute()
+    pubnub.fetch_messages().channels(channels).maximum_per_channel(1).pn_async(
+        fetch_callback,
+    )
+
+    display = DisplayThread(bus)
+    display.start()
 
 
 if __name__ == "__main__":

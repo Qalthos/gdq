@@ -32,7 +32,7 @@ class DesertToonie(Dollar):
 
 class DesertBus:
     _start: datetime
-    total: Dollar
+    total: Dollar = Dollar(0)
     offline: bool = False
     width: int = 0
 
@@ -68,7 +68,7 @@ class DesertBus:
         return self.start + timedelta(hours=self.hours)
 
     def header(self, *, extended: bool = True) -> Iterable[str]:
-        now = datetime.now(UTC)
+        now = datetime.now(UTC).replace(microsecond=0)
         if now < self.start:
             yield f"Starting in {self.start - now}".center(self.width)
         elif now < (self.start + timedelta(hours=self.hours + 1)):
