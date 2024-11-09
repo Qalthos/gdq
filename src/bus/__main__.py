@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Thread
 from typing import TYPE_CHECKING
+import urllib.parse
 
 import xdg
 from pubnub.callbacks import SubscribeCallback
@@ -76,23 +77,22 @@ def init_pubnub(key: str, channel: str, bus: DesertBus) -> None:
     pubnub = PubNub(pn_config)
     pubnub.add_listener(SubscribeHandler(bus))
 
+    # Subscribe to updates
+    data_channel = pubnub.channel(channel).subscription()
+    data_channel.subscribe()
+
     def fetch_callback(envelope: PNFetchMessagesResult, status: PNStatus) -> None:
         if status and status.is_error():
             print("Request returned an error!")
             return
         for channel_name, items in envelope.channels.items():
-            if channel_name == channel:
-                print(items[0].message)
+            if channel_name == urllib.parse.quote(channel):
                 bus.total = Dollar(items[0].message)
 
     # Fetch current total
     pubnub.fetch_messages().channels(channel).maximum_per_channel(1).pn_async(
         fetch_callback,
     )
-
-    # Subscribe to updates
-    data_channel = pubnub.channel(channel).subscription()
-    data_channel.subscribe()
 
 
 def main() -> None:
