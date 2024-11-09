@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 import xdg
 from pubnub.callbacks import SubscribeCallback
-from pubnub.pubnub import PNConfiguration, PubNub
+from pubnub.pubnub import PNConfiguration, PNStatusCategory, PubNub
 
 from bus.desert_bus import DesertBus
 from gdq import utils
@@ -51,13 +51,55 @@ class SubscribeHandler(SubscribeCallback):  # type: ignore[misc]
         super().__init__()
         self.bus = bus
 
+    def status(self, pubnub: PubNub, status: PNStatus) -> None:
+        super().status(pubnub, status)
+        print(status.category.name)
+        if status.category == PNStatusCategory.PNUnexpectedDisconnectCategory:
+            # internet got lost, do some magic and call reconnect when ready
+            print("disconnected")
+            pubnub.reconnect()
+        elif status.category == PNStatusCategory.PNTimeoutCategory:
+            # do some magic and call reconnect when ready
+            print("timeout")
+            pubnub.reconnect()
+
     def message(self, pubnub: PubNub, message: PNMessageResult) -> None:
+        super().status(pubnub, message)
+        print(message.message)
+
         self.bus.total = Dollar(message.message)
 
         now = datetime.now(UTC)
         if bool(now >= self.bus.end):
             pubnub.stop()
             sys.exit(0)
+
+
+def init_pubnub(key: str, channel: str, bus: DesertBus) -> None:
+    pn_config = PNConfiguration()
+    pn_config.subscribe_key = key
+    pn_config.user_id = str(uuid.uuid4())
+
+    pubnub = PubNub(pn_config)
+    pubnub.add_listener(SubscribeHandler(bus))
+
+    def fetch_callback(envelope: PNFetchMessagesResult, status: PNStatus) -> None:
+        if status and status.is_error():
+            print("Request returned an error!")
+            return
+        for channel_name, items in envelope.channels.items():
+            if channel_name == channel:
+                print(items[0].message)
+                bus.total = Dollar(items[0].message)
+
+    # Fetch current total
+    pubnub.fetch_messages().channels(channel).maximum_per_channel(1).pn_async(
+        fetch_callback,
+    )
+
+    # Subscribe to updates
+    data_channel = pubnub.channel(channel).subscription()
+    data_channel.subscribe()
 
 
 def main() -> None:
@@ -71,27 +113,7 @@ def main() -> None:
         sys.exit(1)
 
     bus = DesertBus(start=event_config["start"])
-
-    pn_config = PNConfiguration()
-    pn_config.subscribe_key = event_config["key"]
-    pn_config.user_id = str(uuid.uuid4())
-
-    channels = "total%3AJNQGRZPRCSSJ,total%3ARZZQRDQNLNLW"
-
-    def fetch_callback(envelope: PNFetchMessagesResult, status: PNStatus) -> None:
-        if status.is_error():
-            print("Request returned an error!")
-            return
-        for channel_name, items in envelope.channels.items():
-            if channel_name.startswith("total"):
-                bus.total = Dollar(items[0].message)
-
-    pubnub = PubNub(pn_config)
-    pubnub.add_listener(SubscribeHandler(bus))
-    pubnub.subscribe().channels(channels).execute()
-    pubnub.fetch_messages().channels(channels).maximum_per_channel(1).pn_async(
-        fetch_callback,
-    )
+    init_pubnub(event_config["key"], event_config["channel"], bus)
 
     display = DisplayThread(bus)
     display.start()
