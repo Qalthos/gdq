@@ -5,7 +5,7 @@ import sys
 import time
 import tomllib
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Thread
 from typing import TYPE_CHECKING
@@ -52,25 +52,18 @@ class SubscribeHandler(SubscribeCallback):  # type: ignore[misc]
         self.bus = bus
 
     def status(self, pubnub: PubNub, status: PNStatus) -> None:
-        super().status(pubnub, status)
-        print(status.category.name)
         if status.category == PNStatusCategory.PNUnexpectedDisconnectCategory:
-            # internet got lost, do some magic and call reconnect when ready
             print("disconnected")
             pubnub.reconnect()
         elif status.category == PNStatusCategory.PNTimeoutCategory:
-            # do some magic and call reconnect when ready
             print("timeout")
             pubnub.reconnect()
 
     def message(self, pubnub: PubNub, message: PNMessageResult) -> None:
-        super().status(pubnub, message)
-        print(message.message)
-
         self.bus.total = Dollar(message.message)
 
         now = datetime.now(UTC)
-        if bool(now >= self.bus.end):
+        if bool(now >= (self.bus.end + timedelta(hours=2))):
             pubnub.stop()
             sys.exit(0)
 
