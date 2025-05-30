@@ -45,7 +45,7 @@ class DesertBus:
 
     @property
     def estimate(self) -> Dollar:
-        now = datetime.now(UTC)
+        now = datetime.now(UTC).replace(microsecond=0, second=0)
         future_hours = 0
         future_total = self.total
         current_hours = min(now - self.start, timedelta(hours=self.hours))
