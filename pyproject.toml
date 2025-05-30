@@ -13,9 +13,16 @@ gdq = "gdq.__main__:main"
 bus = "bus.__main__:main"
 
 [tool.mypy]
-python_version = 3.11
+python_version = 3.12
 strict = true
 exclude = "(build|tests)"
+
+[[tool.mypy.overrides]]
+module = [
+    "pubnub.*",
+    "xdg"
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -24,7 +31,7 @@ pythonpath = ["src"]
 fix = true
 line-length = 120
 builtins = ["__"]
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 ignore = ["ANN", "D", "T201"]
