@@ -226,7 +226,7 @@ class DesertBus:
         records.append((*next(lifetimes), lifetimes))
 
         while True:
-            records.sort()
+            records.sort(key=lambda r: r[0].total)
             value, sentinel, generator = records.pop(0)
             records.append((*next(generator), generator))
             yield value, sentinel

@@ -4,10 +4,10 @@ from bus.utils import RATE, dollars_to_hours, hours_to_dollars
 from gdq.money import Dollar
 
 
-def test_conversion():
+def test_conversion() -> None:
     """Test conversion for rounding errors."""
     total = 0
-    for hours in range(1, 21):
+    for hours in range(1, 50):
         total += RATE ** (hours - 1)
 
         dollars = Dollar(total)

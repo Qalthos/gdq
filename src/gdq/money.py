@@ -123,13 +123,17 @@ class Dollar(Money):
     _exponent = 2
 
 
+class CanadianDollar(Dollar):
+    _symbol = "C$"
+
+
 class Euro(Money):
     _symbol = "€"
     _exponent = 2
 
 
 CURRENCIES: dict[str, type[Money]] = {
-    "CAD": Dollar,
+    "CAD": CanadianDollar,
     "EUR": Euro,
     "USD": Dollar,
 }

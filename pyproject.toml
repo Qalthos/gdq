@@ -3,7 +3,7 @@ name = "gdq-cli"
 version = "1.2"
 requires-python = ">=3.12"
 dependencies = [
-  "pubnub",
+  "phoenix-channels-python-client",
   "requests",
   "xdg",
 ]
