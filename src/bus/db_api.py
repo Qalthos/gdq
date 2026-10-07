@@ -2,13 +2,16 @@
 # SPDX-License-Identifier: MIT
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Self
+from typing import TYPE_CHECKING
 
 import requests
 from requests import Response
 
 from bus.utils import dollars_to_hours
 from gdq.money import CURRENCIES, Dollar
+
+if TYPE_CHECKING:
+    from typing import Any, Self
 
 BASE_URL = "https://desertbus.org/api/"
 
@@ -42,7 +45,7 @@ class Event:
         return self.name
 
     @classmethod
-    def from_json(cls, json) -> Self:
+    def from_json(cls, json: dict[str, Any]) -> Self:
         json["logo"] = Logo(**json["logo"])
         json["total"] = CURRENCIES[json["total"]["currency"]](float(json["total"]["amount"]))
         json["series"] = Series(**json["series"])

@@ -1,4 +1,4 @@
-# Copyright 2024
+# Copyright 2023
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
@@ -17,6 +17,8 @@ from gdq.money import Dollar
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
 
+    from gdq.money import Money
+
 
 RECORDS = get_events("12pEtImeluwLBvtnl7zlaV")
 RECORDS.reverse()
@@ -28,7 +30,7 @@ class Record(Protocol):
     name: str
 
 
-def record_key(record: Record):
+def record_key(record: Record) -> Money:
     return record.total
 
 

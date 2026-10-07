@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2024
+# Copyright 2023
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
