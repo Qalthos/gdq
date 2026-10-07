@@ -1,3 +1,5 @@
+# Copyright 2024
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 import random
@@ -18,8 +20,8 @@ class Shift:
         return bool(self.start_hour <= current_hour < self.start_hour + 6)
 
 
-class Omega(Shift):
-    def is_active(self, _: datetime) -> bool:
+class Omega(Shift):  # ty: ignore[subclass-of-dataclass-with-order]
+    def is_active(self, timestamp: datetime) -> bool:  # noqa: ARG002
         return bool(random.getrandbits(1))
 
 

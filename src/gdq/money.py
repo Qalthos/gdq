@@ -1,14 +1,15 @@
+# Copyright 2022
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any, TypeVar
+from functools import total_ordering
+from typing import Self
 
 from gdq import utils
 
-M = TypeVar("M", bound="Money")
 
-
-def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
+def progress_bar_money[M: Money](start: M, current: M, end: M, width: int) -> str:
     width -= 8
 
     if start:
@@ -24,10 +25,7 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
     else:
         chars = " ▏▎▍▌▋▊▉█"
 
-        if (end - start).to_float() > 0:
-            percent = (current - start) / (end - start) * 100
-        else:
-            percent = 0
+        percent = (current - start) / (end - start) * 100 if (end - start).to_float() > 0 else 0
 
         blocks, fraction = 0, 0
         if percent:
@@ -45,16 +43,15 @@ def progress_bar_money(start: M, current: M, end: M, width: int) -> str:
             prog_bar = f"{chars[-1] * blocks}{chars[fraction]}{current}{suffix}"
         else:
             prefix = chars[-1] * (blocks - len(current))
-            prog_bar = (
-                f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
-            )
+            prog_bar = f"{prefix}\x1b[7m{current}\x1b[m{chars[fraction]}{' ' * remainder}"
 
     if start:
         return f"{start.short: <6s}▕{prog_bar}▏{end.short: >6s}"
     return f"▕{prog_bar}▏{end.short: >6s}"
 
 
-class Money(ABC):
+@total_ordering
+class Money(ABC):  # noqa: PLW1641
     _value: int
     _symbol: str
     _exponent: int = 0
@@ -76,58 +73,38 @@ class Money(ABC):
         return self._symbol
 
     # Operator methods
-    def __neg__(self: M) -> M:
+    def __neg__(self: Self) -> Self:
         result = type(self)()
-        result._value = -self._value
+        result._value = -self._value  # noqa: SLF001
         return result
 
-    def __add__(self: M, other: M) -> M:
-        self._validate(other)
-
+    def __add__(self: Self, other: Self) -> Self:
         result = type(self)()
         result._value = self._value + other._value
         return result
 
-    def __sub__(self: M, other: M) -> M:
-        self._validate(other)
-
+    def __sub__(self: Self, other: Self) -> Self:
         result = type(self)()
         result._value = self._value - other._value
         return result
 
-    def __mul__(self: M, other: float) -> M:
+    def __mul__(self: Self, other: float) -> Self:
         result = type(self)()
         result._value = round(self._value * other)
         return result
 
-    def __truediv__(self: M, other: M) -> float:
-        self._validate(other)
-
+    def __truediv__(self: Self, other: Self) -> float:
         return self._value / other._value
 
     # Ordering methods
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):
-            raise TypeError(
-                f"unsupported operand type(s) for ==: '{type(self).__name__}' and '{type(other).__name__}'",
-            )
+            err = f"unsupported operand type(s) for ==: '{type(self).__name__}' and '{type(other).__name__}'"
+            raise TypeError(err)
         return bool(self._value == other._value)
 
-    def __lt__(self: M, other: M) -> bool:
-        self._validate(other)
+    def __lt__(self: Self, other: Self) -> bool:
         return self._value < other._value
-
-    def __le__(self: M, other: M) -> bool:
-        self._validate(other)
-        return self._value <= other._value
-
-    def __gt__(self: M, other: M) -> bool:
-        self._validate(other)
-        return self._value > other._value
-
-    def __ge__(self: M, other: M) -> bool:
-        self._validate(other)
-        return self._value >= other._value
 
     # Casting methods
     def __str__(self) -> str:
@@ -139,13 +116,6 @@ class Money(ABC):
     @property
     def short(self) -> str:
         return f"{self.symbol}{utils.short_number(self.to_float())}"
-
-    # Type validation check
-    def _validate(self, other: Any) -> None:
-        if not isinstance(other, type(self)):
-            raise TypeError(
-                f"unsupported operand type(s): '{type(self).__name__}' and '{type(other).__name__}'",
-            )
 
 
 class Dollar(Money):
@@ -159,6 +129,7 @@ class Euro(Money):
 
 
 CURRENCIES: dict[str, type[Money]] = {
+    "CAD": Dollar,
     "EUR": Euro,
     "USD": Dollar,
 }

@@ -1,16 +1,20 @@
+# Copyright 2024
+# SPDX-License-Identifier: MIT
 from bus.desert_bus import DesertBuck, DesertToonie, next_hours
-from bus.records import RECORDS, dollars_to_hours
+from bus.utils import dollars_to_hours
+from gdq.money import Dollar
 
 
 def test_desert_buck():
-    assert DesertBuck(RECORDS[0].total).to_float() == 1
+    assert DesertBuck(Dollar(22805)).to_float() == 1
 
 
 def test_desert_toonie():
-    assert DesertToonie(RECORDS[1].total).to_float() == 1
+    assert DesertToonie(Dollar(70423.79)).to_float() == 1
 
 
 def test_next_hours():
-    hours = next_hours(0)
+    hours = next_hours(Dollar(0))
     for i in range(1, 10):
-        assert i == dollars_to_hours(next(hours)[0])
+        next_hour, _ = next(hours)
+        assert i == dollars_to_hours(next_hour.total)

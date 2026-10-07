@@ -1,12 +1,14 @@
 # Copyright 2026
 # SPDX-License-Identifier: MIT
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Self
 
 import requests
 from requests import Response
 
-from gdq.money import CURRENCIES, Money
+from bus.utils import dollars_to_hours
+from gdq.money import CURRENCIES, Dollar
 
 BASE_URL = "https://desertbus.org/api/"
 
@@ -31,17 +33,32 @@ class Event:
     name: str
     url: str  # just year?
     primary: bool  # current event?
-    starts_at: str  # datetime
+    starts_at: datetime
     logo: Logo
-    total: Money
+    total: Dollar
     series: Series
+
+    def __str__(self) -> str:
+        return self.name
 
     @classmethod
     def from_json(cls, json) -> Self:
         json["logo"] = Logo(**json["logo"])
-        json["total"] = CURRENCIES[json["total"]["currency"]](json["total"]["amount"])
+        json["total"] = CURRENCIES[json["total"]["currency"]](float(json["total"]["amount"]))
         json["series"] = Series(**json["series"])
+        json["starts_at"] = datetime.fromisoformat(json["starts_at"])
         return cls(**json)
+
+    @property
+    def hours(self) -> int:
+        return dollars_to_hours(self.total)
+
+    def distance(self, current: Dollar) -> str:
+        next_level = self.total - current
+        if next_level <= Dollar():
+            return ""
+
+        return f"{next_level} until {self!s}"
 
 
 def _request(path: str, params: dict[str, str] | None = None) -> Response:
@@ -54,6 +71,9 @@ def get_series() -> list[Series]:
     return [Series(**item) for item in json]
 
 
-def get_events(series: Series) -> list[Event]:
-    json = _request("events", {"series": series.id}).json()["events"]
+def get_events(series_id: str = "") -> list[Event]:
+    params = {}
+    if series_id:
+        params["series"] = series_id
+    json = _request("events", params).json()["events"]
     return [Event.from_json(item) for item in json]
