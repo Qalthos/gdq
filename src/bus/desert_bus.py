@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Protocol
 
-from bus.db_api import get_events
+from bus.db_api import get_history
 from bus.shifts import OMEGA, SHIFTS, Shift
 from bus.utils import dollars_to_hours, hours_to_dollars
 from gdq import utils
@@ -20,8 +20,7 @@ if TYPE_CHECKING:
     from gdq.money import Money
 
 
-RECORDS = get_events("12pEtImeluwLBvtnl7zlaV")
-RECORDS.reverse()
+RECORDS = get_history()
 LIFETIME = sum((event.total for event in RECORDS), start=Dollar(0))
 
 

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 import requests
@@ -69,14 +70,32 @@ def _request(path: str, params: dict[str, str] | None = None) -> Response:
     return requests.get(BASE_URL + path, params, timeout=5)
 
 
+@lru_cache
 def get_series() -> list[Series]:
     json = _request("series").json()["series"]
     return [Series(**item) for item in json]
 
 
+@lru_cache
 def get_events(series_id: str = "") -> list[Event]:
     params = {}
     if series_id:
         params["series"] = series_id
     json = _request("events", params).json()["events"]
     return [Event.from_json(item) for item in json]
+
+
+@lru_cache
+def get_primary() -> Event:
+    for event in get_events():
+        if event.primary:
+            return event
+    err = "No primary event found"
+    raise RuntimeError(err)
+
+
+@lru_cache
+def get_history() -> list[Event]:
+    primary = get_primary()
+    events = reversed(get_events(primary.series.id))
+    return [event for event in events if not event.primary]
