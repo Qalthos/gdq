@@ -1,10 +1,16 @@
+# Copyright 2022
+# SPDX-License-Identifier: MIT
 """
 ========header========
 | col1 | col2 | col3 |
 ========footer========
 """
+
 import shutil
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 class Display:

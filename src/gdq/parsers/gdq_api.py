@@ -3,13 +3,22 @@ import operator
 import re
 import urllib.parse
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import requests
 
-from gdq import money
-from gdq.models import (Choice, ChoiceIncentive, DonationIncentive, Event,
-                        Incentive, MultiEvent, Run, Runner, SingleEvent)
+from common import money
+from gdq.models import (
+    Choice,
+    ChoiceIncentive,
+    DonationIncentive,
+    Event,
+    Incentive,
+    MultiEvent,
+    Run,
+    Runner,
+    SingleEvent,
+)
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs: str) -> requests.Response:
@@ -41,7 +50,7 @@ def get_events(base_url: str, event_name: str = "") -> list[Event]:
                 try:
                     start = datetime.strptime(event_data[key], "%Y-%m-%dT%H:%M:%S%z")
                 except ValueError:
-                    start = datetime.strptime(event_data[key], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    start = datetime.strptime(event_data[key], "%Y-%m-%d").replace(tzinfo=UTC)
                 break
 
         # Set currency from data
@@ -101,19 +110,21 @@ def get_runs(base_url: str, event_id: int, currency: type[money.Money]) -> list[
             # No times attached, huh?
             continue
 
-        run_list.append(Run(
-            run_id=run_id,
-            game=run["name"],
-            platform=run["console"].strip(),
-            category=run["category"],
-            runners=[runners[runner] for runner in run["runners"]],
-            incentives=sorted(
-                incentives.get(run["name"]) or [],
-                key=operator.attrgetter("incentive_id"),
+        run_list.append(
+            Run(
+                run_id=run_id,
+                game=run["name"],
+                platform=run["console"].strip(),
+                category=run["category"],
+                runners=[runners[runner] for runner in run["runners"]],
+                incentives=sorted(
+                    incentives.get(run["name"]) or [],
+                    key=operator.attrgetter("incentive_id"),
+                ),
+                start=start_time,
+                estimate=int(estimate),
             ),
-            start=start_time,
-            estimate=int(estimate),
-        ))
+        )
 
     return run_list
 
@@ -130,9 +141,7 @@ def get_runners_for_event(base_url: str, event_id: int) -> dict[int, Runner]:
     return runner_dict
 
 
-def get_incentives_for_event(
-        base_url: str, event_id: int,
-        currency: type[money.Money]) -> dict[str, list[Incentive]]:
+def get_incentives_for_event(base_url: str, event_id: int, currency: type[money.Money]) -> dict[str, list[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=str(event_id)).json()
     incentive_dict: dict[str, list[Incentive]] = dict()
@@ -143,7 +152,7 @@ def get_incentives_for_event(
         incentive = incentive["fields"]
         game = incentive.get("speedrun__name")
 
-        if incentive.get('parent'):
+        if incentive.get("parent"):
             parent_id = incentive["parent"]
             choice = Choice(
                 name=incentive["name"],

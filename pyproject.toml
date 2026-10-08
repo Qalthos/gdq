@@ -1,28 +1,34 @@
 [project]
 name = "gdq-cli"
-version="1.1"
-requires-python = ">=3.11"
+version = "1.2"
+requires-python = ">=3.12"
 dependencies = [
-    "pubnub",
-    "requests",
-    "xdg",
+  "phoenix-channels-python-client",
+  "requests",
+  "xdg",
 ]
 
 [project.scripts]
-gdq = "gdq.__main__:main"
 bus = "bus.__main__:main"
+gdq = "gdq.__main__:main"
 
-[tool.mypy]
-python_version = 3.12
-strict = true
-exclude = "(build|tests)"
-
-[[tool.mypy.overrides]]
-module = [
-    "pubnub.*",
-    "xdg"
+[dependency-groups]
+test = [
+  "pytest",
+  "pytest-cov",
 ]
-ignore_missing_imports = true
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13"]
+build-backend = "uv_build"
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+skip_empty = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
@@ -31,11 +37,14 @@ pythonpath = ["src"]
 fix = true
 line-length = 120
 builtins = ["__"]
-target-version = "py312"
+target-version = "py314"
 
 [tool.ruff.lint]
-ignore = ["ANN", "D", "T201"]
+ignore = ["ANN204", "D", "T201"]
 select = ["ALL"]
+
+[tool.ruff.lint.flake8-copyright]
+min-file-size = 1
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "PLR2004"]
@@ -45,3 +54,11 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 bus = ["*.json"]
+
+[tool.ty]
+
+[tool.uv]
+default-groups = ["test"]
+
+[tool.uv.build-backend]
+module-name = ["bus", "gdq"]
