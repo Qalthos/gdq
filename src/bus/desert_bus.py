@@ -8,14 +8,14 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Protocol
 
-from bus.db_api import get_history
-from bus.shifts import OMEGA, SHIFTS, Shift
+from bus.db_api import get_history, is_omega
+from bus.shifts import OMEGA, SHIFTS
 from bus.utils import dollars_to_hours, hours_to_dollars
 from gdq import utils
 from gdq.money import Dollar
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Sequence
+    from collections.abc import Iterable, Iterator
 
     from gdq.money import Money
 
@@ -166,10 +166,7 @@ class DesertBus:
         yield f"{hours_done}{progress}{hours_left}"
 
     def shift_banners(self, timestamp: datetime) -> str:
-        shifts: Sequence[Shift] = SHIFTS
-        # OMEGA detected
-        if timestamp > self.end - timedelta(hours=3):
-            shifts = OMEGA
+        shifts = OMEGA if is_omega() else SHIFTS
 
         banners = _even_banner(
             [shift.name for shift in shifts],

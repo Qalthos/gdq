@@ -4,23 +4,31 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
-PACIFIC = timezone(timedelta(hours=-8))
+if TYPE_CHECKING:
+    from datetime import datetime
+
+PACIFIC = ZoneInfo("America/Vancouver")
 
 
-@dataclass(order=True, frozen=True)
+@dataclass
 class Shift:
-    start_hour: int
     color: str
     name: str
+    start_hour: int
 
     def is_active(self, timestamp: datetime) -> bool:
         current_hour = timestamp.astimezone(PACIFIC).hour
         return bool(self.start_hour <= current_hour < self.start_hour + 6)
 
 
-class Omega(Shift):  # ty: ignore[subclass-of-dataclass-with-order]
+@dataclass
+class Omega:
+    color: str
+    name: str
+
     def is_active(self, timestamp: datetime) -> bool:  # noqa: ARG002
         return bool(random.getrandbits(1))
 
@@ -33,9 +41,9 @@ SHIFTS = [
 ]
 
 OMEGA = [
-    Omega(color="\x1b[33", start_hour=-1, name="O"),
-    Omega(color="\x1b[31", start_hour=-1, name="M"),
-    Omega(color="\x1b[39", start_hour=-1, name="E"),
-    Omega(color="\x1b[34", start_hour=-1, name="G"),
-    Omega(color="\x1b[35", start_hour=-1, name="A"),
+    Omega(color="\x1b[33", name="O"),
+    Omega(color="\x1b[31", name="M"),
+    Omega(color="\x1b[39", name="E"),
+    Omega(color="\x1b[34", name="G"),
+    Omega(color="\x1b[35", name="A"),
 ]

@@ -1,7 +1,7 @@
 # Copyright 2026
 # SPDX-License-Identifier: MIT
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from typing import Any, Self
 
 BASE_URL = "https://desertbus.org/api/"
+OMEGA = 0, False
 
 
 @dataclass
@@ -99,3 +100,17 @@ def get_history() -> list[Event]:
     primary = get_primary()
     events = reversed(get_events(primary.series.id))
     return [event for event in events if not event.primary]
+
+
+def is_omega() -> bool:
+    global OMEGA  # noqa: PLW0603
+    current_hour = datetime.now(UTC).hour
+    if current_hour != OMEGA[0]:
+        try:
+            omega = requests.get("https://vst.ninja/Resources/isitomegashift.html", timeout=5).text
+        except requests.exceptions.RequestException:
+            pass
+        else:
+            OMEGA = current_hour, bool(int(omega))
+
+    return OMEGA[1]
