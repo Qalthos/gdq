@@ -1,7 +1,7 @@
 # Copyright 2026
 # SPDX-License-Identifier: MIT
 from bus.utils import RATE, dollars_to_hours, hours_to_dollars
-from gdq.money import Dollar
+from common.money import Dollar
 
 
 def test_conversion() -> None:
@@ -14,6 +14,5 @@ def test_conversion() -> None:
         assert hours_to_dollars(hours) == dollars
         assert dollars_to_hours(dollars) == hours
 
-        if hours > 0:
-            # Also make sure previous cent is previous hour
-            assert dollars_to_hours(dollars - Dollar(0.01)) == hours - 1
+        # Also make sure previous cent is previous hour
+        assert dollars_to_hours(dollars - Dollar(0.01)) == hours - 1

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 import math
 
-from gdq.money import Dollar
+from common.money import Dollar
 
 RATE = 1.07
 

@@ -11,13 +11,13 @@ from typing import TYPE_CHECKING, Protocol
 from bus.db_api import get_history, is_omega
 from bus.shifts import OMEGA, SHIFTS
 from bus.utils import dollars_to_hours, hours_to_dollars
-from gdq import utils
-from gdq.money import Dollar
+from common.money import Dollar
+from common.time import timedelta_as_hours
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from gdq.money import Money
+    from common.money import Money
 
 
 RECORDS = get_history()
@@ -125,8 +125,8 @@ class DesertBus:
         elapsed = max(min(now - self.start, total), timedelta())
         remaining = total - elapsed
 
-        hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
-        hours_left = f"[{utils.timedelta_as_hours(remaining)}]"
+        hours_done = f"[{timedelta_as_hours(elapsed)}]"
+        hours_left = f"[{timedelta_as_hours(remaining)}]"
         progress_width = self.width - len(hours_done) - len(hours_left) - 4
 
         # Scaled to last passed record

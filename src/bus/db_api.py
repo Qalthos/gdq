@@ -9,7 +9,7 @@ import requests
 from requests import Response
 
 from bus.utils import dollars_to_hours
-from gdq.money import CURRENCIES, Dollar
+from common.money import CURRENCIES, Dollar
 
 if TYPE_CHECKING:
     from typing import Any, Self

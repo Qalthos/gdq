@@ -1,8 +1,12 @@
 import shutil
 import time
-from collections.abc import Collection, Iterable
-from datetime import UTC, datetime, timedelta
-from typing import TypeVar
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, TypeVar
+
+from common.progress_bar import progress_bar
+
+if TYPE_CHECKING:
+    from collections.abc import Collection, Iterable
 
 X = TypeVar("X")
 now: datetime = datetime.now(UTC)
@@ -11,42 +15,6 @@ now: datetime = datetime.now(UTC)
 def flatten(string: str) -> str:
     translation = str.maketrans("┼╫┤", "┬╥┐")
     return string.translate(translation)
-
-
-def progress_bar(start: float, current: float, end: float, width: int) -> str:
-    chars = " ▏▎▍▌▋▊▉█"
-
-    try:
-        percent = (current - start) / (end - start) * 100
-    except ZeroDivisionError:
-        percent = 0
-
-    blocks, fraction = 0, 0
-    if percent:
-        divparts = divmod(percent * width, 100)
-        blocks = int(divparts[0])
-        fraction = int(divparts[1] // (100 / len(chars)))
-
-    if blocks >= width:
-        blocks = width - 1
-        fraction = -1
-    remainder = width - blocks - 1
-    return f"{chars[-1] * blocks}{chars[fraction]}{' ' * remainder}"
-
-
-def short_number(number: float) -> str:
-    if number >= 1_000_000:  # noqa: PLR2004
-        number = number // 10_000 / 100
-        return f"{number:.2f}M"
-    if number >= 100_000:  # noqa: PLR2004
-        number = number // 1_000
-        return f"{number:.0f}k"
-    if number >= 10_000:  # noqa: PLR2004
-        number = number // 100 / 10
-        return f"{number:.1f}k"
-    if number < 100:  # noqa: PLR2004
-        return f"{number:.2f}"
-    return f"{number:,.0f}"
 
 
 def slow_refresh_with_progress(interval: int = 30) -> Iterable[int]:
@@ -77,15 +45,6 @@ def show_iterable_progress(iterable: Collection[X], offset: int = 0) -> Iterable
             flush=True,
         )
         yield item
-
-
-def timedelta_as_hours(delta: timedelta) -> str:
-    """Format a timedelta in HHH:MM format."""
-
-    minutes = delta.total_seconds() // 60
-    hours, minutes = divmod(minutes, 60)
-
-    return f"{hours:.0f}:{minutes:02.0f}"
 
 
 def update_now() -> datetime:

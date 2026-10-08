@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 from bus.desert_bus import DesertBuck, DesertToonie, fun_numbers, next_hours
 from bus.utils import dollars_to_hours
-from gdq.money import Dollar
+from common.money import Dollar
 
 
 def test_desert_buck() -> None:
@@ -15,7 +15,7 @@ def test_desert_toonie() -> None:
 
 def test_next_hours() -> None:
     hours = next_hours(Dollar(0))
-    for i in range(1, 10):
+    for i in range(1, 48):
         next_hour, _ = next(hours)
         assert i == dollars_to_hours(next_hour.total)
 

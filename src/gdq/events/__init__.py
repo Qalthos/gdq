@@ -1,12 +1,16 @@
-import argparse
 import math
 from abc import abstractmethod
-from collections.abc import Iterable
 from datetime import datetime, timedelta
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
+from common.time import timedelta_as_hours
 from gdq import utils
-from gdq.models import Run
+
+if TYPE_CHECKING:
+    import argparse
+    from collections.abc import Iterable
+
+    from gdq.models import Run
 
 
 class Marathon(Protocol):
@@ -59,15 +63,13 @@ class TrackerBase(Marathon, Protocol):
         total = self.end - self.start
         remaining = min(self.start + total - utils.now, total)
 
-        hours_done = f"[{utils.timedelta_as_hours(elapsed)}]"
-        hours_left = f"[{utils.timedelta_as_hours(remaining)}]"
+        hours_done = f"[{timedelta_as_hours(elapsed)}]"
+        hours_left = f"[{timedelta_as_hours(remaining)}]"
         progress_width = width - len(hours_done) - len(hours_left) - 3
 
         completed_width = math.floor(
             progress_width * elapsed / total,
         )
-        progress = (
-            f"{'─' * completed_width}🎮{' ' * (progress_width - completed_width - 1)}🏁"
-        )
+        progress = f"{'─' * completed_width}🎮{' ' * (progress_width - completed_width - 1)}🏁"
 
         yield f"{hours_done}{progress}{hours_left}"

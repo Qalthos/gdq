@@ -11,8 +11,7 @@ from threading import Thread
 from bus.db_api import get_primary
 from bus.desert_bus import DesertBus
 from bus.phoenix import subscribe
-from gdq import utils
-from gdq.display.raw import Display
+from common.display.raw import Display
 
 
 class DisplayThread(Thread):
@@ -26,7 +25,6 @@ class DisplayThread(Thread):
 
     def run(self) -> None:
         while True:
-            utils.update_now()
             self.display.refresh_terminal()
             self.bus.width = self.display.term_w
             self.display.update_header(self.bus.header())

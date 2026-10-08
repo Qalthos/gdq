@@ -27,6 +27,8 @@ branch = true
 
 [tool.coverage.report]
 show_missing = true
+skip_covered = true
+skip_empty = true
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

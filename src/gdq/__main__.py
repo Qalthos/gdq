@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-import argparse
 import sys
 import tomllib
-from collections.abc import Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import xdg
 
+from common.display.raw import Display
 from gdq import runners, utils
-from gdq.display.raw import Display
-from gdq.events import Marathon
+
+if TYPE_CHECKING:
+    import argparse
+    from collections.abc import Mapping
+
+    from gdq.events import Marathon
 
 
 def refresh_event(
