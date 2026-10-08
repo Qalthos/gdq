@@ -7,17 +7,12 @@ import asyncio
 import sys
 import time
 from threading import Thread
-from typing import TYPE_CHECKING
 
-from phoenix_channels_python_client import PHXChannelsClient
-
-from bus.db_api import get_events
+from bus.db_api import get_primary
 from bus.desert_bus import DesertBus
+from bus.phoenix import subscribe
 from gdq import utils
 from gdq.display.raw import Display
-
-if TYPE_CHECKING:
-    from phoenix_channels_python_client.phx_messages import ChannelMessage
 
 
 class DisplayThread(Thread):
@@ -41,31 +36,11 @@ class DisplayThread(Thread):
             time.sleep(0.2)
 
 
-async def init_phoenix(bus: DesertBus, event_id: str) -> None:  # noqa: ARG001
-
-    async def fetch_callback(message: ChannelMessage) -> None:
-        print(message.topic)
-        print(message.event)
-        print(message.payload)
-
-    client = PHXChannelsClient("wss://desertbus.org/api/socket/websocket", api_key="")
-    print("Connecting...")
-    async with client:
-        for topic in ("auctions", "prizes", "total"):
-            full_topic = f"{topic}:{event_id}"
-            await client.subscribe_to_topic(full_topic, fetch_callback)
-        await client.run_forever()
-
-
 async def run() -> None:
-    events = get_events()
-    for event in events:
-        if event.primary:
-            print(event.name)
-            # current event
-            break
-    else:
-        print("No primary event found?")
+    try:
+        event = get_primary()
+    except RuntimeError as exc:
+        print(exc)
         sys.exit(1)
 
     bus = DesertBus(start=event.starts_at)
@@ -74,7 +49,7 @@ async def run() -> None:
     display = DisplayThread(bus)
     display.start()
 
-    await init_phoenix(bus, event.id)
+    await subscribe(bus, event.id)
 
 
 def main() -> None:
