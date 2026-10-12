@@ -15,7 +15,6 @@ if TYPE_CHECKING:
     from typing import Any, Self
 
 BASE_URL = "https://desertbus.org/api/"
-OMEGA = 0, False
 
 
 @dataclass
@@ -103,14 +102,12 @@ def get_history() -> list[Event]:
 
 
 def is_omega() -> bool:
-    global OMEGA  # noqa: PLW0603
+    """Uses the current hour as a cache key for fetching call."""
     current_hour = datetime.now(UTC).hour
-    if current_hour != OMEGA[0]:
-        try:
-            omega = requests.get("https://vst.ninja/Resources/isitomegashift.html", timeout=5).text
-        except requests.exceptions.RequestException:
-            pass
-        else:
-            OMEGA = current_hour, bool(int(omega))
+    return _omega(current_hour)
 
-    return OMEGA[1]
+
+@lru_cache(maxsize=10)
+def _omega(_: int) -> bool:
+    omega = requests.get("https://vst.ninja/Resources/isitomegashift.html", timeout=5).text
+    return bool(int(omega))
