@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 PACIFIC = ZoneInfo("America/Vancouver")
 
@@ -22,6 +19,12 @@ class Shift:
     def is_active(self, timestamp: datetime) -> bool:
         current_hour = timestamp.astimezone(PACIFIC).hour
         return bool(self.start_hour <= current_hour < self.start_hour + 6)
+
+    def __str__(self) -> str:
+        boldness = 2
+        if self.is_active(datetime.now(UTC)):
+            boldness = 7
+        return f"{self.color};{boldness}m{self.name}\x1b[0m"
 
 
 @dataclass

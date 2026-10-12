@@ -40,13 +40,15 @@ builtins = ["__"]
 target-version = "py314"
 
 [tool.ruff.lint]
-ignore = ["ANN204", "D", "T201"]
+ignore = ["ANN204", "D"]
 select = ["ALL"]
 
 [tool.ruff.lint.flake8-copyright]
 min-file-size = 1
 
 [tool.ruff.lint.per-file-ignores]
+"src/common/display/raw.py" = ["T201"]
+"src/gdq/__main__.py" = ["T201"]
 "tests/*" = ["S101", "PLR2004"]
 
 [tool.setuptools.packages.find]

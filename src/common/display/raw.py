@@ -1,23 +1,17 @@
 # Copyright 2022
 # SPDX-License-Identifier: MIT
-"""
-========header========
-| col1 | col2 | col3 |
-========footer========
-"""
-
 import shutil
 from typing import TYPE_CHECKING
 
+from common.display import Display, SquishableString, String
+
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Sequence
 
 
-class Display:
+class RawDisplay(Display):
     _header_size: int = 0
     _footer_size: int = 0
-    term_w: int
-    term_h: int
 
     def __init__(self) -> None:
         self.refresh_terminal()
@@ -25,31 +19,30 @@ class Display:
     def refresh_terminal(self) -> None:
         self.term_w, self.term_h = shutil.get_terminal_size()
 
-    def update_header(self, header: Iterable[str]) -> None:
-        print("\x1b[H", end="")
+    def update_header(self, lines: Sequence[String]) -> None:
+        self._header_size = len(lines)
+        self._print(lines)
 
-        self._header_size = 0
-        for line in header:
-            print(line)
-            self._header_size += 1
+    def update_body(self, lines: Iterable[String]) -> None:
+        max_len = self.term_h - self._header_size - self._footer_size - 1
+        self._print(lines, self._header_size, max_len)
 
-    def update_body(self, body: Iterable[str]) -> None:
-        current_line = self._header_size
+    def update_footer(self, lines: Sequence[String]) -> None:
+        self._footer_size = len(lines)
+        footer_start = self.term_h - self._footer_size
+        self._print(lines, footer_start)
 
-        for line in body:
-            current_line += 1
-            print(f"\x1b[{current_line}H{line}", end="\x1b[K")
+    def _print(self, lines: Iterable[String], offset: int = 0, max_len: int = 0) -> None:
+        for i, line in enumerate(lines):
+            line_no = offset + i + 1
+            line = line.render(self.term_w) if isinstance(line, SquishableString) else line  # noqa: PLW2901
 
-            if current_line == self.term_h - self._footer_size:
+            print(f"\x1b[{line_no}H{line}", end="\x1b[K")
+
+            if max_len and i >= max_len:
                 break
         else:
-            # Clear the rest of the screen
-            print("\x1b[J", end="")
-
-    def update_footer(self, footer: Iterable[str]) -> None:
-        footer = list(footer)
-
-        self._footer_size = len(footer)
-        footer_start = self.term_h - self._footer_size + 1
-        for index, line in enumerate(footer):
-            print(f"\x1b[{footer_start + index}H{line}", end="")
+            if max_len:
+                # Clear the rest of the screen
+                print("\x1b[J", end="")
+        print(flush=True, end="")

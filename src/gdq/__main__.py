@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2019
+# SPDX-License-Identifier: MIT
 import sys
 import tomllib
 from datetime import datetime, timedelta
@@ -7,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import xdg
 
-from common.display.raw import Display
+from common.display.raw import RawDisplay as Display
 from gdq import runners, utils
 
 if TYPE_CHECKING:
@@ -30,9 +32,9 @@ def refresh_event(
         utils.update_now()
 
         display = Display()
-        display.update_header(marathon.header(width=display.term_w, args=event_args))
+        display.update_header(list(marathon.header(width=display.term_w, args=event_args)))
         display.update_body(marathon.render(width=display.term_w, args=event_args))
-        display.update_footer(marathon.footer(width=display.term_w, args=event_args))
+        display.update_footer(list(marathon.footer(width=display.term_w, args=event_args)))
         if base_args.oneshot:
             return False
 
