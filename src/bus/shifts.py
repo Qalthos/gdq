@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from zoneinfo import ZoneInfo
 
 PACIFIC = ZoneInfo("America/Vancouver")
@@ -16,13 +16,12 @@ class Shift:
     name: str
     start_hour: int
 
-    def is_active(self, timestamp: datetime) -> bool:
-        current_hour = timestamp.astimezone(PACIFIC).hour
-        return bool(self.start_hour <= current_hour < self.start_hour + 6)
+    def is_active(self) -> bool:
+        return bool(self.start_hour <= _current_hour() < self.start_hour + 6)
 
     def __str__(self) -> str:
         boldness = 2
-        if self.is_active(datetime.now(UTC)):
+        if self.is_active():
             boldness = 7
         return f"{self.color};{boldness}m{self.name}\x1b[0m"
 
@@ -32,8 +31,12 @@ class Omega:
     color: str
     name: str
 
-    def is_active(self, timestamp: datetime) -> bool:  # noqa: ARG002
-        return bool(random.getrandbits(1))
+    def is_active(self, _: datetime) -> bool:
+        return bool(random.getrandbits(1))  # pragma: nocover
+
+
+def _current_hour() -> int:
+    return datetime.now(PACIFIC).hour  # pragma: nocover
 
 
 SHIFTS = [
