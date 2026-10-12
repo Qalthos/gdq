@@ -5,20 +5,22 @@ from typing import TYPE_CHECKING
 from phoenix_channels_python_client import PHXChannelsClient
 
 if TYPE_CHECKING:
+    import queue
+
     from phoenix_channels_python_client.phx_messages import ChannelMessage
 
-    from bus.desert_bus import DesertBus
 
-
-async def subscribe(bus: DesertBus, event_id: str) -> None:  # noqa: ARG001
+async def subscribe(q: queue.Queue, event_id: str) -> None:
 
     async def fetch_callback(message: ChannelMessage) -> None:
-        print(message.topic)
-        print(message.event)
-        print(message.payload)
+        print(message.topic)  # noqa: T201
+        print(message.event)  # noqa: T201
+        print(message.payload)  # noqa: T201
+        if message.topic == "total":
+            q.put(message.payload)
 
     client = PHXChannelsClient("wss://desertbus.org/api/socket/websocket", api_key="")
-    print("Connecting...")
+    print("Connecting...")  # noqa: T201
     async with client:
         for topic in ("auctions", "prizes", "total"):
             full_topic = f"{topic}:{event_id}"

@@ -4,11 +4,11 @@
 from __future__ import annotations
 
 import asyncio
+import queue
 import sys
 import threading
 
 from bus.db_api import get_primary
-from bus.desert_bus import DesertBus
 from bus.display import display
 from bus.phoenix import subscribe
 
@@ -20,13 +20,11 @@ async def run() -> None:
         print(exc)  # noqa: T201
         sys.exit(1)
 
-    bus = DesertBus(start=event.starts_at)
-    bus.total = event.total
-
-    display_thread = threading.Thread(target=lambda: asyncio.run(display(bus)))
+    q = queue.Queue()
+    display_thread = threading.Thread(target=lambda: asyncio.run(display(event, q)))
     display_thread.start()
 
-    await subscribe(bus, event.id)
+    await subscribe(q, event.id)
 
 
 def main() -> None:

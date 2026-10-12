@@ -57,11 +57,15 @@ class DesertToonie(Dollar):
 
 class DesertBus:
     _start: datetime
-    total: Dollar = Dollar(0)
+    total: Dollar
     offline: bool = False
 
-    def __init__(self, start: datetime):
+    def __init__(self, start: datetime, total: Dollar | None = None):
         self._start = start
+        if total is not None:
+            self.total = total
+        else:
+            self.total = Dollar(0)
 
     @property
     def hours(self) -> int:
@@ -86,6 +90,9 @@ class DesertBus:
     @property
     def end(self) -> datetime:
         return self.start + timedelta(hours=self.hours)
+
+    def update_total(self, value: float) -> None:
+        self.total = Dollar(value)
 
     def header(self, *, extended: bool = True) -> list[String]:
         lines: list[String] = []
