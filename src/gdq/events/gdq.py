@@ -1,14 +1,18 @@
-import argparse
 import operator
-from collections.abc import Iterable
 from datetime import UTC, datetime, timedelta
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
+from common.progress_bar import progress_bar_money
 from gdq import utils
 from gdq.events import TrackerBase
 from gdq.models import Event, MultiEvent, SingleEvent
-from gdq.money import Money, progress_bar_money
 from gdq.parsers import gdq_api
+
+if TYPE_CHECKING:
+    import argparse
+    from collections.abc import Iterable
+
+    from common.money import Money
 
 
 class FakeRecord(NamedTuple):
@@ -107,9 +111,7 @@ class GDQTracker(TrackerBase):
 
     def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:
         if args.extended_header and self.current_event.charity:
-            header = (
-                f"{self.current_event.name} supporting {self.current_event.charity}"
-            )
+            header = f"{self.current_event.name} supporting {self.current_event.charity}"
             yield header.center(width)
 
         last_record: FakeRecord | Event = FakeRecord(

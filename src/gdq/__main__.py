@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
-import argparse
+# Copyright 2019
+# SPDX-License-Identifier: MIT
 import sys
 import tomllib
-from collections.abc import Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import xdg
 
+from common.display.raw import RawDisplay as Display
 from gdq import runners, utils
-from gdq.display.raw import Display
-from gdq.events import Marathon
+
+if TYPE_CHECKING:
+    import argparse
+    from collections.abc import Mapping
+
+    from gdq.events import Marathon
 
 
 def refresh_event(
@@ -27,9 +32,9 @@ def refresh_event(
         utils.update_now()
 
         display = Display()
-        display.update_header(marathon.header(width=display.term_w, args=event_args))
+        display.update_header(list(marathon.header(width=display.term_w, args=event_args)))
         display.update_body(marathon.render(width=display.term_w, args=event_args))
-        display.update_footer(marathon.footer(width=display.term_w, args=event_args))
+        display.update_footer(list(marathon.footer(width=display.term_w, args=event_args)))
         if base_args.oneshot:
             return False
 

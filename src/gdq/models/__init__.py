@@ -1,12 +1,20 @@
-import argparse
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from operator import attrgetter
 from textwrap import wrap
+from typing import TYPE_CHECKING
 
-from gdq import money, utils
+from common.progress_bar import progress_bar_money
+from gdq import utils
+
+if TYPE_CHECKING:
+    import argparse
+    from collections.abc import Iterable
+
+    from common import money
 
 
 @dataclass
@@ -229,7 +237,7 @@ class Run:
 
 @dataclass
 class ChoiceIncentive(Incentive):
-    options: list["Choice"]
+    options: list[Choice]
 
     @property
     def max_option(self) -> money.Money:
@@ -257,10 +265,7 @@ class ChoiceIncentive(Incentive):
                 incentive.append(
                     f"       ├┬{self.short_desc:<{desc_size}s}  {lines[0]: <{rest_size}s}│",
                 )
-                incentive.extend(
-                    f"       ││{'':<{desc_size}s}  {line: <{rest_size}s}│"
-                    for line in lines[1:]
-                )
+                incentive.extend(f"       ││{'':<{desc_size}s}  {line: <{rest_size}s}│" for line in lines[1:])
             else:
                 incentive.append(
                     f"       ├┬{self.short_desc:<{desc_size}s}  {'': <{rest_size}s}│",
@@ -273,11 +278,7 @@ class ChoiceIncentive(Incentive):
                 except ZeroDivisionError:
                     percent = 0
 
-                if (
-                    percent < args.min_percent
-                    and index >= args.min_options
-                    and index != len(self.options) - 1
-                ):
+                if percent < args.min_percent and index >= args.min_options and index != len(self.options) - 1:
                     remaining = sorted_options[index:]
                     option_totals = [option.total for option in remaining]
                     total = sum(option_totals, self.currency())
@@ -310,10 +311,7 @@ class ChoiceIncentive(Incentive):
                 if option.description and option.description != option.name:
                     lines = wrap(option.description, width - 1)
                     incentive.append(f"       │{leg[1]} └▶{lines[0].ljust(width - 1)}│")
-                    incentive.extend(
-                        f"       │{leg[1]}   {line.ljust(width - 1)}│"
-                        for line in lines[1:]
-                    )
+                    incentive.extend(f"       │{leg[1]}   {line.ljust(width - 1)}│" for line in lines[1:])
 
                 if self.closed:
                     break
@@ -344,7 +342,7 @@ class DonationIncentive(Incentive):
             width -= 3
 
             lines = wrap(self.description, width)
-            incentive_bar = money.progress_bar_money(
+            incentive_bar = progress_bar_money(
                 self.currency(),
                 self.current,
                 self.total,
@@ -352,9 +350,7 @@ class DonationIncentive(Incentive):
             )
             if lines:
                 incentive.append(f"       ├┬{lines[0].ljust(width + 1)}│")
-                incentive.extend(
-                    f"       ││{line.ljust(width + 1)}│" for line in lines[1:]
-                )
+                incentive.extend(f"       ││{line.ljust(width + 1)}│" for line in lines[1:])
                 incentive.append(
                     f"       │└▶{self.short_desc:<{align}s}{incentive_bar}│",
                 )
