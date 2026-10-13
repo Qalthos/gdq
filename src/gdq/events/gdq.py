@@ -1,3 +1,5 @@
+# Copyright 2019
+# SPDX-License-Identifier: MIT
 import operator
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, NamedTuple
@@ -5,8 +7,8 @@ from typing import TYPE_CHECKING, NamedTuple
 from common.progress_bar import progress_bar_money
 from gdq import utils
 from gdq.events import TrackerBase
-from gdq.models import Event, MultiEvent, SingleEvent
-from gdq.parsers import gdq_api
+from gdq.models.v1 import Event, MultiEvent, SingleEvent
+from gdq.parsers import gdq_v1
 
 if TYPE_CHECKING:
     import argparse
@@ -31,7 +33,7 @@ class GDQTracker(TrackerBase):
     # Cached live data
     current_event: Event
 
-    # Set to account for discrepencies between computed and reported totals.
+    # Set to account for discrepancies between computed and reported totals.
     offset: float
 
     def __init__(
@@ -87,7 +89,7 @@ class GDQTracker(TrackerBase):
             reader()
 
     def read_events(self) -> None:
-        events = gdq_api.get_events(self.url, event_name=self.stream_name)
+        events = gdq_v1.get_events(self.url, event_name=self.stream_name)
         if not events:
             msg = f"Couldn't find any events at {self.url}"
             raise IndexError(msg)
@@ -106,7 +108,7 @@ class GDQTracker(TrackerBase):
         self.schedules = []
         for event in self.current_events:
             self.schedules.append(
-                gdq_api.get_runs(self.url, event.event_id, self.currency),
+                gdq_v1.get_runs(self.url, event.event_id, self.currency),
             )
 
     def header(self, width: int, args: argparse.Namespace) -> Iterable[str]:

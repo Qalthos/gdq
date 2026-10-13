@@ -1,3 +1,5 @@
+# Copyright 2019
+# SPDX-License-Identifier: MIT
 import json
 import operator
 import re
@@ -9,21 +11,23 @@ import requests
 
 from common import money
 from gdq.models import (
+    Incentive,
+    Run,
+    Runner,
+)
+from gdq.models.v1 import (
     Choice,
     ChoiceIncentive,
     DonationIncentive,
     Event,
-    Incentive,
     MultiEvent,
-    Run,
-    Runner,
     SingleEvent,
 )
 
 
 def _get_resource(base_url: str, resource_type: str, **kwargs: str) -> requests.Response:
     resource_url = urllib.parse.urljoin(base_url, "api/v1/search")
-    return requests.get(resource_url, params={"type": resource_type, **kwargs})
+    return requests.get(resource_url, params={"type": resource_type, **kwargs}, timeout=5)
 
 
 def get_events(base_url: str, event_name: str = "") -> list[Event]:
@@ -144,7 +148,7 @@ def get_runners_for_event(base_url: str, event_id: int) -> dict[int, Runner]:
 def get_incentives_for_event(base_url: str, event_id: int, currency: type[money.Money]) -> dict[str, list[Incentive]]:
     # FIXME: This stops at 500 results, and doesn't seem to be pageable.
     incentives = _get_resource(base_url, "allbids", event=str(event_id)).json()
-    incentive_dict: dict[str, list[Incentive]] = dict()
+    incentive_dict: dict[str, list[Incentive]] = {}
     choices = defaultdict(list)
 
     for incentive in incentives:
@@ -181,6 +185,6 @@ def get_incentives_for_event(base_url: str, event_id: int, currency: type[money.
                 options=choices[incentive_id],
                 state=incentive["state"],
             )
-        incentive_dict[game] = incentive_dict.get(game, []) + [incentive_obj]
+        incentive_dict[game] = [*incentive_dict.get(game, []), incentive_obj]
 
     return incentive_dict
