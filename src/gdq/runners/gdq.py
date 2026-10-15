@@ -1,3 +1,5 @@
+# Copyright 2019
+# SPDX-License-Identifier: MIT
 import argparse
 
 from gdq.events.gdq import GDQTracker
@@ -7,63 +9,86 @@ from gdq.runners.base import RunnerBase
 class Runner(RunnerBase):
     def get_marathon(self) -> GDQTracker:
         if "url" not in self.event_config:
-            raise KeyError("`url` key missing from configuration")
+            err = "`url` key missing from configuration"
+            raise KeyError(err)
 
-        record_offsets = {}
-        if "offsets" in self.event_config:
-            record_offsets = self.event_config["offsets"]
+        extra = {}
+        if self.event_config.get("version") == "v1":
+            extra = {"offset": self.args.delta_total, "record_offsets": self.event_config.get("offsets", {})}
 
         return GDQTracker(
             url=self.event_config["url"],
             stream_name=self.args.stream_name,
-            offset=self.args.delta_total,
-            record_offsets=record_offsets,
+            **extra,
         )
 
     def set_options(self, event_args: list[str]) -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "-d", "--delta-total", type=float, default=0,
+            "-d",
+            "--delta-total",
+            type=float,
+            default=0,
             help="Offset to subtract from event total to reconcile discrepencies",
         )
         parser.add_argument(
-            "-i", "--stream_name", type=str, default="",
+            "-i",
+            "--stream_name",
+            type=str,
+            default="",
             help="Follow a specific named stream",
         )
         parser.add_argument(
-            "-o", "--min-options", type=int, default=5,
+            "-o",
+            "--min-options",
+            type=int,
+            default=5,
             help="Minimum number of choices before applying percent cutoff.",
         )
         parser.add_argument(
-            "-p", "--min-percent", type=int, default=5,
+            "-p",
+            "--min-percent",
+            type=int,
+            default=5,
             help="Minimum percent before displaying choice incentive.",
         )
         parser.add_argument(
-            "-s", "--split-pane", action="store_true",
+            "-s",
+            "--split-pane",
+            action="store_true",
             help="Display a split view with schedule on the left and incentives on the right",
         )
         parser.add_argument(
-            "-w", "--min-width", type=int, default=16,
+            "-w",
+            "--min-width",
+            type=int,
+            default=16,
             help="Minimum width for option description names",
         )
         parser.add_argument(
-            "-x", "--extended-header", action="store_true",
+            "-x",
+            "--extended-header",
+            action="store_true",
             help="Show expanded information in the header",
         )
         parser.add_argument(
-            "--hide-completed", action="store_true",
+            "--hide-completed",
+            action="store_true",
             help="Hide completed donation incentives.",
         )
         parser.add_argument(
-            "--hide-basic", action="store_true",
+            "--hide-basic",
+            action="store_true",
             help="Hide runs with no active incentives",
         )
         parser.add_argument(
-            "--hide-incentives", action="store_true",
+            "--hide-incentives",
+            action="store_true",
             help="Hide run incentives",
         )
         parser.add_argument(
-            "--list", action="store_true",
+            "--list",
+            action="store_true",
             help="Show known marathons and status",
         )
 

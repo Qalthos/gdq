@@ -9,7 +9,6 @@ class Runner(RunnerBase):
         try:
             return HoraroTracker(
                 group=self.event_config["group"],
-                event=self.event_config["event"],
                 key_map=self.event_config["keys"],
             )
         except KeyError as exc:
@@ -18,7 +17,10 @@ class Runner(RunnerBase):
     def set_options(self, event_args: list[str]) -> None:
         parser = argparse.ArgumentParser()
         parser.add_argument(
-            "-i", "--stream_index", type=int, default=1,
+            "-i",
+            "--stream_index",
+            type=int,
+            default=1,
             help="Follow only a single stream",
         )
 

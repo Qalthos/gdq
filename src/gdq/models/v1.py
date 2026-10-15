@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from operator import attrgetter
 from textwrap import wrap
@@ -10,6 +9,7 @@ from typing import TYPE_CHECKING
 
 from common.progress_bar import progress_bar_money
 from gdq import utils
+from gdq.models import Event as BaseEvent
 from gdq.models import Incentive
 
 if TYPE_CHECKING:
@@ -20,29 +20,8 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class Event(ABC):
-    name: str
-    short_name: str
+class Event(BaseEvent):
     _offset: money.Money
-
-    @property
-    @abstractmethod
-    def start_time(self) -> datetime:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def total(self) -> money.Money:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def charity(self) -> str:
-        raise NotImplementedError
-
-    @property
-    def currency(self) -> type[money.Money]:
-        return type(self.total)
 
     @property
     def offset(self) -> money.Money:
@@ -54,27 +33,13 @@ class Event(ABC):
 
 @dataclass
 class SingleEvent(Event):
-    event_id: int
+    id: int
     target: money.Money
-    _start_time: datetime
-    _total: money.Money
-    _charity: str
-
-    @property
-    def start_time(self) -> datetime:
-        return self._start_time
-
-    @property
-    def total(self) -> money.Money:
-        return self._total - self._offset
-
-    @property
-    def charity(self) -> str:
-        return self._charity
 
 
 @dataclass
 class MultiEvent(Event):
+    id: int
     subevents: list[SingleEvent]
 
     @property
@@ -92,8 +57,8 @@ class MultiEvent(Event):
         return sum(totals, -self._offset)
 
     @property
-    def charity(self) -> str:
-        return self.subevents[0].charity
+    def receiver(self) -> str:
+        return self.subevents[0].receiver
 
 
 @dataclass

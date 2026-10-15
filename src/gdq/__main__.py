@@ -25,7 +25,10 @@ def refresh_event(
     event_args: argparse.Namespace,
 ) -> bool:
     # Recaclulate terminal size
-    marathon.refresh_all()
+    try:
+        marathon.refresh_all()
+    except ValueError:
+        return False
 
     for _ in utils.slow_refresh_with_progress(base_args.interval):
         # Update current time for display.

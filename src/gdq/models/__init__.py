@@ -4,14 +4,34 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
+
+from common.money import Money
 
 if TYPE_CHECKING:
     import argparse
     from collections.abc import Iterable
 
     from common import money
+
+
+@dataclass
+class Event:
+    id: int
+    name: str
+    short: str
+    receiver: str
+    start_time: datetime
+    total: Money
+
+    @property
+    def currency(self) -> type[money.Money]:
+        return type(self.total)
+
+    @property
+    def future(self) -> bool:
+        return datetime.now(UTC) < self.start_time + timedelta(days=10)
 
 
 @dataclass
@@ -44,7 +64,7 @@ class Run:
     game: str
     platform: str
     category: str
-    runners: list[Runner | str]
+    runners: list[Runner]
     incentives: list[Incentive]
 
     start: datetime
@@ -58,7 +78,7 @@ class Run:
 
     @property
     def delta(self) -> str:
-        now = datetime.now()
+        now = datetime.now(UTC)
         if self.start < now:
             return "  NOW  "
         delta = self.start - now
@@ -73,7 +93,7 @@ class Run:
 
     @property
     def remaining(self) -> timedelta:
-        now = datetime.now()
+        now = datetime.now(UTC)
         if self.start < now:
             return self.end - now
         return timedelta(seconds=self.estimate)
