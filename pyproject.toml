@@ -40,7 +40,7 @@ builtins = ["__"]
 target-version = "py314"
 
 [tool.ruff.lint]
-ignore = ["ANN204", "D"]
+ignore = ["ANN204", "D", "TD002", "TD003"]
 select = ["ALL"]
 
 [tool.ruff.lint.flake8-copyright]

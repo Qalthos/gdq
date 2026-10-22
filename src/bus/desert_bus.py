@@ -7,9 +7,9 @@ import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import partial
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, cast
 
-from bus.db_api import get_history, is_omega
+from bus.db_api import Prize, _money_from_message, get_history, get_prizes, is_omega
 from bus.shifts import OMEGA, SHIFTS
 from bus.utils import dollars_to_hours, hours_to_dollars
 from common.display import SquishableString, String
@@ -19,6 +19,7 @@ from common.time import timedelta_as_hours
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
+    from bus.types import AuctionMessage, PrizeMessage, TotalMessage
     from common.money import Money
 
 
@@ -56,11 +57,16 @@ class DesertToonie(Dollar):
 
 
 class DesertBus:
+    _event_id: str
     _start: datetime
     total: Dollar
     offline: bool = False
 
-    def __init__(self, start: datetime, total: Dollar | None = None):
+    _prizes: dict[str, Prize]
+
+    def __init__(self, event: str, start: datetime, total: Dollar | None = None):
+        self._event_id = event
+        self._prizes = {p.id: p for p in get_prizes(event)}
         self._start = start
         if total is not None:
             self.total = total
@@ -91,9 +97,19 @@ class DesertBus:
     def end(self) -> datetime:
         return self.start + timedelta(hours=self.hours)
 
-    def update_total(self, value: float) -> None:
-        self.total = Dollar(value)
+    # State modifiers
+    def update_auction(self, message: AuctionMessage) -> None:
+        self._auction = message
 
+    def update_prize(self, message: PrizeMessage) -> None:
+        prize = Prize.from_json(message)
+        self._prizes[prize.id] = prize
+
+    def update_total(self, message: TotalMessage) -> None:
+        # TODO: Use Money everywhere  # noqa: FIX002
+        self.total = cast("Dollar", _money_from_message(message))
+
+    # Render functions
     def header(self, *, extended: bool = True) -> list[String]:
         lines: list[String] = []
 
@@ -128,6 +144,7 @@ class DesertBus:
 
     def render(self) -> Iterable[str]:
         now = datetime.now(UTC)
+        yield from self.show_prizes()
         if now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
 
@@ -187,6 +204,11 @@ class DesertBus:
             [shift.name for shift in shifts],
             partial(_even_banner, fill_char="═"),
         )
+
+    def show_prizes(self) -> Iterable[str]:
+        for prize in self._prizes.values():
+            if prize.active:
+                yield str(prize)
 
     def print_records(self) -> Iterable[str]:
         others = self.artificial_records()

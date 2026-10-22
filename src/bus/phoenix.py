@@ -11,18 +11,12 @@ if TYPE_CHECKING:
 
 
 async def subscribe(q: queue.Queue, event_id: str) -> None:
-
-    async def fetch_callback(message: ChannelMessage) -> None:
-        print(message.topic)  # noqa: T201
-        print(message.event)  # noqa: T201
-        print(message.payload)  # noqa: T201
-        if message.topic == "total":
-            q.put(message.payload)
+    async def event_callback(message: ChannelMessage) -> None:
+        q.put({message.event: message.payload})
 
     client = PHXChannelsClient("wss://desertbus.org/api/socket/websocket", api_key="")
-    print("Connecting...")  # noqa: T201
+    topics = ("auctions", "prizes", "total")
     async with client:
-        for topic in ("auctions", "prizes", "total"):
-            full_topic = f"{topic}:{event_id}"
-            await client.subscribe_to_topic(full_topic, fetch_callback)
+        for topic in topics:
+            await client.subscribe_to_topic(f"{topic}:{event_id}", event_callback)
         await client.run_forever()

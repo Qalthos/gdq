@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 async def display(event: Event, q: queue.Queue) -> None:
     _display = Display()
-    bus = DesertBus(event.starts_at, event.total)
+    bus = DesertBus(event.id, event.starts_at, event.total)
 
     def _flush_display(*, full: bool = False) -> None:
         _display.refresh_terminal()
@@ -26,8 +26,15 @@ async def display(event: Event, q: queue.Queue) -> None:
     while True:
         full = False
         try:
-            total = q.get_nowait()
-            bus.update_total(total)
+            match q.get_nowait():
+                case {"auction": auction}:
+                    bus.update_auction(auction)
+                case {"total": total}:
+                    bus.update_total(total)
+                case {"prize": prize}:
+                    bus.update_prize(prize)
+                case other:
+                    print(f"unknown message {other}")  # noqa: T201
             full = True
         except queue.Empty:
             pass

@@ -1,20 +1,90 @@
 # Copyright 2026
 # SPDX-License-Identifier: MIT
+from __future__ import annotations
+
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from enum import StrEnum, auto
 from functools import lru_cache
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import requests
-from requests import Response
 
 from bus.utils import dollars_to_hours
-from common.money import CURRENCIES, Dollar
+from common.money import CURRENCIES, Dollar, Money
 
 if TYPE_CHECKING:
     from typing import Any, Self
 
+    from bus.types import PrizeMessage, TotalMessage
+
 BASE_URL = "https://desertbus.org/api/"
+
+
+@dataclass
+class Prize:
+    id: str
+    type: PrizeType
+    enabled: bool
+    state: PrizeState
+    name: str
+    description: dict[str, Any]
+    description_text: str
+    starts_at: datetime
+    ends_at: datetime
+    updated_at: datetime
+    images: list[Any]
+    giveaway_amount: str | None
+    raised: Money | None
+    entrants: str | None
+    winners: list[str | None]
+    current_high_bid: str | None
+    crafter: dict[str, Any] | None
+    sponsor: dict[str, Any] | None
+
+    def __str__(self) -> str:
+        match self.state:
+            case PrizeState.UPCOMING:
+                eta = datetime.now(UTC) - self.starts_at
+                return f"{self.name} in {eta}"
+            case PrizeState.SOLD:
+                return f"{self.name} sold for {self.raised}"
+
+    @property
+    def active(self) -> bool:
+        match self.state:
+            case PrizeState.UPCOMING:
+                eta = self.starts_at - datetime.now(UTC).replace(microsecond=0)
+                return eta < timedelta(hours=1)
+            case PrizeState.SOLD:
+                return False
+
+    @classmethod
+    def from_json(cls, message: PrizeMessage) -> Self:
+        updated: dict[str, Any] = dict(**message)
+        for key in ("starts_at", "ends_at", "updated_at"):
+            updated[key] = datetime.fromisoformat(message[key])
+        for key in ("raised",):
+            value = message[key]
+            if value is None:
+                updated[key] = None
+            else:
+                updated[key] = _money_from_message(value)
+        updated["state"] = PrizeState(message["state"])
+        updated["type"] = PrizeType(message["type"])
+
+        return cls(**updated)
+
+
+class PrizeState(StrEnum):
+    UPCOMING = auto()
+    SOLD = auto()
+
+
+class PrizeType(StrEnum):
+    LIVE = auto()
+    GIVEAWAY = auto()
+    SILENT = auto()
 
 
 @dataclass
@@ -65,15 +135,17 @@ class Event:
         return f"{next_level} until {self!s}"
 
 
-def _request(path: str, params: dict[str, str] | None = None) -> Response:
+def _money_from_message(message: TotalMessage) -> Money:
+    currency = CURRENCIES.get(message["currency"], None)
+    if currency is None:
+        msg = f"Invalid currency {message['currency']}"
+        raise ValueError(msg)
+    return currency(message["amount"])
+
+
+def _request(resource: str, path: str = "", params: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """Generic request handler wrapper"""
-    return requests.get(BASE_URL + path, params, timeout=5)
-
-
-@lru_cache
-def get_series() -> list[Series]:
-    json = _request("series").json()["series"]
-    return [Series(**item) for item in json]
+    return requests.get(BASE_URL + path + resource, params, timeout=5).json()[resource]
 
 
 @lru_cache
@@ -81,8 +153,19 @@ def get_events(series_id: str = "") -> list[Event]:
     params = {}
     if series_id:
         params["series"] = series_id
-    json = _request("events", params).json()["events"]
+    json = _request("events", params=params)
     return [Event.from_json(item) for item in json]
+
+
+def get_prizes(event_id: str) -> list[Prize]:
+    json = cast("list[PrizeMessage]", _request("prizes", f"events/{event_id}/"))
+    return [Prize.from_json(item) for item in json]
+
+
+@lru_cache
+def get_series() -> list[Series]:
+    json = _request("series")
+    return [Series(**item) for item in json]
 
 
 @lru_cache
