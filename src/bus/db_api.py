@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum, auto
@@ -63,7 +64,8 @@ class Prize:
     def from_json(cls, message: PrizeMessage) -> Self:
         updated: dict[str, Any] = dict(**message)
         for key in ("starts_at", "ends_at", "updated_at"):
-            updated[key] = datetime.fromisoformat(message[key])
+            with contextlib.suppress(KeyError):
+                updated[key] = datetime.fromisoformat(message[key])
         for key in ("raised",):
             value = message[key]
             if value is None:
