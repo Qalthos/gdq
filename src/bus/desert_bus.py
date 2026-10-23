@@ -62,6 +62,7 @@ class DesertBus:
     total: Dollar
     offline: bool = False
 
+    _auction: AuctionMessage | None = None
     _prizes: dict[str, Prize]
 
     def __init__(self, event: str, start: datetime, total: Dollar | None = None):
@@ -143,8 +144,9 @@ class DesertBus:
         return lines
 
     def render(self) -> Iterable[str]:
-        now = datetime.now(UTC)
+        yield from self.show_auction()
         yield from self.show_prizes()
+        now = datetime.now(UTC)
         if now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
 
@@ -204,6 +206,10 @@ class DesertBus:
             [shift.name for shift in shifts],
             partial(_even_banner, fill_char="═"),
         )
+
+    def show_auction(self) -> Iterable[str]:
+        if self._auction is not None:
+            yield str(self._auction)
 
     def show_prizes(self) -> Iterable[str]:
         for prize in self._prizes.values():
