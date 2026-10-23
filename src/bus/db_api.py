@@ -22,6 +22,12 @@ if TYPE_CHECKING:
 BASE_URL = "https://desertbus.org/api/"
 
 
+def _make_link(prize_id: str, text: str) -> str:
+    OSC = "\033]8;;"  # noqa: N806
+    ST = "\033\\"  # noqa: N806
+    return f"{OSC}https://desertbus.org/2026/prize/{prize_id}{ST}{text}{OSC}{ST}"
+
+
 @dataclass
 class Prize:
     id: str
@@ -44,7 +50,7 @@ class Prize:
     sponsor: dict[str, Any] | None
 
     def __str__(self) -> str:
-        name = f"\033[{self.color}m{self.name}\033[0m"
+        name = _make_link(self.id, f"\033[{self.color}m{self.name}\033[0m")
         start = self.starts_at.astimezone()
         end = self.ends_at.astimezone()
         date_f = "%a %b %d"
