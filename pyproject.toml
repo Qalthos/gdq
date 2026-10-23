@@ -1,7 +1,18 @@
+[build-system]
+build-backend = "uv_build"
+requires = [ "uv-build>=0.12.23,<0.13" ]
+
 [project]
 name = "gdq-cli"
 version = "1.2"
+license = "MIT"
 requires-python = ">=3.13"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+]
 dependencies = [
   "phoenix-channels-python-client",
   "requests",
@@ -18,49 +29,39 @@ test = [
   "pytest-cov",
 ]
 
-[build-system]
-requires = ["uv_build>=0.12.23,<0.13"]
-build-backend = "uv_build"
+[tool.uv]
+default-groups = [ "test" ]
+
+[tool.uv.build-backend]
+module-name = [ "bus", "gdq" ]
+
+[tool.ruff]
+line-length = 120
+builtins = [ "__" ]
+fix = true
+
+[tool.ruff.lint]
+select = [ "ALL" ]
+ignore = [ "ANN204", "D", "TD002", "TD003" ]
+per-file-ignores."src/common/display/raw.py" = [ "T201" ]
+per-file-ignores."tests/*" = [ "PLR2004", "S101" ]
+flake8-copyright.min-file-size = 1
+
+[tool.pyproject-fmt]
+table_format = "long"
+sub_table_spacing = "\n"
+
+[tool.pytest]
+
+[tool.pytest.ini_options]
+pythonpath = [ "src" ]
+
+[tool.coverage]
 
 [tool.coverage.run]
 branch = true
 
 [tool.coverage.report]
-show_missing = true
 skip_covered = true
 skip_empty = true
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-
-[tool.ruff]
-fix = true
-line-length = 120
-builtins = ["__"]
-target-version = "py314"
-
-[tool.ruff.lint]
-ignore = ["ANN204", "D", "TD002", "TD003"]
-select = ["ALL"]
-
-[tool.ruff.lint.flake8-copyright]
-min-file-size = 1
-
-[tool.ruff.lint.per-file-ignores]
-"src/common/display/raw.py" = ["T201"]
-"src/gdq/__main__.py" = ["T201"]
-"tests/*" = ["S101", "PLR2004"]
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-bus = ["*.json"]
-
-[tool.ty]
-
-[tool.uv]
-default-groups = ["test"]
-
-[tool.uv.build-backend]
-module-name = ["bus", "gdq"]
+show_missing = true
