@@ -142,11 +142,11 @@ class DesertBus:
             lines.append(SquishableString(totals, _even_banner))
 
         lines.extend(self.show_auction())
-        lines.extend(self.show_prizes())
 
         return lines
 
     def render(self) -> Iterable[str]:
+        yield from self.show_prizes()
         now = datetime.now(UTC)
         if now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
@@ -213,7 +213,7 @@ class DesertBus:
             yield str(self._auction)
 
     def show_prizes(self) -> Iterable[str]:
-        for prize in self._prizes.values():
+        for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
             if prize.active:
                 yield str(prize)
 

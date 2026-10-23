@@ -44,23 +44,37 @@ class Prize:
     sponsor: dict[str, Any] | None
 
     def __str__(self) -> str:
-        match self.type:
-            case PrizeType.LIVE:
-                # Red
-                name_color = 31
-            case PrizeType.GIVEAWAY:
-                # Yellow
-                name_color = 33
-            case PrizeType.SILENT:
-                # Cyan
-                name_color = 36
-        name = f"\033[{name_color}m{self.name}\033[0m"
+        name = f"\033[{self.color}m{self.name}\033[0m"
+        start = self.starts_at.astimezone()
+        end = self.ends_at.astimezone()
+        date_f = "%a %b %d"
+        time_f = "%I:%M %p"
 
         match self.state:
             case PrizeState.UPCOMING:
-                return f"{name} starts between {self.starts_at.strftime('%c')} and {self.ends_at.strftime('%c')}"
+                return (
+                    f"{name} starts on {start.strftime(date_f)} "
+                    f"between {start.strftime(time_f)} and {end.strftime(time_f)}"
+                )
             case PrizeState.SOLD:
                 return f"{name} sold for {self.raised}"
+
+    @property
+    def color(self) -> int:
+        match self.type:
+            case PrizeType.LIVE:
+                # Red
+                return 31
+            case PrizeType.GIVEAWAY:
+                # Yellow
+                return 33
+            case PrizeType.SILENT:
+                # Cyan
+                return 36
+
+    @property
+    def eta(self) -> timedelta:
+        return self.starts_at - datetime.now(UTC)
 
     @property
     def active(self) -> bool:
@@ -73,8 +87,7 @@ class Prize:
                         lookahead = 12
                     case PrizeType.LIVE:
                         lookahead = 24
-                eta = self.ends_at - datetime.now(UTC)
-                return eta < timedelta(hours=lookahead)
+                return self.eta < timedelta(hours=lookahead)
             case PrizeState.SOLD:
                 return False
 
