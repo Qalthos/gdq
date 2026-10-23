@@ -1,5 +1,7 @@
 # Copyright 2026
 # SPDX-License-Identifier: MIT
+from __future__ import annotations
+
 import asyncio
 import queue
 from typing import TYPE_CHECKING
@@ -31,11 +33,11 @@ async def display(event: Event, q: queue.Queue) -> None:
                     bus.update_auction(auction)
                 case {"total": total}:
                     bus.update_total(total)
+                    full = True
                 case {"prize": prize}:
                     bus.update_prize(prize)
                 case other:
                     print(f"unknown message {other}")  # noqa: T201
-            full = True
         except queue.Empty:
             pass
         except queue.ShutDown:

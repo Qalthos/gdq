@@ -17,7 +17,7 @@ from common.money import CURRENCIES, Dollar, Money
 if TYPE_CHECKING:
     from typing import Any, Self
 
-    from bus.types import PrizeMessage, TotalMessage
+    from bus.types import DocFragment, Image, Person, PrizeMessage, TotalMessage
 
 BASE_URL = "https://desertbus.org/api/"
 
@@ -29,34 +29,52 @@ class Prize:
     enabled: bool
     state: PrizeState
     name: str
-    description: dict[str, Any]
+    description: DocFragment
     description_text: str
     starts_at: datetime
     ends_at: datetime
     updated_at: datetime
-    images: list[Any]
+    images: list[Image]
     giveaway_amount: str | None
     raised: Money | None
     entrants: str | None
     winners: list[str | None]
     current_high_bid: str | None
-    crafter: dict[str, Any] | None
+    crafter: Person | None
     sponsor: dict[str, Any] | None
 
     def __str__(self) -> str:
+        match self.type:
+            case PrizeType.LIVE:
+                # Red
+                name_color = 31
+            case PrizeType.GIVEAWAY:
+                # Yellow
+                name_color = 33
+            case PrizeType.SILENT:
+                # Cyan
+                name_color = 36
+        name = f"\033[{name_color}m{self.name}\033[0m"
+
         match self.state:
             case PrizeState.UPCOMING:
-                eta = datetime.now(UTC) - self.starts_at
-                return f"{self.name} in {eta}"
+                return f"{name} starts between {self.starts_at.strftime('%c')} and {self.ends_at.strftime('%c')}"
             case PrizeState.SOLD:
-                return f"{self.name} sold for {self.raised}"
+                return f"{name} sold for {self.raised}"
 
     @property
     def active(self) -> bool:
         match self.state:
             case PrizeState.UPCOMING:
-                eta = self.starts_at - datetime.now(UTC).replace(microsecond=0)
-                return eta < timedelta(hours=1)
+                match self.type:
+                    case PrizeType.GIVEAWAY:
+                        lookahead = 6
+                    case PrizeType.SILENT:
+                        lookahead = 12
+                    case PrizeType.LIVE:
+                        lookahead = 24
+                eta = self.ends_at - datetime.now(UTC)
+                return eta < timedelta(hours=lookahead)
             case PrizeState.SOLD:
                 return False
 
@@ -96,21 +114,13 @@ class Series:
 
 
 @dataclass
-class Logo:
-    url: str
-    alt: str | None
-    width: int
-    height: int
-
-
-@dataclass
 class Event:
     id: str
     name: str
     url: str  # just year?
     primary: bool  # current event?
     starts_at: datetime
-    logo: Logo
+    logo: Image
     total: Dollar
     series: Series
 
@@ -119,7 +129,6 @@ class Event:
 
     @classmethod
     def from_json(cls, json: dict[str, Any]) -> Self:
-        json["logo"] = Logo(**json["logo"])
         json["total"] = CURRENCIES[json["total"]["currency"]](float(json["total"]["amount"]))
         json["series"] = Series(**json["series"])
         json["starts_at"] = datetime.fromisoformat(json["starts_at"])

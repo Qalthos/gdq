@@ -20,14 +20,15 @@ class TotalMessage(TypedDict):
 
 class PrizeMessage(TypedDict):
     id: str
-    type: Literal["giveaway", "live"]
-    state: Literal["upcoming"]
+    type: Literal["giveaway", "live", "silent"]
+    state: Literal["sold", "upcoming"]
     name: str
-    description: dict[str, Any]
+    description: DocFragment
     description_text: str
     starts_at: str
     ends_at: str
     updated_at: str
+    images: list[Image]
     giveaway_amount: str | None
     raised: TotalMessage | None
     entrants: str | None
@@ -35,3 +36,34 @@ class PrizeMessage(TypedDict):
     current_high_bid: str | None
     crafter: dict[str, Any] | None
     sponsor: dict[str, Any] | None
+
+
+class Person(TypedDict):
+    name: str
+    pronouns: str
+    bio: DocFragment
+    bio_text: str
+    picture: Image
+
+
+class Image(TypedDict):
+    url: str
+    alt: str | None
+    width: int
+    height: int
+
+
+class TextFragment(TypedDict):
+    type: Literal["text"]
+    text: str
+    marks: None
+
+
+class ParagraphFragment(TypedDict):
+    type: Literal["paragraph"]
+    content: list[TextFragment]
+
+
+class DocFragment(TypedDict):
+    type: Literal["doc"]
+    content: list[ParagraphFragment]
