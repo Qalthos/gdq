@@ -141,11 +141,12 @@ class DesertBus:
             totals.append(f"{self.total + LIFETIME} lifetime")
             lines.append(SquishableString(totals, _even_banner))
 
+        lines.extend(self.show_auction())
+        lines.extend(self.show_prizes())
+
         return lines
 
     def render(self) -> Iterable[str]:
-        yield from self.show_auction()
-        yield from self.show_prizes()
         now = datetime.now(UTC)
         if now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
