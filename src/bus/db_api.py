@@ -17,7 +17,7 @@ from common.money import CURRENCIES, Dollar, Money
 if TYPE_CHECKING:
     from typing import Any, Self
 
-    from bus.types import DocFragment, Image, Person, PrizeMessage, TotalMessage
+    from bus.types import Bidder, BidMessage, DocFragment, Image, Person, PrizeMessage, Sponsor, TotalMessage
 
 BASE_URL = "https://desertbus.org/api/"
 
@@ -28,12 +28,16 @@ def _make_link(prize_id: str, text: str) -> str:
     return f"{OSC}https://desertbus.org/2026/prize/{prize_id}{ST}{text}{OSC}{ST}"
 
 
+def _eta(ref: datetime) -> timedelta:
+    return ref - datetime.now(UTC).replace(microsecond=0)
+
+
 @dataclass
 class Prize:
     id: str
     type: PrizeType
-    enabled: bool
     state: PrizeState
+    enabled: bool
     name: str
     description: DocFragment
     description_text: str
@@ -41,29 +45,42 @@ class Prize:
     ends_at: datetime
     updated_at: datetime
     images: list[Image]
-    giveaway_amount: str | None
+    giveaway_amount: Money | None
     raised: Money | None
-    entrants: str | None
-    winners: list[str | None]
-    current_high_bid: str | None
+    entrants: list[str] | None
+    winners: list[Bidder] | list[None]
+    current_high_bid: Bid | None
     crafter: Person | None
-    sponsor: dict[str, Any] | None
+    sponsor: Sponsor | None
 
     def __str__(self) -> str:
         name = _make_link(self.id, f"\033[{self.color}m{self.name}\033[0m")
-        start = self.starts_at.astimezone()
-        end = self.ends_at.astimezone()
-        date_f = "%a %b %d"
         time_f = "%I:%M %p"
 
         match self.state:
             case PrizeState.UPCOMING:
-                return (
-                    f"{name} starts on {start.strftime(date_f)} "
-                    f"between {start.strftime(time_f)} and {end.strftime(time_f)}"
-                )
+                output = f"{name} starts on {self.starts_at.strftime('%a %b %d')}"
+                match self.type:
+                    case PrizeType.GIVEAWAY:
+                        return f"{output} between {self.starts_at.strftime(time_f)} and {self.ends_at.strftime(time_f)}"
+                    case PrizeType.LIVE:
+                        return f"{output} around {self.starts_at.strftime(time_f)}"
+                    case PrizeType.SILENT:
+                        return f"{output} at {self.starts_at.strftime(time_f)}"
+            case PrizeState.ACTIVE:
+                match self.type:
+                    case PrizeType.GIVEAWAY:
+                        detail = f"{self.giveaway_amount} for {self.eta_end}"
+                    case _:
+                        if self.current_high_bid is None:
+                            detail = "be the first!"
+                        else:
+                            detail = f"{self.current_high_bid.name} for {self.current_high_bid.amount}"
+                return f"{name} - {detail}"
             case PrizeState.SOLD:
                 return f"{name} sold for {self.raised}"
+            case _:
+                return f"{name} {self.type} {self.state}"
 
     @property
     def color(self) -> int:
@@ -80,10 +97,22 @@ class Prize:
 
     @property
     def eta(self) -> timedelta:
-        return self.starts_at - datetime.now(UTC)
+        return _eta(self.starts_at)
+
+    @property
+    def eta_end(self) -> timedelta:
+        return _eta(self.ends_at)
 
     @property
     def active(self) -> bool:
+        match self.state:
+            case PrizeState.ACTIVE | PrizeState.COOLDOWN | PrizeState.FINALIZING:
+                return True
+            case _:
+                return False
+
+    @property
+    def upcoming(self) -> bool:
         match self.state:
             case PrizeState.UPCOMING:
                 match self.type:
@@ -93,8 +122,8 @@ class Prize:
                         lookahead = 12
                     case PrizeType.LIVE:
                         lookahead = 24
-                return self.eta < timedelta(hours=lookahead)
-            case PrizeState.SOLD:
+                return self.eta_end < timedelta(hours=lookahead)
+            case _:
                 return False
 
     @classmethod
@@ -102,21 +131,34 @@ class Prize:
         updated: dict[str, Any] = dict(**message)
         for key in ("starts_at", "ends_at", "updated_at"):
             with contextlib.suppress(KeyError):
-                updated[key] = datetime.fromisoformat(message[key])
-        for key in ("raised",):
+                updated[key] = datetime.fromisoformat(message[key]).astimezone()
+        for key in ("raised", "giveaway_amount"):
             value = message[key]
-            if value is None:
-                updated[key] = None
-            else:
-                updated[key] = _money_from_message(value)
+            updated[key] = None if value is None else _money_from_message(value)
+        for key in ("current_high_bid",):
+            value = message[key]
+            updated[key] = None if value is None else Bid.from_json(value)
         updated["state"] = PrizeState(message["state"])
         updated["type"] = PrizeType(message["type"])
 
         return cls(**updated)
 
 
+@dataclass
+class Bid:
+    name: str
+    amount: Money
+
+    @classmethod
+    def from_json(cls, message: BidMessage) -> Self:
+        return cls(message["name"], _money_from_message(message["amount"]))
+
+
 class PrizeState(StrEnum):
     UPCOMING = auto()
+    ACTIVE = auto()
+    COOLDOWN = auto()
+    FINALIZING = auto()
     SOLD = auto()
 
 

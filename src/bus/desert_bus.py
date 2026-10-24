@@ -142,6 +142,7 @@ class DesertBus:
             lines.append(SquishableString(totals, _even_banner))
 
         lines.extend(self.show_auction())
+        lines.extend(self.show_prizes(active=True))
 
         return lines
 
@@ -212,10 +213,10 @@ class DesertBus:
         if self._auction is not None:
             yield str(self._auction)
 
-    def show_prizes(self) -> Iterable[str]:
+    def show_prizes(self, *, active: bool = False) -> Iterable[str]:
         for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
-            if prize.active:
-                yield str(prize)
+            if (active and prize.active) or prize.upcoming:
+                yield prize
 
     def print_records(self) -> Iterable[str]:
         others = self.artificial_records()

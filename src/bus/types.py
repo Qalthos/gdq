@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 from __future__ import annotations
 
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
 
 
 # API responses
@@ -21,7 +21,7 @@ class TotalMessage(TypedDict):
 class PrizeMessage(TypedDict):
     id: str
     type: Literal["giveaway", "live", "silent"]
-    state: Literal["sold", "upcoming"]
+    state: Literal["active", "sold", "cooldown", "finalizing", "upcoming"]
     name: str
     description: DocFragment
     description_text: str
@@ -29,21 +29,34 @@ class PrizeMessage(TypedDict):
     ends_at: str
     updated_at: str
     images: list[Image]
-    giveaway_amount: str | None
+    giveaway_amount: TotalMessage | None
     raised: TotalMessage | None
     entrants: str | None
-    winners: list[str | None]
-    current_high_bid: str | None
-    crafter: dict[str, Any] | None
-    sponsor: dict[str, Any] | None
+    winners: list[Bidder] | list[None]
+    current_high_bid: BidMessage | None
+    crafter: Person | None
+    sponsor: Sponsor | None
 
 
-class Person(TypedDict):
-    name: str
+class Bidder(TypedDict):
+    display_name: str
     pronouns: str
+
+
+class Sponsor(TypedDict):
+    name: str
     bio: DocFragment
     bio_text: str
     picture: Image
+
+
+class Person(Sponsor):
+    pronouns: str
+
+
+class BidMessage(TypedDict):
+    name: str
+    amount: TotalMessage
 
 
 class Image(TypedDict):
