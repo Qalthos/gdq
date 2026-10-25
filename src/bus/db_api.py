@@ -17,7 +17,18 @@ from common.money import CURRENCIES, Dollar, Money
 if TYPE_CHECKING:
     from typing import Any, Self
 
-    from bus.types import Bidder, BidMessage, DocFragment, Image, Person, PrizeMessage, Sponsor, TotalMessage
+    from bus.types import (
+        AuctionBid,
+        AuctionMessage,
+        Bidder,
+        BidMessage,
+        DocFragment,
+        Image,
+        Person,
+        PrizeMessage,
+        Sponsor,
+        TotalMessage,
+    )
 
 BASE_URL = "https://desertbus.org/api/"
 
@@ -30,6 +41,28 @@ def _make_link(prize_id: str, text: str) -> str:
 
 def _eta(ref: datetime) -> timedelta:
     return ref - datetime.now(UTC).replace(microsecond=0)
+
+
+@dataclass
+class Auction:
+    status: AuctionStatus
+    updated_at: datetime
+    prize_id: str
+    high_bid: AuctionBid | None
+
+    def __str__(self) -> str:
+        if self.high_bid is None:
+            return "waiting for bids..."
+        return f"{self.high_bid['name']} says {self.high_bid['message']}"
+
+    @classmethod
+    def from_json(cls, message: AuctionMessage) -> Self:
+        return cls(
+            status=AuctionStatus(message["status"]),
+            updated_at=datetime.fromisoformat(message["updated_at"]),
+            prize_id=message["prize_id"],
+            high_bid=message["high_bid"],
+        )
 
 
 @dataclass
@@ -62,11 +95,12 @@ class Prize:
                 output = f"{name} starts on {self.starts_at.strftime('%a %b %d')}"
                 match self.type:
                     case PrizeType.GIVEAWAY:
-                        return f"{output} between {self.starts_at.strftime(time_f)} and {self.ends_at.strftime(time_f)}"
+                        detail = f"between {self.starts_at.strftime(time_f)} and {self.ends_at.strftime(time_f)}"
                     case PrizeType.LIVE:
-                        return f"{output} around {self.starts_at.strftime(time_f)}"
+                        detail = f"around {self.starts_at.strftime(time_f)}"
                     case PrizeType.SILENT:
-                        return f"{output} at {self.starts_at.strftime(time_f)}"
+                        detail = f"at {self.starts_at.strftime(time_f)}"
+                return f"{output} {detail}"
             case PrizeState.ACTIVE:
                 match self.type:
                     case PrizeType.GIVEAWAY:
@@ -152,6 +186,13 @@ class Bid:
     @classmethod
     def from_json(cls, message: BidMessage) -> Self:
         return cls(message["name"], _money_from_message(message["amount"]))
+
+
+class AuctionStatus(StrEnum):
+    STARTED = auto()
+    ONCE = auto()
+    TWICE = auto()
+    SOLD = auto()
 
 
 class PrizeState(StrEnum):

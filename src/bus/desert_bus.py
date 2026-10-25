@@ -9,8 +9,8 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Protocol, cast
 
-from bus.db_api import Prize, _money_from_message, get_history, get_prizes, is_omega
-from bus.shifts import OMEGA, SHIFTS
+from bus.db_api import Auction, Prize, _money_from_message, get_history, get_prizes, is_omega
+from bus.shifts import OMEGA, SHIFTS, BaseShift, Omega, Shift
 from bus.utils import dollars_to_hours, hours_to_dollars
 from common.display import SquishableString, String
 from common.money import Dollar
@@ -62,7 +62,7 @@ class DesertBus:
     total: Dollar
     offline: bool = False
 
-    _auction: AuctionMessage | None = None
+    _auction: Auction | None = None
     _prizes: dict[str, Prize]
 
     def __init__(self, event: str, start: datetime, total: Dollar | None = None):
@@ -100,7 +100,7 @@ class DesertBus:
 
     # State modifiers
     def update_auction(self, message: AuctionMessage) -> None:
-        self._auction = message
+        self._auction = Auction.from_json(message)
 
     def update_prize(self, message: PrizeMessage) -> None:
         prize = Prize.from_json(message)
@@ -201,13 +201,10 @@ class DesertBus:
 
         return f"{hours_done}{progress}{hours_left}"
 
-    def shift_banners(self) -> SquishableString[list[str]]:
+    def shift_banners(self) -> SquishableString[list[Shift] | list[Omega]]:
         shifts = OMEGA if is_omega() else SHIFTS
 
-        return SquishableString(
-            [shift.name for shift in shifts],
-            partial(_even_banner, fill_char="═"),
-        )
+        return SquishableString(shifts, partial(_even_shift_banner, fill_char="═"))
 
     def show_auction(self) -> Iterable[str]:
         if self._auction is not None:
@@ -215,7 +212,10 @@ class DesertBus:
 
     def show_prizes(self, *, active: bool = False) -> Iterable[str]:
         for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
-            if (active and prize.active) or prize.upcoming:
+            if active:
+                if prize.active:
+                    yield prize
+            elif prize.upcoming:
                 yield prize
 
     def print_records(self) -> Iterable[str]:
@@ -292,13 +292,17 @@ def fun_numbers(total: Dollar, *, lifetime: bool = False) -> Iterator[tuple[Reco
         zeroes += 1
 
 
-def _even_banner(items: list[str], width: int = 80, fill_char: str = " ") -> str:
+def _even_shift_banner(items: list[BaseShift], width: int, fill_char: str = " ") -> str:
+    # Adjust for dividers
     width -= len(items) - 1
+    # Need extra characters for spacers
     min_width = sum(len(s) for s in items)
+    # Minimum for even spacing
+    min_even = max(len(s) for s in items) * len(items)
     # reflow is extra spaces that should be distributed amongst the
     # groups in the banner.
     reflow = 0
-    if width <= max(len(s) for s in items) * len(items):
+    if width <= min_even:
         shift_width = 0
         if width > min_width:
             # reflow is negative, width will be compressed if possible
@@ -308,12 +312,45 @@ def _even_banner(items: list[str], width: int = 80, fill_char: str = " ") -> str
         # reflow is positive, an extra space will be added
         reflow = width - (shift_width * len(items))
 
+    display = []
     for index, stat in enumerate(items):
         mod = 0
         if reflow < 0 and index == len(items) - 1:
             mod = len(items) - reflow
         elif int(index * reflow / len(items)) > int((index - 1) * reflow / len(items)):
             mod = 1
-        items[index] = stat.center(shift_width + mod, fill_char)
+        display.append(stat.colorize(str(stat).center(shift_width + mod, fill_char)))
 
-    return "|".join(items)
+    return "|".join(display)
+
+
+def _even_banner(items: list[str], width: int, fill_char: str = " ") -> str:
+    # Adjust for dividers
+    width -= len(items) - 1
+    # Need extra characters for spacers
+    min_width = sum(len(s) for s in items)
+    # Minimum for even spacing
+    min_even = max(len(s) for s in items) * len(items)
+    # reflow is extra spaces that should be distributed amongst the
+    # groups in the banner.
+    reflow = 0
+    if width <= min_even:
+        shift_width = 0
+        if width > min_width:
+            # reflow is negative, width will be compressed if possible
+            reflow = min_width - width
+    else:
+        shift_width = width // len(items)
+        # reflow is positive, an extra space will be added
+        reflow = width - (shift_width * len(items))
+
+    display = []
+    for index, stat in enumerate(items):
+        mod = 0
+        if reflow < 0 and index == len(items) - 1:
+            mod = len(items) - reflow
+        elif int(index * reflow / len(items)) > int((index - 1) * reflow / len(items)):
+            mod = 1
+        display.append(stat.center(shift_width + mod, fill_char))
+
+    return "|".join(display)
