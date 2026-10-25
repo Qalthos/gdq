@@ -8,9 +8,21 @@ from typing import Literal, TypedDict
 # API responses
 class AuctionMessage(TypedDict):
     prize_id: str
-    status: Literal["sold"]
+    status: Literal["started", "once", "twice", "sold"]
     updated_at: str
-    high_bid: TotalMessage | None
+    high_bid: AuctionBid | None
+
+
+class GuestMessage(TypedDict):
+    id: str
+    name: str
+    pronouns: str
+    title: str | None
+    description: DocFragment
+    description_text: str
+    picture: Image
+    type: Literal["visitor"]
+    dates: list[TimeFragment]
 
 
 class TotalMessage(TypedDict):
@@ -36,6 +48,12 @@ class PrizeMessage(TypedDict):
     current_high_bid: BidMessage | None
     crafter: Person | None
     sponsor: Sponsor | None
+
+
+# Fragments from other messages
+class AuctionBid(TotalMessage):
+    message: str
+    name: str
 
 
 class Bidder(TypedDict):
@@ -64,6 +82,11 @@ class Image(TypedDict):
     alt: str | None
     width: int
     height: int
+
+
+class TimeFragment(TypedDict):
+    starts_at: str
+    ends_at: str
 
 
 class TextFragment(TypedDict):
