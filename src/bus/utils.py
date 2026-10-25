@@ -18,3 +18,10 @@ def dollars_to_hours(dollars: Dollar) -> int:
 def hours_to_dollars(hours: int) -> Dollar:
     value = (RATE**hours - 1) / (RATE - 1)
     return Dollar(value)
+
+
+def wingding(in_s: str) -> str:
+    source = "$(),-.0123456789:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    dest = "👓🕿✆📪📫📬📁📂📄🗏🗐🗄⌛🖮🖰🖲🖳✌👌👍👎☜☞☝☟🖐☺😐☹💣☠🏳🏱✈☼💧❄🕆✞🕈✠✡☪♋♌♍♎♏♐♑♒♓🙰🙵●🔾■□🞐❑❒⬧⧫◆❖⬥⌧⮹⌘"
+    t = str.maketrans(source, dest)
+    return in_s.translate(t)
