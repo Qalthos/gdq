@@ -51,9 +51,11 @@ class Auction:
     high_bid: AuctionBid | None
 
     def __str__(self) -> str:
+        exclamations = list(AuctionStatus).index(self.status)
+        prefix = f"{self.status}{'!' * exclamations} " if exclamations > 0 else ""
         if self.high_bid is None:
             return "waiting for bids..."
-        return f"{self.high_bid['name']} says {self.high_bid['message']}"
+        return f"{prefix}{self.high_bid['name']} says {self.high_bid['message']}"
 
     @classmethod
     def from_json(cls, message: AuctionMessage) -> Self:
