@@ -113,6 +113,8 @@ class Prize:
                         else:
                             detail = f"{self.current_high_bid.name} for {self.current_high_bid.amount}"
                 return f"{name} - {detail}"
+            case PrizeState.FINALIZING:
+                return f"{name} drawing soon"
             case PrizeState.SOLD:
                 return f"{name} sold for {self.raised}"
             case _:
@@ -140,14 +142,6 @@ class Prize:
         return _eta(self.ends_at)
 
     @property
-    def active(self) -> bool:
-        match self.state:
-            case PrizeState.ACTIVE | PrizeState.COOLDOWN | PrizeState.FINALIZING:
-                return True
-            case _:
-                return False
-
-    @property
     def upcoming(self) -> bool:
         match self.state:
             case PrizeState.UPCOMING:
@@ -159,6 +153,8 @@ class Prize:
                     case PrizeType.LIVE:
                         lookahead = 24
                 return self.eta_end < timedelta(hours=lookahead)
+            case PrizeState.COOLDOWN | PrizeState.FINALIZING:
+                return True
             case _:
                 return False
 
