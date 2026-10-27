@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Protocol, cast
 
-from bus.db_api import Auction, Prize, PrizeState, _money_from_message, get_history, get_prizes, is_omega
+from bus.db_api import Auction, AuctionStatus, Prize, PrizeState, _money_from_message, get_history, get_prizes, is_omega
 from bus.shifts import OMEGA, SHIFTS, BaseShift, Omega, Shift
 from bus.utils import dollars_to_hours, hours_to_dollars
 from common.display import SquishableString, String
@@ -209,6 +209,10 @@ class DesertBus:
     def show_auction(self) -> Iterable[str]:
         if self._auction is not None:
             yield str(self._auction)
+            if self._auction.status == AuctionStatus.SOLD and self._auction.updated_at + timedelta(
+                seconds=30,
+            ) < datetime.now(UTC):
+                self._auction = None
 
     def show_prizes(self, *, active: bool = False) -> Iterable[str]:
         for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
