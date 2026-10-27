@@ -1,5 +1,7 @@
 # Copyright 2026
 # SPDX-License-Identifier: MIT
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from phoenix_channels_python_client import PHXChannelsClient
@@ -20,3 +22,4 @@ async def subscribe(q: queue.Queue, event_id: str) -> None:
         for topic in topics:
             await client.subscribe_to_topic(f"{topic}:{event_id}", event_callback)
         await client.run_forever()
+    q.shutdown()

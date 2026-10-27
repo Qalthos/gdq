@@ -37,6 +37,7 @@ async def display(event: Event, q: queue.Queue) -> None:
                     bus.update_prize(prize)
                 case other:
                     print(f"unknown message {other}")  # noqa: T201
+            q.task_done()
             full = True
         except queue.Empty:
             pass

@@ -9,7 +9,7 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Protocol, cast
 
-from bus.db_api import Auction, Prize, _money_from_message, get_history, get_prizes, is_omega
+from bus.db_api import Auction, Prize, PrizeState, _money_from_message, get_history, get_prizes, is_omega
 from bus.shifts import OMEGA, SHIFTS, BaseShift, Omega, Shift
 from bus.utils import dollars_to_hours, hours_to_dollars
 from common.display import SquishableString, String
@@ -17,7 +17,7 @@ from common.money import Dollar
 from common.time import timedelta_as_hours
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable, Iterator, Sequence
 
     from bus.types import AuctionMessage, PrizeMessage, TotalMessage
     from common.money import Money
@@ -213,7 +213,7 @@ class DesertBus:
     def show_prizes(self, *, active: bool = False) -> Iterable[str]:
         for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
             if active:
-                if prize.active:
+                if prize.state == PrizeState.ACTIVE:
                     yield prize
             elif prize.upcoming:
                 yield prize
@@ -292,7 +292,7 @@ def fun_numbers(total: Dollar, *, lifetime: bool = False) -> Iterator[tuple[Reco
         zeroes += 1
 
 
-def _even_shift_banner(items: list[BaseShift], width: int, fill_char: str = " ") -> str:
+def _even_shift_banner(items: Sequence[BaseShift], width: int, fill_char: str = " ") -> str:
     # Adjust for dividers
     width -= len(items) - 1
     # Need extra characters for spacers
