@@ -9,7 +9,17 @@ from datetime import UTC, datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Protocol, cast
 
-from bus.db_api import Auction, AuctionStatus, Prize, PrizeState, _money_from_message, get_history, get_prizes, is_omega
+from bus.db_api import (
+    Auction,
+    AuctionStatus,
+    Prize,
+    PrizeState,
+    PrizeType,
+    _money_from_message,
+    get_history,
+    get_prizes,
+    is_omega,
+)
 from bus.shifts import OMEGA, SHIFTS, BaseShift, Omega, Shift
 from bus.utils import dollars_to_hours, hours_to_dollars
 from common.display import SquishableString, String
@@ -141,13 +151,14 @@ class DesertBus:
             totals.append(f"{self.total + LIFETIME} lifetime")
             lines.append(SquishableString(totals, _even_banner))
 
-        lines.extend(self.show_auction())
-        lines.extend(self.show_prizes(active=True))
+        lines.extend(self.show_live_prizes(PrizeType.GIVEAWAY))
 
         return lines
 
     def render(self) -> Iterable[str]:
-        yield from self.show_prizes()
+        yield from self.show_auction()
+        yield from self.show_live_prizes(PrizeType.SILENT)
+        yield from self.show_upcoming_prizes()
         now = datetime.now(UTC)
         if now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
@@ -208,18 +219,21 @@ class DesertBus:
 
     def show_auction(self) -> Iterable[str]:
         if self._auction is not None:
+            yield str(self._prizes[self._auction.prize_id])
             yield str(self._auction)
             if self._auction.status == AuctionStatus.SOLD and self._auction.updated_at + timedelta(
                 seconds=30,
             ) < datetime.now(UTC):
                 self._auction = None
 
-    def show_prizes(self, *, active: bool = False) -> Iterable[str]:
+    def show_live_prizes(self, prize_type: PrizeType) -> Iterable[str]:
         for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
-            if active:
-                if prize.state == PrizeState.ACTIVE:
-                    yield prize
-            elif prize.upcoming:
+            if prize.state == PrizeState.ACTIVE and prize.type == prize_type:
+                yield prize
+
+    def show_upcoming_prizes(self) -> Iterable[str]:
+        for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
+            if prize.upcoming:
                 yield prize
 
     def print_records(self) -> Iterable[str]:
