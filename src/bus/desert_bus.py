@@ -140,7 +140,7 @@ class DesertBus:
                     str(DesertBuck(self.total)),
                     str(DesertToonie(self.total)),
                 ],
-                _even_banner,
+                even_banner,
             ),
         )
         if extended:
@@ -149,7 +149,7 @@ class DesertBus:
                 estimate = self.estimate
                 totals.append(f"{estimate.total} estimated ({dollars_to_hours(estimate.total)}h)")
             totals.append(f"{self.total + LIFETIME} lifetime")
-            lines.append(SquishableString(totals, _even_banner))
+            lines.append(SquishableString(totals, even_banner))
 
         lines.extend(self.show_live_prizes(PrizeType.GIVEAWAY))
 
@@ -215,7 +215,7 @@ class DesertBus:
     def shift_banners(self) -> SquishableString[list[Shift] | list[Omega]]:
         shifts = OMEGA if is_omega() else SHIFTS
 
-        return SquishableString(shifts, partial(_even_shift_banner, fill_char="═"))
+        return SquishableString(shifts, partial(even_shift_banner, fill_char="═"))
 
     def show_auction(self) -> Iterable[str]:
         if self._auction is not None:
@@ -310,7 +310,7 @@ def fun_numbers(total: Dollar, *, lifetime: bool = False) -> Iterator[tuple[Reco
         zeroes += 1
 
 
-def _even_shift_banner(items: Sequence[BaseShift], width: int, fill_char: str = " ") -> str:
+def _bannerize(items: Sequence, width: int) -> tuple[int, int]:
     # Adjust for dividers
     width -= len(items) - 1
     # Need extra characters for spacers
@@ -329,46 +329,34 @@ def _even_shift_banner(items: Sequence[BaseShift], width: int, fill_char: str = 
         shift_width = width // len(items)
         # reflow is positive, an extra space will be added
         reflow = width - (shift_width * len(items))
+    return shift_width, reflow
+
+
+def even_banner(items: list[str], width: int, fill_char: str = " ") -> str:
+    item_w, reflow = _bannerize(items, width)
 
     display = []
     for index, stat in enumerate(items):
         mod = 0
         if reflow < 0 and index == len(items) - 1:
             mod = len(items) - reflow
-        elif int(index * reflow / len(items)) > int((index - 1) * reflow / len(items)):
+        elif index < reflow:
             mod = 1
-        display.append(stat.colorize(str(stat).center(shift_width + mod, fill_char)))
+        display.append(stat.center(item_w + mod, fill_char))
 
     return "|".join(display)
 
 
-def _even_banner(items: list[str], width: int, fill_char: str = " ") -> str:
-    # Adjust for dividers
-    width -= len(items) - 1
-    # Need extra characters for spacers
-    min_width = sum(len(s) for s in items)
-    # Minimum for even spacing
-    min_even = max(len(s) for s in items) * len(items)
-    # reflow is extra spaces that should be distributed amongst the
-    # groups in the banner.
-    reflow = 0
-    if width <= min_even:
-        shift_width = 0
-        if width > min_width:
-            # reflow is negative, width will be compressed if possible
-            reflow = min_width - width
-    else:
-        shift_width = width // len(items)
-        # reflow is positive, an extra space will be added
-        reflow = width - (shift_width * len(items))
+def even_shift_banner(items: Sequence[BaseShift], width: int, fill_char: str = " ") -> str:
+    shift_width, reflow = _bannerize(items, width)
 
     display = []
     for index, stat in enumerate(items):
         mod = 0
         if reflow < 0 and index == len(items) - 1:
             mod = len(items) - reflow
-        elif int(index * reflow / len(items)) > int((index - 1) * reflow / len(items)):
+        elif index < reflow:
             mod = 1
-        display.append(stat.center(shift_width + mod, fill_char))
+        display.append(stat.colorize(str(stat).center(shift_width + mod, fill_char)))
 
     return "|".join(display)
