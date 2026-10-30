@@ -236,7 +236,7 @@ class DesertBus:
             bid = self._auction.high_bid
             exclamations = list(AuctionStatus).index(self._auction.status)
             if exclamations > 0:
-                yield f"{self._auction.status}{exclamations}"
+                yield f"{self._auction.status}{'!' * exclamations}"
             if bid is not None and bid.message:
                 yield f"{bid.name} says {bid.message}"
 
@@ -267,7 +267,7 @@ class DesertBus:
                 while next_other.total < event.total:
                     yield f"{next_other.total - self.total} until {next_other.name}"
                     if not sentinel:
-                        return
+                        break
                     next_other, sentinel = next(others)
 
                 yield event.distance(self.total)
@@ -284,7 +284,7 @@ class DesertBus:
         records: list[tuple[Record, bool, Iterator[tuple[Record, bool]]]] = [
             (
                 self.estimate,
-                False,
+                True,
                 iter(lambda: (VirtualRecord(Dollar(sys.maxsize), ""), True), 0),
             ),
         ]
@@ -293,7 +293,7 @@ class DesertBus:
         records.append((*next(hours), hours))
         numbers = fun_numbers(self.total)
         records.append((*next(numbers), numbers))
-        lifetimes = fun_numbers(self.total, lifetime=True)
+        lifetimes = lifetime(self.total)
         records.append((*next(lifetimes), lifetimes))
 
         while True:
@@ -316,17 +316,23 @@ def next_hours(total: Dollar) -> Iterator[tuple[Record, bool]]:
         hour += 1
 
 
-def fun_numbers(total: Dollar, *, lifetime: bool = False) -> Iterator[tuple[Record, bool]]:
+def fun_numbers(total: Dollar) -> Iterator[tuple[Record, bool]]:
     zeroes = 0
     while True:
         for fives in range(2, 20):
             current = Dollar(fives * 5 * 10**zeroes)
-            if lifetime:
-                if total + LIFETIME < current:
-                    yield VirtualRecord(current - LIFETIME, f"{current} lifetime"), True
-            elif total < current:
+            if total < current:
                 yield VirtualRecord(current, str(current)), True
         zeroes += 1
+
+
+def lifetime(total: Dollar) -> Iterator[tuple[Record, bool]]:
+    millions = 1
+    while True:
+        current = Dollar(millions * 1_000_000)
+        if total + LIFETIME < current:
+            yield VirtualRecord(current - LIFETIME, f"{current} lifetime"), True
+        millions += 1
 
 
 def _bannerize(items: Sequence, width: int) -> tuple[int, int]:
