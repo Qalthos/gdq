@@ -10,7 +10,7 @@ class AuctionMessage(TypedDict):
     prize_id: str
     status: Literal["started", "once", "twice", "sold"]
     updated_at: str
-    high_bid: AuctionBid | None
+    high_bid: AuctionBidMessage | None
 
 
 class GuestMessage(TypedDict):
@@ -51,7 +51,7 @@ class PrizeMessage(TypedDict):
 
 
 # Fragments from other messages
-class AuctionBid(TotalMessage):
+class AuctionBidMessage(TotalMessage):
     message: str
     name: str
 

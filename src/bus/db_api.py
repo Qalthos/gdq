@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from typing import Any, Self
 
     from bus.types import (
-        AuctionBid,
+        AuctionBidMessage,
         AuctionMessage,
         Bidder,
         BidMessage,
@@ -55,7 +55,7 @@ class Auction:
         prefix = f"{self.status}{'!' * exclamations} " if exclamations > 0 else ""
         if self.high_bid is None:
             return "waiting for bids..."
-        return f"{prefix}{self.high_bid['name']} says {self.high_bid['message']}"
+        return f"{prefix}{self.high_bid.name} says {self.high_bid.message}"
 
     @classmethod
     def from_json(cls, message: AuctionMessage) -> Self:
@@ -63,7 +63,7 @@ class Auction:
             status=AuctionStatus(message["status"]),
             updated_at=datetime.fromisoformat(message["updated_at"]),
             prize_id=message["prize_id"],
-            high_bid=message["high_bid"],
+            high_bid=AuctionBid.from_json(message["high_bid"]),
         )
 
 
@@ -184,6 +184,24 @@ class Bid:
     @classmethod
     def from_json(cls, message: BidMessage) -> Self:
         return cls(message["name"], _money_from_message(message["amount"]))
+
+
+@dataclass
+class AuctionBid:
+    name: str
+    amount: Money
+    message: str
+
+    @classmethod
+    def from_json(cls, message: AuctionBidMessage | None) -> Self | None:
+        if message is None:
+            return None
+        amount = _money_from_message(message)
+        return cls(
+            message=message["message"],
+            name=message["name"],
+            amount=amount,
+        )
 
 
 class AuctionStatus(StrEnum):

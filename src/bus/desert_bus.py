@@ -219,8 +219,15 @@ class DesertBus:
 
     def show_auction(self) -> Iterable[str]:
         if self._auction is not None:
-            yield str(self._prizes[self._auction.prize_id])
-            yield str(self._auction)
+            prize = self._prizes[self._auction.prize_id]
+            yield str(prize)
+            bid = self._auction.high_bid
+            exclamations = list(AuctionStatus).index(self._auction.status)
+            if exclamations > 0:
+                yield f"{self._auction.status}{exclamations}"
+            if bid is not None and bid.message:
+                yield f"{bid.name} says {bid.message}"
+
             if self._auction.status == AuctionStatus.SOLD and self._auction.updated_at + timedelta(
                 seconds=30,
             ) < datetime.now(UTC):
