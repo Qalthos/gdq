@@ -124,7 +124,10 @@ class Prize:
     def _format_active(self) -> str:
         match self.type:
             case PrizeType.GIVEAWAY:
-                detail = f"{self.giveaway_amount} for {self.eta_end}"
+                if self.eta_end > timedelta():
+                    detail = f"{self.giveaway_amount} for {self.eta_end}"
+                else:
+                    detail = "calculating..."
             case _:
                 if self.current_high_bid is None:
                     detail = "be the first!"
