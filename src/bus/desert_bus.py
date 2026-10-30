@@ -10,6 +10,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Protocol, cast
 
 from bus.db_api import (
+    TIME_F,
     Auction,
     AuctionStatus,
     Prize,
@@ -144,12 +145,23 @@ class DesertBus:
             ),
         )
         if extended:
+            datetime_f = f"%m-%d {TIME_F}"
             totals = []
-            if now > self.start:
-                estimate = self.estimate
-                totals.append(f"{estimate.total} estimated ({dollars_to_hours(estimate.total)}h)")
             totals.append(f"{self.total + LIFETIME} lifetime")
+            current_end = (self.start + timedelta(hours=self.hours)).astimezone()
+            current = f"running until {current_end.strftime(datetime_f)}"
+            totals.append(current)
             lines.append(SquishableString(totals, even_banner))
+
+            if now > self.start:
+                totals = []
+                estimate = self.estimate
+                estimate_h = dollars_to_hours(estimate.total)
+                totals.append(f"{estimate.total} estimated ({estimate_h}h)")
+                current_end = (self.start + timedelta(hours=estimate_h)).astimezone()
+                current = f"estimate end {current_end.strftime(datetime_f)}"
+                totals.append(current)
+                lines.append(SquishableString(totals, even_banner))
 
         lines.extend(self.show_live_prizes(PrizeType.GIVEAWAY))
 

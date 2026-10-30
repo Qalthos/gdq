@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from enum import StrEnum, auto
 from functools import lru_cache
 from typing import TYPE_CHECKING, cast
@@ -31,6 +31,8 @@ if TYPE_CHECKING:
     )
 
 BASE_URL = "https://desertbus.org/api/"
+DATE_F = "%a %b %d"
+TIME_F = "%-I%P"
 
 
 def _make_link(prize_id: str, text: str) -> str:
@@ -90,35 +92,45 @@ class Prize:
 
     def __str__(self) -> str:
         name = _make_link(self.id, f"\033[{self.color}m{self.name}\033[0m")
-        time_f = "%I:%M %p"
 
         match self.state:
             case PrizeState.UPCOMING:
-                output = f"{name} starts on {self.starts_at.strftime('%a %b %d')}"
-                match self.type:
-                    case PrizeType.GIVEAWAY:
-                        detail = f"between {self.starts_at.strftime(time_f)} and {self.ends_at.strftime(time_f)}"
-                    case PrizeType.LIVE:
-                        detail = f"around {self.starts_at.strftime(time_f)}"
-                    case PrizeType.SILENT:
-                        detail = f"at {self.starts_at.strftime(time_f)}"
-                return f"{output} {detail}"
+                detail = self._format_upcoming()
             case PrizeState.ACTIVE:
-                match self.type:
-                    case PrizeType.GIVEAWAY:
-                        detail = f"{self.giveaway_amount} for {self.eta_end}"
-                    case _:
-                        if self.current_high_bid is None:
-                            detail = "be the first!"
-                        else:
-                            detail = f"{self.current_high_bid.name} for {self.current_high_bid.amount}"
-                return f"{name} - {detail}"
+                detail = self._format_active()
             case PrizeState.FINALIZING:
-                return f"{name} drawing soon"
+                detail = "drawing soon"
             case PrizeState.SOLD:
-                return f"{name} sold for {self.raised}"
+                detail = f"sold for {self.raised}"
             case _:
-                return f"{name} {self.type} {self.state}"
+                detail = f"{self.type} {self.state}"
+
+        return f"{name} {detail}"
+
+    def _format_upcoming(self) -> str:
+        today = date.today().day  # noqa: DTZ011
+        output = "starts"
+        if self.starts_at.day != today:
+            output += f" on {self.starts_at.strftime(DATE_F)}"
+        match self.type:
+            case PrizeType.GIVEAWAY:
+                detail = f"between {self.starts_at.strftime(TIME_F)} and {self.ends_at.strftime(TIME_F)}"
+            case PrizeType.LIVE:
+                detail = f"around {self.starts_at.strftime(TIME_F)}"
+            case PrizeType.SILENT:
+                detail = f"at {self.starts_at.strftime(TIME_F)}"
+        return f"{output} {detail}"
+
+    def _format_active(self) -> str:
+        match self.type:
+            case PrizeType.GIVEAWAY:
+                detail = f"{self.giveaway_amount} for {self.eta_end}"
+            case _:
+                if self.current_high_bid is None:
+                    detail = "be the first!"
+                else:
+                    detail = f"{self.current_high_bid.name} for {self.current_high_bid.amount}"
+        return detail
 
     @property
     def color(self) -> int:
