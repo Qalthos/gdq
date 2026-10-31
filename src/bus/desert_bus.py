@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import partial
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol, Self
 
 from bus.db_api import (
     TIME_F,
@@ -18,6 +18,7 @@ from bus.db_api import (
     PrizeType,
     _money_from_message,
     get_history,
+    get_lifetime,
     get_prizes,
     is_omega,
 )
@@ -35,11 +36,11 @@ if TYPE_CHECKING:
 
 
 RECORDS = get_history()
-LIFETIME = sum((event.total for event in RECORDS), start=Dollar(0))
+LIFETIME = get_lifetime()
 
 
 class Record(Protocol):
-    total: Dollar
+    total: Money
     name: str
 
 
@@ -49,41 +50,46 @@ def record_key(record: Record) -> Money:
 
 @dataclass
 class VirtualRecord:
-    total: Dollar
+    total: Money
     name: str
 
 
 class DesertBuck(Dollar):
     _symbol = "d฿"
 
-    def __init__(self, value: Dollar):
-        super().__init__(value / RECORDS[0].total)
+    @classmethod
+    def convert(cls, value: Money) -> Self:
+        if isinstance(value, Dollar):
+            return cls(value / RECORDS[0].total)
+        err = f"Conversion not defined on {type(value)}"
+        raise ValueError(err)
 
 
 class DesertToonie(Dollar):
     _symbol = "d฿²"
 
-    def __init__(self, value: Dollar):
-        super().__init__(value / RECORDS[1].total)
+    @classmethod
+    def convert(cls, value: Money) -> Self:
+        if isinstance(value, Dollar):
+            return cls(value / RECORDS[1].total)
+        err = f"Conversion not defined on {type(value)}"
+        raise ValueError(err)
 
 
 class DesertBus:
-    _event_id: str
-    _start: datetime
-    total: Dollar
+    start: datetime
+    total: Money
     offline: bool = False
 
+    _event_id: str
     _auction: Auction | None = None
     _prizes: dict[str, Prize]
 
-    def __init__(self, event: str, start: datetime, total: Dollar | None = None):
+    def __init__(self, event: str, start: datetime, total: Money):
         self._event_id = event
         self._prizes = {p.id: p for p in get_prizes(event)}
-        self._start = start
-        if total is not None:
-            self.total = total
-        else:
-            self.total = Dollar(0)
+        self.start = start
+        self.total = total
 
     @property
     def hours(self) -> int:
@@ -102,10 +108,6 @@ class DesertBus:
         return VirtualRecord(future_total, f"current estimate ({future_total})")
 
     @property
-    def start(self) -> datetime:
-        return self._start
-
-    @property
     def end(self) -> datetime:
         return self.start + timedelta(hours=self.hours)
 
@@ -118,8 +120,7 @@ class DesertBus:
         self._prizes[prize.id] = prize
 
     def update_total(self, message: TotalMessage) -> None:
-        # TODO: Use Money everywhere  # noqa: FIX002
-        self.total = cast("Dollar", _money_from_message(message))
+        self.total = _money_from_message(message)
 
     # Render functions
     def header(self, *, extended: bool = True) -> list[String]:
@@ -138,8 +139,8 @@ class DesertBus:
                 [
                     str(self.total),
                     f"{self.hours} hours",
-                    str(DesertBuck(self.total)),
-                    str(DesertToonie(self.total)),
+                    str(DesertBuck.convert(self.total)),
+                    str(DesertToonie.convert(self.total)),
                 ],
                 even_banner,
             ),
@@ -303,7 +304,7 @@ class DesertBus:
             yield value, sentinel
 
 
-def next_hours(total: Dollar) -> Iterator[tuple[Record, bool]]:
+def next_hours(total: Money) -> Iterator[tuple[Record, bool]]:
     hour = dollars_to_hours(total) + 1
     while True:
         if hour % 24 == 0:
@@ -316,7 +317,7 @@ def next_hours(total: Dollar) -> Iterator[tuple[Record, bool]]:
         hour += 1
 
 
-def fun_numbers(total: Dollar) -> Iterator[tuple[Record, bool]]:
+def fun_numbers(total: Money) -> Iterator[tuple[Record, bool]]:
     zeroes = 0
     while True:
         for fives in range(2, 20):
@@ -326,7 +327,7 @@ def fun_numbers(total: Dollar) -> Iterator[tuple[Record, bool]]:
         zeroes += 1
 
 
-def lifetime(total: Dollar) -> Iterator[tuple[Record, bool]]:
+def lifetime(total: Money) -> Iterator[tuple[Record, bool]]:
     millions = 1
     while True:
         current = Dollar(millions * 1_000_000)

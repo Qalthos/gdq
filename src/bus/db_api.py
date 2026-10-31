@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, cast
 import requests
 
 from bus.utils import dollars_to_hours
-from common.money import CURRENCIES, Dollar, Money
+from common.money import CURRENCIES, Money
 
 if TYPE_CHECKING:
     from typing import Any, Self
@@ -254,7 +254,7 @@ class Event:
     primary: bool  # current event?
     starts_at: datetime
     logo: Image
-    total: Dollar
+    total: Money
     series: Series
 
     def __str__(self) -> str:
@@ -271,9 +271,9 @@ class Event:
     def hours(self) -> int:
         return dollars_to_hours(self.total)
 
-    def distance(self, current: Dollar) -> str:
+    def distance(self, current: Money) -> str:
         next_level = self.total - current
-        if next_level <= Dollar():
+        if next_level.to_float() <= 0:
             return ""
 
         return f"{next_level} until {self!s}"
@@ -326,6 +326,14 @@ def get_history() -> list[Event]:
     primary = get_primary()
     events = reversed(get_events(primary.series.id))
     return [event for event in events if not event.primary]
+
+
+@lru_cache
+def get_lifetime() -> Money:
+    events = get_history()
+    currency = type(events[0].total)
+
+    return sum((event.total for event in events), start=currency())
 
 
 def is_omega() -> bool:

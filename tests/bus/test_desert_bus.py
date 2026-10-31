@@ -7,11 +7,11 @@ from common.money import Dollar
 
 
 def test_desert_buck() -> None:
-    assert desert_bus.DesertBuck(Dollar(22805)).to_float() == 1
+    assert desert_bus.DesertBuck.convert(Dollar(22805)).to_float() == 1
 
 
 def test_desert_toonie() -> None:
-    assert desert_bus.DesertToonie(Dollar(70423.79)).to_float() == 1
+    assert desert_bus.DesertToonie.convert(Dollar(70423.79)).to_float() == 1
 
 
 def test_next_hours() -> None:
