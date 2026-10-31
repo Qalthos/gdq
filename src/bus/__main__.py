@@ -26,6 +26,10 @@ async def run() -> None:
 
     await subscribe(q, event.id)
 
+    # phoenix has terminated, close
+    q.join()
+    display_thread.join()
+
 
 def main() -> None:
     asyncio.run(run())
