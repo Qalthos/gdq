@@ -7,27 +7,40 @@ import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from functools import partial
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, Self
 
-from bus.db_api import get_history, is_omega
-from bus.shifts import OMEGA, SHIFTS
+from bus.db_api import (
+    TIME_F,
+    Auction,
+    AuctionStatus,
+    Prize,
+    PrizeState,
+    PrizeType,
+    _money_from_message,
+    get_history,
+    get_lifetime,
+    get_prizes,
+    is_omega,
+)
+from bus.shifts import OMEGA, SHIFTS, BaseShift, Omega, Shift
 from bus.utils import dollars_to_hours, hours_to_dollars
 from common.display import SquishableString, String
 from common.money import Dollar
 from common.time import timedelta_as_hours
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable, Iterator, Sequence
 
+    from bus.types import AuctionMessage, PrizeMessage, TotalMessage
     from common.money import Money
 
 
 RECORDS = get_history()
-LIFETIME = sum((event.total for event in RECORDS), start=Dollar(0))
+LIFETIME = get_lifetime()
 
 
 class Record(Protocol):
-    total: Dollar
+    total: Money
     name: str
 
 
@@ -37,35 +50,46 @@ def record_key(record: Record) -> Money:
 
 @dataclass
 class VirtualRecord:
-    total: Dollar
+    total: Money
     name: str
 
 
 class DesertBuck(Dollar):
     _symbol = "d฿"
 
-    def __init__(self, value: Dollar):
-        super().__init__(value / RECORDS[0].total)
+    @classmethod
+    def convert(cls, value: Money) -> Self:
+        if isinstance(value, Dollar):
+            return cls(value / RECORDS[0].total)
+        err = f"Conversion not defined on {type(value)}"
+        raise ValueError(err)
 
 
 class DesertToonie(Dollar):
     _symbol = "d฿²"
 
-    def __init__(self, value: Dollar):
-        super().__init__(value / RECORDS[1].total)
+    @classmethod
+    def convert(cls, value: Money) -> Self:
+        if isinstance(value, Dollar):
+            return cls(value / RECORDS[1].total)
+        err = f"Conversion not defined on {type(value)}"
+        raise ValueError(err)
 
 
 class DesertBus:
-    _start: datetime
-    total: Dollar
+    start: datetime
+    total: Money
     offline: bool = False
 
-    def __init__(self, start: datetime, total: Dollar | None = None):
-        self._start = start
-        if total is not None:
-            self.total = total
-        else:
-            self.total = Dollar(0)
+    _event_id: str
+    _auction: Auction | None = None
+    _prizes: dict[str, Prize]
+
+    def __init__(self, event: str, start: datetime, total: Money):
+        self._event_id = event
+        self._prizes = {p.id: p for p in get_prizes(event)}
+        self.start = start
+        self.total = total
 
     @property
     def hours(self) -> int:
@@ -84,16 +108,21 @@ class DesertBus:
         return VirtualRecord(future_total, f"current estimate ({future_total})")
 
     @property
-    def start(self) -> datetime:
-        return self._start
-
-    @property
     def end(self) -> datetime:
         return self.start + timedelta(hours=self.hours)
 
-    def update_total(self, value: float) -> None:
-        self.total = Dollar(value)
+    # State modifiers
+    def update_auction(self, message: AuctionMessage) -> None:
+        self._auction = Auction.from_json(message)
 
+    def update_prize(self, message: PrizeMessage) -> None:
+        prize = Prize.from_json(message)
+        self._prizes[prize.id] = prize
+
+    def update_total(self, message: TotalMessage) -> None:
+        self.total = _money_from_message(message)
+
+    # Render functions
     def header(self, *, extended: bool = True) -> list[String]:
         lines: list[String] = []
 
@@ -110,23 +139,39 @@ class DesertBus:
                 [
                     str(self.total),
                     f"{self.hours} hours",
-                    str(DesertBuck(self.total)),
-                    str(DesertToonie(self.total)),
+                    str(DesertBuck.convert(self.total)),
+                    str(DesertToonie.convert(self.total)),
                 ],
-                _even_banner,
+                even_banner,
             ),
         )
         if extended:
+            datetime_f = f"%m-%d {TIME_F}"
             totals = []
-            if now > self.start:
-                estimate = self.estimate
-                totals.append(f"{estimate.total} estimated ({dollars_to_hours(estimate.total)}h)")
             totals.append(f"{self.total + LIFETIME} lifetime")
-            lines.append(SquishableString(totals, _even_banner))
+            current_end = (self.start + timedelta(hours=self.hours)).astimezone()
+            current = f"running until {current_end.strftime(datetime_f)}"
+            totals.append(current)
+            lines.append(SquishableString(totals, even_banner))
+
+            if now > self.start:
+                totals = []
+                estimate = self.estimate
+                estimate_h = dollars_to_hours(estimate.total)
+                totals.append(f"{estimate.total} estimated ({estimate_h}h)")
+                current_end = (self.start + timedelta(hours=estimate_h)).astimezone()
+                current = f"estimate end {current_end.strftime(datetime_f)}"
+                totals.append(current)
+                lines.append(SquishableString(totals, even_banner))
+
+        lines.extend(self.show_live_prizes(PrizeType.GIVEAWAY))
 
         return lines
 
     def render(self) -> Iterable[str]:
+        yield from self.show_auction()
+        yield from self.show_live_prizes(PrizeType.SILENT)
+        yield from self.show_upcoming_prizes()
         now = datetime.now(UTC)
         if now < self.start + (timedelta(hours=(self.hours + 1))):
             yield from self.print_records()
@@ -180,13 +225,36 @@ class DesertBus:
 
         return f"{hours_done}{progress}{hours_left}"
 
-    def shift_banners(self) -> SquishableString[list[str]]:
+    def shift_banners(self) -> SquishableString[list[Shift] | list[Omega]]:
         shifts = OMEGA if is_omega() else SHIFTS
 
-        return SquishableString(
-            [shift.name for shift in shifts],
-            partial(_even_banner, fill_char="═"),
-        )
+        return SquishableString(shifts, partial(even_shift_banner, fill_char="═"))
+
+    def show_auction(self) -> Iterable[str]:
+        if self._auction is not None:
+            prize = self._prizes[self._auction.prize_id]
+            yield str(prize)
+            bid = self._auction.high_bid
+            exclamations = list(AuctionStatus).index(self._auction.status)
+            if exclamations > 0:
+                yield f"{self._auction.status}{'!' * exclamations}"
+            if bid is not None and bid.message:
+                yield f"{bid.name} says {bid.message}"
+
+            if self._auction.status == AuctionStatus.SOLD and self._auction.updated_at + timedelta(
+                seconds=30,
+            ) < datetime.now(UTC):
+                self._auction = None
+
+    def show_live_prizes(self, prize_type: PrizeType) -> Iterable[str]:
+        for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
+            if prize.state == PrizeState.ACTIVE and prize.type == prize_type:
+                yield prize
+
+    def show_upcoming_prizes(self) -> Iterable[str]:
+        for prize in sorted(self._prizes.values(), key=lambda p: p.starts_at):
+            if prize.upcoming:
+                yield prize
 
     def print_records(self) -> Iterable[str]:
         others = self.artificial_records()
@@ -200,7 +268,7 @@ class DesertBus:
                 while next_other.total < event.total:
                     yield f"{next_other.total - self.total} until {next_other.name}"
                     if not sentinel:
-                        return
+                        break
                     next_other, sentinel = next(others)
 
                 yield event.distance(self.total)
@@ -217,7 +285,7 @@ class DesertBus:
         records: list[tuple[Record, bool, Iterator[tuple[Record, bool]]]] = [
             (
                 self.estimate,
-                False,
+                True,
                 iter(lambda: (VirtualRecord(Dollar(sys.maxsize), ""), True), 0),
             ),
         ]
@@ -226,7 +294,7 @@ class DesertBus:
         records.append((*next(hours), hours))
         numbers = fun_numbers(self.total)
         records.append((*next(numbers), numbers))
-        lifetimes = fun_numbers(self.total, lifetime=True)
+        lifetimes = lifetime(self.total)
         records.append((*next(lifetimes), lifetimes))
 
         while True:
@@ -236,7 +304,7 @@ class DesertBus:
             yield value, sentinel
 
 
-def next_hours(total: Dollar) -> Iterator[tuple[Record, bool]]:
+def next_hours(total: Money) -> Iterator[tuple[Record, bool]]:
     hour = dollars_to_hours(total) + 1
     while True:
         if hour % 24 == 0:
@@ -249,26 +317,36 @@ def next_hours(total: Dollar) -> Iterator[tuple[Record, bool]]:
         hour += 1
 
 
-def fun_numbers(total: Dollar, *, lifetime: bool = False) -> Iterator[tuple[Record, bool]]:
+def fun_numbers(total: Money) -> Iterator[tuple[Record, bool]]:
     zeroes = 0
     while True:
         for fives in range(2, 20):
             current = Dollar(fives * 5 * 10**zeroes)
-            if lifetime:
-                if total + LIFETIME < current:
-                    yield VirtualRecord(current - LIFETIME, f"{current} lifetime"), True
-            elif total < current:
+            if total < current:
                 yield VirtualRecord(current, str(current)), True
         zeroes += 1
 
 
-def _even_banner(items: list[str], width: int = 80, fill_char: str = " ") -> str:
+def lifetime(total: Money) -> Iterator[tuple[Record, bool]]:
+    millions = 1
+    while True:
+        current = Dollar(millions * 1_000_000)
+        if total + LIFETIME < current:
+            yield VirtualRecord(current - LIFETIME, f"{current} lifetime"), True
+        millions += 1
+
+
+def _bannerize(items: Sequence, width: int) -> tuple[int, int]:
+    # Adjust for dividers
     width -= len(items) - 1
+    # Need extra characters for spacers
     min_width = sum(len(s) for s in items)
+    # Minimum for even spacing
+    min_even = max(len(s) for s in items) * len(items)
     # reflow is extra spaces that should be distributed amongst the
     # groups in the banner.
     reflow = 0
-    if width <= max(len(s) for s in items) * len(items):
+    if width <= min_even:
         shift_width = 0
         if width > min_width:
             # reflow is negative, width will be compressed if possible
@@ -277,13 +355,34 @@ def _even_banner(items: list[str], width: int = 80, fill_char: str = " ") -> str
         shift_width = width // len(items)
         # reflow is positive, an extra space will be added
         reflow = width - (shift_width * len(items))
+    return shift_width, reflow
 
+
+def even_banner(items: list[str], width: int, fill_char: str = " ") -> str:
+    item_w, reflow = _bannerize(items, width)
+
+    display = []
     for index, stat in enumerate(items):
         mod = 0
         if reflow < 0 and index == len(items) - 1:
             mod = len(items) - reflow
-        elif int(index * reflow / len(items)) > int((index - 1) * reflow / len(items)):
+        elif index < reflow:
             mod = 1
-        items[index] = stat.center(shift_width + mod, fill_char)
+        display.append(stat.center(item_w + mod, fill_char))
 
-    return "|".join(items)
+    return "|".join(display)
+
+
+def even_shift_banner(items: Sequence[BaseShift], width: int, fill_char: str = " ") -> str:
+    shift_width, reflow = _bannerize(items, width)
+
+    display = []
+    for index, stat in enumerate(items):
+        mod = 0
+        if reflow < 0 and index == len(items) - 1:
+            mod = len(items) - reflow
+        elif index < reflow:
+            mod = 1
+        display.append(stat.colorize(str(stat).center(shift_width + mod, fill_char)))
+
+    return "|".join(display)

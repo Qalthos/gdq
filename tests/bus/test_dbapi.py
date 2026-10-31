@@ -4,7 +4,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from bus.db_api import Event, Logo, Series, get_events, get_series
+from bus.db_api import Event, Series, get_events, get_series
+from bus.types import Image
 from common.money import Dollar
 
 
@@ -16,7 +17,7 @@ def fake_event() -> Event:
         url="example.com",
         primary=False,
         starts_at=datetime(2000, 1, 1, tzinfo=UTC),
-        logo=Logo(url="example.com/logo.png", alt=None, width=0, height=0),
+        logo=Image(url="example.com/logo.png", alt=None, width=0, height=0),
         total=Dollar(20),
         series=Series(id="AlsoFake", name="Totally Fake Events"),
     )

@@ -15,7 +15,9 @@ class Money(ABC):  # noqa: PLW1641
     _symbol: str
     _exponent: int = 0
 
-    def __init__(self, value: float = 0):
+    def __init__(self, value: float | str = 0):
+        if isinstance(value, str):
+            value = float(value)
         self._value = round(value * (10**self._exponent))
 
     def __repr__(self) -> str:
